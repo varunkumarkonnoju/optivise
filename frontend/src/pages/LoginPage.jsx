@@ -24,8 +24,6 @@ export default function LoginPage() {
     }
   }
 
-  const fillDemo = () => { setEmail('sarah@optivise.io'); setPassword('demo1234') }
-
   return (
     <div className="auth-page">
       <div className="auth-orb auth-orb-1"/>
@@ -67,12 +65,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="auth-demo-hint" style={{marginTop:16}}>
-          <p>Demo account (click to fill)</p>
-          <code style={{cursor:'pointer'}} onClick={fillDemo}>
-            sarah@optivise.io / demo1234
-          </code>
-        </div>
 
         <p className="auth-switch">
           Don't have an account? <Link to="/register">Sign up free</Link>

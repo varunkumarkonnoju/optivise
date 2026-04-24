@@ -1,4 +1,4 @@
-.analytics-page { display: flex; flex-direction: column; gap: 18px; max-width: 1100px; }
+.analytics-page { display: flex; flex-direction: column; gap: 18px; max-width: 100%; }
 .analytics-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
 .analytics-stat { padding: 16px 18px; }
 .chart-full { padding: 20px; }

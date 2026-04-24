@@ -6,18 +6,36 @@ import './Auth.css'
 export default function ProfilePage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
   const [form, setForm] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
+    name:       user?.name       || '',
+    email:      user?.email      || '',
     shopDomain: user?.shopDomain || '',
   })
 
   const handleSave = async (e) => {
     e.preventDefault()
-    // For now just show saved — full update endpoint can be added later
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
+    setSaving(true); setError(''); setSaved(false)
+    try {
+      const res = await fetch('/api/users/me', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify(form)
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to save')
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleLogout = () => {
@@ -40,32 +58,44 @@ export default function ProfilePage() {
       <div className="card" style={{ padding: 28, marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid var(--border)' }}>
           <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'linear-gradient(135deg, #6366F1, #06B6D4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, color: 'white', flexShrink: 0 }}>
-            {user?.name?.charAt(0) || 'V'}
+            {form.name?.charAt(0) || 'V'}
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)' }}>{user?.name}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{user?.email}</div>
+            <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)' }}>{form.name}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{form.email}</div>
             <div style={{ fontSize: 11, color: 'var(--purple-light)', marginTop: 4, fontWeight: 600 }}>
-              {user?.role || 'Store Owner'} · Free plan
+              {user?.role || 'Store Owner'} · {user?.plan || 'Free'} plan
             </div>
           </div>
         </div>
+
+        {error && (
+          <div style={{ background: 'var(--red-dim)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '10px 14px', color: '#F87171', fontSize: 13, marginBottom: 16 }}>
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSave}>
           <div className="auth-field">
             <label>Full name</label>
             <input type="text" value={form.name}
-              onChange={e => setForm({...form, name: e.target.value})}/>
+              onChange={e => setForm({...form, name: e.target.value})}
+              placeholder="Your full name"/>
           </div>
           <div className="auth-field">
             <label>Email address</label>
             <input type="email" value={form.email}
-              onChange={e => setForm({...form, email: e.target.value})}/>
+              onChange={e => setForm({...form, email: e.target.value})}
+              placeholder="your@email.com"/>
           </div>
           <div className="auth-field">
             <label>Shopify store domain</label>
             <input type="text" value={form.shopDomain}
-              onChange={e => setForm({...form, shopDomain: e.target.value})}/>
+              onChange={e => setForm({...form, shopDomain: e.target.value})}
+              placeholder="your-store.myshopify.com"/>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 5 }}>
+              Changing this reconnects the app to a different store
+            </div>
           </div>
 
           {saved && (
@@ -74,8 +104,8 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <button type="submit" className="auth-btn-primary" style={{ marginTop: 4 }}>
-            Save changes
+          <button type="submit" className="auth-btn-primary" style={{ marginTop: 4 }} disabled={saving}>
+            {saving ? 'Saving...' : 'Save changes'}
           </button>
         </form>
       </div>
@@ -86,7 +116,7 @@ export default function ProfilePage() {
           <div>
             <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Subscription Plan</div>
             <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-              You are on the <strong style={{color:'var(--purple-light)'}}>Free</strong> plan
+              You are on the <strong style={{color:'var(--purple-light)'}}>{user?.plan || 'Free'}</strong> plan
             </div>
           </div>
           <button className="btn-primary" onClick={() => navigate('/pricing')}>
@@ -102,9 +132,7 @@ export default function ProfilePage() {
           Sign out of your account or delete it permanently.
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn-ghost" onClick={handleLogout}>
-            Sign out
-          </button>
+          <button className="btn-ghost" onClick={handleLogout}>Sign out</button>
           <button className="btn-ghost" style={{ color: 'var(--red)', borderColor: 'rgba(239,68,68,0.3)' }}>
             Delete account
           </button>

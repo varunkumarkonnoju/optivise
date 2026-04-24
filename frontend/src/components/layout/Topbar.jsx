@@ -1,10 +1,12 @@
 import { Bell, Plus, Search, Menu } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useState } from 'react'
 import './Layout.css'
 
 export default function Topbar({ onMenuClick }) {
   const { user } = useAuth()
+  const navigate = useNavigate()
   return (
     <div className="topbar">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -26,7 +28,7 @@ export default function Topbar({ onMenuClick }) {
           <Bell size={15} />
           <span className="notif-dot" />
         </button>
-        <div className="topbar-user">
+        <div className="topbar-user" onClick={() => navigate('/profile')} style={{cursor:'pointer'}}>
           <div className="user-avatar" style={{ width: 34, height: 34, fontSize: 13, background: 'linear-gradient(135deg, #6366F1, #06B6D4)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>
             {user?.name?.charAt(0) || '?'}
           </div>

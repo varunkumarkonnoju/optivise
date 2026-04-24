@@ -6,6 +6,7 @@ import LandingPage from './pages/LandingPage'
 import RegisterPage from './pages/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import PrivacyPage from './pages/PrivacyPage'
+import ProfilePage from './pages/ProfilePage'
 import TermsPage from './pages/TermsPage'
 import PricingPage from './pages/PricingPage'
 import BillingSuccess from './pages/BillingSuccess'
@@ -32,6 +33,7 @@ function AppRoutes() {
       {/* Public routes */}
       <Route path="/home" element={<LandingPage />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+      <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />

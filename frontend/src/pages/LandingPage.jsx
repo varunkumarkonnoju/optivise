@@ -619,7 +619,15 @@ export default function LandingPage() {
           </div>
           <span style={{fontSize:14}}>Optivise</span>
         </div>
-        <div style={{fontSize:12,color:'#2D3748'}}>© 2026 Optivise · Built for small Shopify stores · Made with ❤️ by Varun Kumar Konnoju</div>
+        <div style={{fontSize:12,color:'#2D3748',display:'flex',gap:16,alignItems:'center',flexWrap:'wrap',justifyContent:'center'}}>
+          <span>© 2026 Optivise</span>
+          <span>·</span>
+          <a href="/privacy" style={{color:'#334155',textDecoration:'none'}} onMouseEnter={e=>e.target.style.color='#818CF8'} onMouseLeave={e=>e.target.style.color='#334155'}>Privacy Policy</a>
+          <span>·</span>
+          <a href="/terms" style={{color:'#334155',textDecoration:'none'}} onMouseEnter={e=>e.target.style.color='#818CF8'} onMouseLeave={e=>e.target.style.color='#334155'}>Terms of Service</a>
+          <span>·</span>
+          <span>Made with ❤️ by Varun Kumar Konnoju</span>
+        </div>
       </footer>
     </div>
   )

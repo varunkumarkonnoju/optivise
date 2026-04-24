@@ -1,0 +1,64 @@
+.legal-page {
+  background: #020817;
+  min-height: 100vh;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: #E2E8F0;
+}
+
+.legal-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 62px;
+  background: rgba(2,8,23,0.9);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(16px);
+}
+.legal-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 18px; font-weight: 800; color: white;
+  cursor: pointer; letter-spacing: -0.3px;
+  font-family: 'Syne', sans-serif;
+}
+.legal-logo-icon {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: linear-gradient(135deg, #6366F1, #06B6D4);
+  display: flex; align-items: center; justify-content: center;
+}
+.legal-back {
+  background: transparent; border: 1px solid rgba(255,255,255,0.1);
+  color: #64748B; border-radius: 8px; padding: 7px 14px;
+  font-size: 13px; cursor: pointer; font-family: inherit;
+  transition: all .2s;
+}
+.legal-back:hover { color: white; border-color: rgba(255,255,255,0.25); }
+
+.legal-content {
+  max-width: 780px; margin: 0 auto; padding: 60px 32px 80px;
+}
+
+.legal-header {
+  margin-bottom: 48px; padding-bottom: 32px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.legal-header h1 {
+  font-size: 36px; font-weight: 800; color: white;
+  letter-spacing: -1px; margin-bottom: 10px;
+  font-family: 'Syne', sans-serif;
+}
+.legal-header p { font-size: 13px; color: #475569; }
+
+.legal-body { display: flex; flex-direction: column; gap: 32px; }
+
+.legal-section h2 {
+  font-size: 16px; font-weight: 700; color: white;
+  margin-bottom: 12px; font-family: 'Syne', sans-serif;
+}
+.legal-section div {
+  font-size: 14px; color: #64748B; line-height: 1.8;
+}
+.legal-section ul {
+  margin: 10px 0 10px 20px; display: flex; flex-direction: column; gap: 6px;
+}
+.legal-section li { color: #64748B; font-size: 14px; line-height: 1.7; }
+.legal-section p { margin-bottom: 10px; }
+.legal-section strong { color: #94A3B8; }

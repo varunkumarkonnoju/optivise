@@ -1,0 +1,7 @@
+.analytics-page { display: flex; flex-direction: column; gap: 18px; max-width: 1100px; }
+.analytics-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.analytics-stat { padding: 16px 18px; }
+.chart-full { padding: 20px; }
+.chart-half { padding: 20px; }
+.chart-title { font-size: 13px; font-weight: 700; margin-bottom: 16px; color: var(--text-secondary); }
+.charts-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }

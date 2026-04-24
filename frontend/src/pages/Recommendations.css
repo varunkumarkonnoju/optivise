@@ -1,0 +1,30 @@
+.reco-page { display: flex; flex-direction: column; gap: 20px; max-width: 1100px; }
+.reco-tabs { display: flex; gap: 6px; }
+.reco-tab {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: transparent;
+  color: var(--text-secondary); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.reco-tab:hover { border-color: var(--border-hover); color: var(--text-primary); }
+.reco-tab.active { background: var(--purple-dim); border-color: rgba(99,102,241,0.4); color: var(--purple-light); }
+.tab-count { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 1px 7px; font-size: 11px; }
+
+.reco-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.reco-card { padding: 18px; display: flex; flex-direction: column; gap: 10px; transition: all 0.15s; }
+.reco-card.applied { opacity: 0.55; }
+.reco-card-top { display: flex; align-items: center; justify-content: space-between; }
+.reco-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.reco-title { font-size: 14px; font-weight: 700; }
+.reco-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; flex: 1; }
+.reco-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+.reco-cat { font-size: 11px; font-weight: 600; text-transform: capitalize; }
+.btn-apply {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--purple-dim); border: 1px solid rgba(99,102,241,0.3);
+  color: var(--purple-light); border-radius: var(--radius-sm);
+  padding: 5px 12px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.btn-apply:hover { background: var(--purple); color: white; }

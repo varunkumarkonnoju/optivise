@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+build/
+
+# Sensitive
+.env
+.env.local
+.env.production
+
+# IDE
+.DS_Store

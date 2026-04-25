@@ -12,6 +12,7 @@ const nav = [
   { label: 'A/B Testing',       path: '/abtesting',     icon: TestTube2 },
   { label: 'Recommendations',   path: '/recommendations',icon: Star },
   { label: 'Analytics',         path: '/analytics',     icon: BarChart3 },
+  { label: 'Automations',        path: '/automations',   icon: Zap },
   { label: 'Pricing & Billing',  path: '/pricing',       icon: CreditCard },
 ]
 

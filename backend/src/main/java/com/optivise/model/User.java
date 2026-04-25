@@ -14,12 +14,10 @@ public class User {
     private String password;
     private String role;
     private String shopDomain;
-
-    // Stripe billing fields
-    private String plan;                 // free, starter, growth
-    private String stripeCustomerId;     // cus_xxx
-    private String subscriptionStatus;  // active, trialing, cancelled
-
+    private String shopifyAccessToken;  // per-user Shopify token
+    private String plan;
+    private String stripeCustomerId;
+    private String subscriptionStatus;
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
@@ -38,6 +36,8 @@ public class User {
     public void setRole(String role) { this.role = role; }
     public String getShopDomain() { return shopDomain; }
     public void setShopDomain(String shopDomain) { this.shopDomain = shopDomain; }
+    public String getShopifyAccessToken() { return shopifyAccessToken; }
+    public void setShopifyAccessToken(String shopifyAccessToken) { this.shopifyAccessToken = shopifyAccessToken; }
     public String getPlan() { return plan; }
     public void setPlan(String plan) { this.plan = plan; }
     public String getStripeCustomerId() { return stripeCustomerId; }

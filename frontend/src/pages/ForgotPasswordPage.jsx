@@ -6,14 +6,23 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-    // Simulate sending — backend email coming soon
-    await new Promise(r => setTimeout(r, 1200))
-    setSent(true)
-    setLoading(false)
+    setLoading(true); setError('')
+    try {
+      await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+      setSent(true)
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -36,6 +45,7 @@ export default function ForgotPasswordPage() {
           <>
             <h2 className="auth-title">Reset your password</h2>
             <p className="auth-sub">Enter your email and we'll send you a reset link.</p>
+            {error && <div className="auth-error">{error}</div>}
             <form onSubmit={handleSubmit}>
               <div className="auth-field">
                 <label>Email address</label>

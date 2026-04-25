@@ -8,12 +8,10 @@ import './Layout.css'
 
 const nav = [
   { label: 'Dashboard',         path: '/dashboard',              icon: LayoutDashboard },
-  { label: 'AI Insights',       path: '/insights',      icon: Sparkles },
   { label: 'Product Optimizer', path: '/products',      icon: Package },
   { label: 'A/B Testing',       path: '/abtesting',     icon: TestTube2 },
   { label: 'Recommendations',   path: '/recommendations',icon: Star },
   { label: 'Analytics',         path: '/analytics',     icon: BarChart3 },
-  { label: 'Automations',       path: '/automations',   icon: Zap },
   { label: 'Pricing & Billing',  path: '/pricing',       icon: CreditCard },
 ]
 

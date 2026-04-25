@@ -5,65 +5,98 @@ import com.optivise.dto.LoginRequest;
 import com.optivise.dto.RegisterRequest;
 import com.optivise.model.User;
 import com.optivise.repository.UserRepository;
+import com.optivise.service.EmailService;
 import com.optivise.service.JwtService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthController {
 
-    private final UserRepository userRepo;
-    private final JwtService jwtService;
-    private final PasswordEncoder encoder;
-    private final AuthenticationManager authManager;
+    @Autowired private UserRepository userRepo;
+    @Autowired private JwtService jwtService;
+    @Autowired private EmailService emailService;
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
-        try {
-            authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword())
-            );
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
-        }
-        User user = userRepo.findByEmail(req.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        String token = jwtService.generateToken(user.getEmail());
-        return ResponseEntity.ok(AuthResponse.builder()
-                .token(token).name(user.getName()).email(user.getEmail())
-                .shopDomain(user.getShopDomain()).role(user.getRole()).build());
-    }
-
+    // ── POST /api/auth/register ───────────────────────────
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
-        if (userRepo.existsByEmail(req.getEmail()))
-            return ResponseEntity.badRequest().body(Map.of("error", "Email already in use"));
-        User user = User.builder()
-                .name(req.getName()).email(req.getEmail())
-                .password(encoder.encode(req.getPassword()))
-                .shopDomain(req.getShopDomain()).role("Store Owner").build();
+        if (userRepo.findByEmail(req.getEmail()).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email already registered"));
+        }
+
+        // Clean shop domain
+        String domain = req.getShopDomain() != null ? req.getShopDomain().trim() : "";
+        domain = domain.replace("https://", "").replace("http://", "").replace("/", "");
+        if (!domain.isEmpty() && !domain.contains(".myshopify.com")) {
+            domain = domain + ".myshopify.com";
+        }
+
+        User user = new User();
+        user.setName(req.getName());
+        user.setEmail(req.getEmail().toLowerCase().trim());
+        user.setPassword(encoder.encode(req.getPassword()));
+        user.setRole("Store Owner");
+        user.setShopDomain(domain);
+        user.setPlan("free");
         userRepo.save(user);
+
+        // Send welcome email async
+        final String finalEmail = user.getEmail();
+        final String finalName = user.getName();
+        new Thread(() -> emailService.sendWelcome(finalEmail, finalName)).start();
+
         String token = jwtService.generateToken(user.getEmail());
-        return ResponseEntity.ok(AuthResponse.builder()
-                .token(token).name(user.getName()).email(user.getEmail())
-                .shopDomain(user.getShopDomain()).role(user.getRole()).build());
+        AuthResponse resp = new AuthResponse();
+        resp.setToken(token);
+        resp.setName(user.getName());
+        resp.setEmail(user.getEmail());
+        resp.setShopDomain(user.getShopDomain());
+        resp.setRole(user.getRole());
+        return ResponseEntity.ok(resp);
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<?> me(Principal principal) {
-        User user = userRepo.findByEmail(principal.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return ResponseEntity.ok(AuthResponse.builder()
-                .name(user.getName()).email(user.getEmail())
-                .shopDomain(user.getShopDomain()).role(user.getRole()).build());
+    // ── POST /api/auth/login ──────────────────────────────
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+        var userOpt = userRepo.findByEmail(req.getEmail().toLowerCase().trim());
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid email or password"));
+        }
+        User user = userOpt.get();
+        if (!encoder.matches(req.getPassword(), user.getPassword())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid email or password"));
+        }
+        String token = jwtService.generateToken(user.getEmail());
+        AuthResponse resp = new AuthResponse();
+        resp.setToken(token);
+        resp.setName(user.getName());
+        resp.setEmail(user.getEmail());
+        resp.setShopDomain(user.getShopDomain());
+        resp.setRole(user.getRole());
+        return ResponseEntity.ok(resp);
+    }
+
+    // ── POST /api/auth/forgot-password ───────────────────
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> req) {
+        String email = req.get("email");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email is required"));
+        }
+        // Always return success (don't reveal if email exists)
+        userRepo.findByEmail(email.toLowerCase().trim()).ifPresent(user -> {
+            String token = UUID.randomUUID().toString();
+            // In production: save token to DB with expiry
+            // For now: send email with token
+            new Thread(() -> emailService.sendPasswordReset(email, token, user.getName())).start();
+        });
+        return ResponseEntity.ok(Map.of("message", "If that email exists, a reset link has been sent"));
     }
 }

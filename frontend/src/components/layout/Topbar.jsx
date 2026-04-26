@@ -6,10 +6,12 @@ import { Bell, Plus, Search, ChevronDown, User, Settings, LogOut, HelpCircle } f
 export default function Topbar({ onMenuClick }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [showNew, setShowNew] = useState(false)
   const [showNotif, setShowNotif] = useState(false)
   const [showUser, setShowUser] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [loadingNotif, setLoadingNotif] = useState(false)
+  const newRef = useRef(null)
   const notifRef = useRef(null)
   const userRef = useRef(null)
 
@@ -41,6 +43,7 @@ export default function Topbar({ onMenuClick }) {
   // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e) => {
+      if (newRef.current && !newRef.current.contains(e.target)) setShowNew(false)
       if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotif(false)
       if (userRef.current && !userRef.current.contains(e.target)) setShowUser(false)
     }
@@ -76,14 +79,43 @@ export default function Topbar({ onMenuClick }) {
 
       {/* Right */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        {/* New button */}
-        <button onClick={() => navigate('/products')} style={{
-          display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, #6366F1, #06B6D4)',
-          color: 'white', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 13,
-          fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit'
-        }}>
-          <Plus size={14}/> New
-        </button>
+        {/* New button with dropdown */}
+        <div style={{ position: 'relative' }} ref={newRef}>
+          <button onClick={() => { setShowNew(!showNew); setShowNotif(false); setShowUser(false) }} style={{
+            display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, #6366F1, #06B6D4)',
+            color: 'white', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 13,
+            fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit'
+          }}>
+            <Plus size={14}/> New
+          </button>
+          {showNew && (
+            <div style={{
+              position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 220,
+              background: 'var(--bg-card)', border: '1px solid var(--border)',
+              borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 200, overflow: 'hidden'
+            }}>
+              <div style={{ padding: '8px 12px 6px', fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>Quick Actions</div>
+              {[
+                { icon: '✨', label: 'Generate AI Description', path: '/products' },
+                { icon: '🧪', label: 'Create A/B Test', path: '/ab-testing' },
+                { icon: '💬', label: 'Ask AI Assistant', path: '/assistant' },
+                { icon: '📊', label: 'View Analytics', path: '/analytics' },
+                { icon: '🎯', label: 'Get Recommendations', path: '/recommendations' },
+              ].map((item, i) => (
+                <button key={i} onClick={() => { navigate(item.path); setShowNew(false) }} style={{
+                  width: '100%', padding: '9px 14px', background: 'none', border: 'none',
+                  cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center',
+                  gap: 10, fontSize: 13, fontFamily: 'inherit', borderTop: i === 0 ? '1px solid var(--border)' : 'none'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                >
+                  <span>{item.icon}</span>{item.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Notifications */}
         <div ref={notifRef} style={{ position: 'relative' }}>

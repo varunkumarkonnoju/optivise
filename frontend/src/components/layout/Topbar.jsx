@@ -10,6 +10,7 @@ export default function Topbar({ onMenuClick }) {
   const [showNotif, setShowNotif] = useState(false)
   const [showUser, setShowUser] = useState(false)
   const [notifications, setNotifications] = useState([])
+  const [dismissed, setDismissed] = useState(new Set())
   const [loadingNotif, setLoadingNotif] = useState(false)
   const newRef = useRef(null)
   const notifRef = useRef(null)
@@ -149,7 +150,7 @@ export default function Topbar({ onMenuClick }) {
                   <button onClick={fetchNotifications} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 11 }}>
                     {loadingNotif ? '⟳' : 'Refresh'}
                   </button>
-                  <span style={{ fontSize: 11, color: 'var(--purple-light)', cursor: 'pointer' }}>Mark all read</span>
+                  <span style={{ fontSize: 11, color: 'var(--purple-light)', cursor: 'pointer' }} onClick={() => setDismissed(new Set(notifications.map(n => n.id)))}>Mark all read</span>
                 </div>
               </div>
 
@@ -166,10 +167,11 @@ export default function Topbar({ onMenuClick }) {
                 ) : notifications.map((n, i) => (
                   <div key={n.id || i} style={{
                     padding: '12px 16px', borderBottom: '1px solid var(--border)',
-                    display: 'flex', gap: 12, alignItems: 'flex-start',
+                    display: dismissed.has(n.id) ? 'none' : 'flex', gap: 12, alignItems: 'flex-start',
                     background: n.isNew ? 'rgba(99,102,241,0.04)' : 'transparent',
                     cursor: 'pointer', transition: 'background .15s'
                   }}
+                  onClick={() => { if (n.actionUrl) { navigate(n.actionUrl); setShowNotif(false) } }}
                   onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
                   onMouseLeave={e => e.currentTarget.style.background = n.isNew ? 'rgba(99,102,241,0.04)' : 'transparent'}
                   >
@@ -188,7 +190,10 @@ export default function Topbar({ onMenuClick }) {
                         {n.isNew && <span style={{ background: '#6366F1', color: 'white', borderRadius: 10, padding: '1px 7px', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>New</span>}
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.4 }}>{n.message}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, opacity: 0.7 }}>{n.time}</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', opacity: 0.7 }}>{n.time}</div>
+                        <button onClick={e => { e.stopPropagation(); setDismissed(prev => new Set([...prev, n.id])) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 11, padding: '2px 6px', borderRadius: 4 }} onMouseEnter={e => e.currentTarget.style.color = '#EF4444'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>✕</button>
+                      </div>
                     </div>
                   </div>
                 ))}

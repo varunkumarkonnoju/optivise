@@ -1,98 +1,195 @@
-import { useEffect, useState } from 'react'
-import { suggestionApi } from '../utils/api'
-import { Sparkles, CheckCircle, Tag, TrendingUp, ShoppingBag, Megaphone, Check } from 'lucide-react'
-import './Recommendations.css'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-const catIcon = { product: ShoppingBag, pricing: Tag, conversion: TrendingUp, marketing: Megaphone }
-const catColor = { product: 'var(--purple)', pricing: 'var(--amber)', conversion: 'var(--teal)', marketing: 'var(--green)' }
+const PRIORITY_COLORS = { high: '#EF4444', medium: '#F59E0B', low: '#34D399' }
+const PRIORITY_BG = { high: 'rgba(239,68,68,0.1)', medium: 'rgba(245,158,11,0.1)', low: 'rgba(52,211,153,0.1)' }
+const TYPE_ICONS = {
+  description: '✨', image: '🖼️', inventory: '📦', abtesting: '🧪',
+  revenue: '💰', info: '🔗', pricing: '💲', seo: '🔍'
+}
 
 export default function RecommendationsPage() {
+  const navigate = useNavigate()
   const [suggestions, setSuggestions] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [applied, setApplied] = useState(new Set())
 
-  const load = () => suggestionApi.getAll().then(r => setSuggestions(r.data)).finally(() => setLoading(false))
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    fetchSuggestions()
+  }, [])
 
-  const apply = async (id) => {
-    await suggestionApi.apply(id)
-    setSuggestions(prev => prev.map(s => s.id === id ? { ...s, applied: true } : s))
+  const fetchSuggestions = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/suggestions', {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+      })
+      if (res.ok) setSuggestions(await res.json())
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const filtered = filter === 'all' ? suggestions
-    : filter === 'applied' ? suggestions.filter(s => s.applied)
-    : suggestions.filter(s => !s.applied && s.impact?.toLowerCase() === filter)
+  const handleAction = (suggestion) => {
+    switch (suggestion.action) {
+      case 'generate_description': navigate('/products'); break
+      case 'create_ab_test': navigate('/abtesting'); break
+      case 'connect_store': navigate('/profile'); break
+      case 'add_images':
+      case 'restock': window.open(`https://admin.shopify.com/store/${window.location.hostname.split('.')[0]}/products/${suggestion.productId}`, '_blank'); break
+      default: break
+    }
+    setApplied(prev => new Set([...prev, suggestion.id]))
+  }
 
-  if (loading) return <div className="spinner" />
+  const filtered = suggestions.filter(s => {
+    if (filter === 'all') return !applied.has(s.id)
+    if (filter === 'applied') return applied.has(s.id)
+    return s.priority === filter && !applied.has(s.id)
+  })
 
-  const pending = suggestions.filter(s => !s.applied).length
+  const counts = {
+    all: suggestions.filter(s => !applied.has(s.id)).length,
+    high: suggestions.filter(s => s.priority === 'high' && !applied.has(s.id)).length,
+    medium: suggestions.filter(s => s.priority === 'medium' && !applied.has(s.id)).length,
+    low: suggestions.filter(s => s.priority === 'low' && !applied.has(s.id)).length,
+    applied: applied.size,
+  }
 
   return (
-    <div className="reco-page">
-      <div className="page-header">
+    <div style={{ maxWidth: 900 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
-          <h1 className="page-title">AI Recommendations</h1>
-          <p className="page-sub">{pending} actionable suggestions to grow your store</p>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>AI Recommendations</h1>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
+            {loading ? 'Analyzing your store...' : `${counts.all} actionable suggestions to grow your store`}
+          </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--purple-dim)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 'var(--radius-sm)', padding: '8px 14px' }}>
-          <Sparkles size={14} style={{ color: 'var(--purple-light)' }} />
-          <span style={{ fontSize: 12, color: 'var(--purple-light)', fontWeight: 600 }}>Updated just now</span>
-        </div>
+        <button onClick={fetchSuggestions} className="btn-ghost" style={{ fontSize: 13 }}>
+          ↻ Refresh
+        </button>
       </div>
 
-      {/* Filter tabs */}
-      <div className="reco-tabs">
-        {['all', 'high', 'medium', 'low', 'applied'].map(f => (
-          <button key={f} className={`reco-tab ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
-            {f.charAt(0).toUpperCase() + f.slice(1)}
-            <span className="tab-count">{
-              f === 'all' ? suggestions.length
-              : f === 'applied' ? suggestions.filter(s => s.applied).length
-              : suggestions.filter(s => !s.applied && s.impact?.toLowerCase() === f).length
-            }</span>
+      {/* Stats */}
+      {!loading && suggestions.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+          {[
+            { label: 'High Priority', count: counts.high, color: '#EF4444', icon: '🔴' },
+            { label: 'Medium Priority', count: counts.medium, color: '#F59E0B', icon: '🟡' },
+            { label: 'Applied', count: counts.applied, color: '#34D399', icon: '✅' },
+          ].map((stat, i) => (
+            <div key={i} className="card" style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 20 }}>{stat.icon}</span>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: stat.color }}>{stat.count}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{stat.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+        {[
+          { key: 'all', label: 'All' },
+          { key: 'high', label: '🔴 High' },
+          { key: 'medium', label: '🟡 Medium' },
+          { key: 'low', label: '🟢 Low' },
+          { key: 'applied', label: '✅ Applied' },
+        ].map(f => (
+          <button key={f.key} onClick={() => setFilter(f.key)} style={{
+            padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            fontFamily: 'inherit', transition: 'all .15s',
+            background: filter === f.key ? 'var(--purple)' : 'var(--bg-card)',
+            color: filter === f.key ? 'white' : 'var(--text-muted)',
+            border: filter === f.key ? '1px solid var(--purple)' : '1px solid var(--border)',
+          }}>
+            {f.label} <span style={{ opacity: 0.7 }}>({counts[f.key]})</span>
           </button>
         ))}
       </div>
 
-      {/* Cards */}
-      <div className="reco-grid">
-        {filtered.map(s => {
-          const Icon = catIcon[s.category] || Sparkles
-          const color = catColor[s.category] || 'var(--purple)'
-          return (
-            <div key={s.id} className={`card reco-card ${s.applied ? 'applied' : ''}`}>
-              <div className="reco-card-top">
-                <div className="reco-icon" style={{ background: color + '22', color }}>
-                  <Icon size={16} />
-                </div>
-                <span className={`badge badge-${s.impact?.toLowerCase()}`}>{s.impact} Impact</span>
-              </div>
-              <div className="reco-title">{s.title}</div>
-              <div className="reco-desc">{s.description}</div>
-              <div className="reco-footer">
-                <span className="reco-cat" style={{ color }}>{s.category}</span>
-                {s.applied ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--green)', fontSize: 12, fontWeight: 600 }}>
-                    <CheckCircle size={13} /> Applied
-                  </div>
-                ) : (
-                  <button className="btn-apply" onClick={() => apply(s.id)}>
-                    <Check size={12} /> Apply
-                  </button>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {filtered.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '60px 24px', color: 'var(--text-muted)' }}>
-          <CheckCircle size={40} style={{ margin: '0 auto 12px', color: 'var(--green)' }} />
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>All caught up!</div>
-          <div style={{ fontSize: 13 }}>No pending suggestions in this category.</div>
+      {/* Loading */}
+      {loading && (
+        <div style={{ textAlign: 'center', padding: '60px 0' }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>🤖</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>Analyzing your store...</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Scanning products, orders, and opportunities</div>
         </div>
       )}
+
+      {/* Empty state */}
+      {!loading && filtered.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '60px 0' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>{filter === 'applied' ? '🎉' : '✅'}</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
+            {filter === 'applied' ? 'No applied suggestions yet' : 'All caught up!'}
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+            {filter === 'applied' ? 'Apply suggestions to see them here' : 'No pending suggestions in this category.'}
+          </div>
+        </div>
+      )}
+
+      {/* Suggestion cards */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {filtered.map(s => (
+          <div key={s.id} className="card" style={{
+            padding: '20px', display: 'flex', gap: 16, alignItems: 'flex-start',
+            borderLeft: `3px solid ${PRIORITY_COLORS[s.priority] || '#6366F1'}`,
+            opacity: applied.has(s.id) ? 0.6 : 1
+          }}>
+            {/* Icon */}
+            <div style={{
+              width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+              background: PRIORITY_BG[s.priority] || 'rgba(99,102,241,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20
+            }}>
+              {TYPE_ICONS[s.type] || '💡'}
+            </div>
+
+            {/* Content */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 6 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.4 }}>{s.title}</div>
+                <span style={{
+                  padding: '2px 10px', borderRadius: 10, fontSize: 11, fontWeight: 700,
+                  background: PRIORITY_BG[s.priority], color: PRIORITY_COLORS[s.priority],
+                  flexShrink: 0, textTransform: 'uppercase', letterSpacing: '.04em'
+                }}>
+                  {s.priority}
+                </span>
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 12 }}>{s.description}</div>
+
+              {/* Meta + Action */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                <div style={{ display: 'flex', gap: 16 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    <span style={{ color: '#34D399', fontWeight: 600 }}>📈 {s.impact}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    ⏱️ {s.effort}
+                  </div>
+                </div>
+                <button onClick={() => handleAction(s)} style={{
+                  background: 'linear-gradient(135deg, #6366F1, #06B6D4)',
+                  color: 'white', border: 'none', borderRadius: 8,
+                  padding: '8px 16px', fontSize: 12, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit'
+                }}>
+                  {s.actionLabel || 'Take Action'} →
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

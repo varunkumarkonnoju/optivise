@@ -69,6 +69,7 @@ public class NotificationController {
                 n.put("time", "Just now");
                 n.put("isNew", true);
                 n.put("color", "#6366F1");
+                n.put("actionUrl", "/dashboard");
                 notifications.add(n);
             }
 
@@ -85,6 +86,7 @@ public class NotificationController {
                 n.put("time", "1h ago");
                 n.put("isNew", change < -10);
                 n.put("color", change >= 0 ? "#34D399" : "#F87171");
+                n.put("actionUrl", "/analytics");
                 notifications.add(n);
             }
 
@@ -116,6 +118,7 @@ public class NotificationController {
                 n.put("time", "2h ago");
                 n.put("isNew", true);
                 n.put("color", "#F59E0B");
+                n.put("actionUrl", "/products");
                 notifications.add(n);
             }
 
@@ -130,6 +133,7 @@ public class NotificationController {
                 n.put("time", "3h ago");
                 n.put("isNew", false);
                 n.put("color", "#06B6D4");
+                n.put("actionUrl", "/analytics");
                 notifications.add(n);
             }
 
@@ -143,6 +147,7 @@ public class NotificationController {
             aiN.put("time", "5h ago");
             aiN.put("isNew", false);
             aiN.put("color", "#818CF8");
+            aiN.put("actionUrl", "/recommendations");
             notifications.add(aiN);
 
         } catch (Exception e) {

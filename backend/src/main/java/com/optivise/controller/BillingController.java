@@ -63,7 +63,7 @@ public class BillingController {
             User user = userRepo.findByEmail(principal.getName()).orElseThrow();
             String planId = req.get("planId"); // "starter" or "growth"
             String priceId = "growth".equals(planId) ? growthPriceId : starterPriceId;
-            String appUrl = req.getOrDefault("appUrl", "http://localhost:5173");
+            String appUrl = req.getOrDefault("appUrl", "https://www.optiviseai.io");
 
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
@@ -104,7 +104,7 @@ public class BillingController {
         try {
             Stripe.apiKey = stripeSecretKey;
             User user = userRepo.findByEmail(principal.getName()).orElseThrow();
-            String appUrl = req.getOrDefault("appUrl", "http://localhost:5173");
+            String appUrl = req.getOrDefault("appUrl", "https://www.optiviseai.io");
 
             if (user.getStripeCustomerId() == null) {
                 return ResponseEntity.badRequest().body(Map.of("error", "No active subscription found"));

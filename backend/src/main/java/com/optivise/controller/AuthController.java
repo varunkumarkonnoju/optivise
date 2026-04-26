@@ -13,6 +13,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.security.Principal;
+import java.util.concurrent.ConcurrentHashMap;
+import java.time.Instant;
 import java.util.UUID;
 
 @RestController
@@ -20,6 +23,8 @@ import java.util.UUID;
 public class AuthController {
 
     @Autowired private UserRepository userRepo;
+    // Simple in-memory token store (token -> [email, expiry])
+    private static final ConcurrentHashMap<String, String[]> resetTokens = new ConcurrentHashMap<>();
     @Autowired private JwtService jwtService;
     @Autowired private EmailService emailService;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
@@ -93,10 +98,51 @@ public class AuthController {
         // Always return success (don't reveal if email exists)
         userRepo.findByEmail(email.toLowerCase().trim()).ifPresent(user -> {
             String token = UUID.randomUUID().toString();
-            // In production: save token to DB with expiry
-            // For now: send email with token
+            // Store token with expiry (1 hour)
+            resetTokens.put(token, new String[]{user.getEmail(), String.valueOf(Instant.now().plusSeconds(3600).getEpochSecond())});
             new Thread(() -> emailService.sendPasswordReset(email, token, user.getName())).start();
         });
         return ResponseEntity.ok(Map.of("message", "If that email exists, a reset link has been sent"));
+    }
+
+    // ── POST /api/auth/reset-password ────────────────────
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> req) {
+        String token = req.get("token");
+        String newPassword = req.get("password");
+        if (token == null || newPassword == null || newPassword.length() < 8)
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid request"));
+        String[] tokenData = resetTokens.get(token);
+        if (tokenData == null)
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid or expired reset link"));
+        long expiry = Long.parseLong(tokenData[1]);
+        if (Instant.now().getEpochSecond() > expiry) {
+            resetTokens.remove(token);
+            return ResponseEntity.badRequest().body(Map.of("error", "Reset link has expired. Please request a new one."));
+        }
+        String email = tokenData[0];
+        userRepo.findByEmail(email).ifPresent(user -> {
+            user.setPassword(encoder.encode(newPassword));
+            userRepo.save(user);
+        });
+        resetTokens.remove(token);
+        return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
+    }
+
+    // ── GET /api/auth/me ─────────────────────────────────
+    @GetMapping("/me")
+    public ResponseEntity<?> me(Principal principal) {
+        if (principal == null) return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        var userOpt = userRepo.findByEmail(principal.getName());
+        if (userOpt.isEmpty()) return ResponseEntity.status(401).body(Map.of("error", "User not found"));
+        User user = userOpt.get();
+        return ResponseEntity.ok(Map.of(
+                "name",            user.getName() != null ? user.getName() : "",
+                "email",           user.getEmail() != null ? user.getEmail() : "",
+                "shopDomain",      user.getShopDomain() != null ? user.getShopDomain() : "",
+                "hasShopifyToken", user.getShopifyAccessToken() != null && !user.getShopifyAccessToken().isBlank(),
+                "role",            user.getRole() != null ? user.getRole() : "Store Owner",
+                "plan",            user.getPlan() != null ? user.getPlan() : "free"
+        ));
     }
 }

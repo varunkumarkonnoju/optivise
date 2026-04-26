@@ -97,7 +97,7 @@ export default function Topbar({ onMenuClick }) {
               <div style={{ padding: '8px 12px 6px', fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>Quick Actions</div>
               {[
                 { icon: '✨', label: 'Generate AI Description', path: '/products' },
-                { icon: '🧪', label: 'Create A/B Test', path: '/ab-testing' },
+                { icon: '🧪', label: 'Create A/B Test', path: '/abtesting' },
                 { icon: '💬', label: 'Ask AI Assistant', path: '/assistant' },
                 { icon: '📊', label: 'View Analytics', path: '/analytics' },
                 { icon: '🎯', label: 'Get Recommendations', path: '/recommendations' },

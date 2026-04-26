@@ -20,7 +20,7 @@ public class EmailService {
 
     public boolean sendPasswordReset(String toEmail, String resetToken, String userName) {
         try {
-            String resetLink = "https://optivise-seven.vercel.app/reset-password?token=" + resetToken;
+            String resetLink = "https://www.optiviseai.io/reset-password?token=" + resetToken;
             String html = """
                 <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px">
                     <div style="text-align:center;margin-bottom:24px">
@@ -77,7 +77,7 @@ public class EmailService {
                         <li style="margin-bottom:8px">🤖 Ask the AI assistant anything about your store</li>
                     </ul>
                     <div style="text-align:center;margin:32px 0">
-                        <a href="https://optivise-seven.vercel.app/dashboard" style="background:#6366F1;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600">
+                        <a href="https://www.optiviseai.io/dashboard" style="background:#6366F1;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600">
                             Go to Dashboard
                         </a>
                     </div>

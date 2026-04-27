@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
+import ShopifyConnectButton from '../components/ShopifyConnectButton'
 import './Auth.css'
 
 const STEPS = ['Account', 'Connect Store', 'All set!']
@@ -140,32 +141,8 @@ export default function RegisterPage() {
             <p className="auth-sub">One click to connect. We'll pull your real products, orders, and analytics automatically.</p>
             {error && <div className="auth-error">{error}</div>}
 
-            <div style={{ background: 'rgba(150,191,72,0.05)', border: '1px solid rgba(150,191,72,0.3)', borderRadius: 12, padding: '28px 20px', marginBottom: 16, textAlign: 'center' }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>🛍️</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>Connect your Shopify store</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 20 }}>One click — we'll ask for your store name and connect instantly.</div>
-              <button
-                onClick={() => {
-                  const storeName = window.prompt('Enter your Shopify store name:', 'your-store')
-                  if (storeName) handleConnectShopify(storeName)
-                }}
-                disabled={loading}
-                style={{
-                  width: '100%', padding: '14px', borderRadius: 10, border: 'none',
-                  background: '#96BF48', color: 'white', fontSize: 15, fontWeight: 700,
-                  cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                  opacity: loading ? 0.7 : 1, boxShadow: '0 4px 12px rgba(150,191,72,0.4)'
-                }}
-              >
-                <svg width="22" height="22" viewBox="0 0 50 50" fill="white">
-                  <path d="M33.3 4.7c-.1-.1-.3-.1-.5 0l-2.3.7c-.4-1.2-1-2.3-1.9-3.1C27.8 1.5 26.9 1 26 1c-.1 0-.2 0-.3 0-.3-.4-.6-.7-1-.9C24 0 23.3 0 22.6.3c-1.6.6-3.1 2.3-4.4 4.8-.9 1.8-1.6 3.9-1.9 5.8l-5.8 1.8c-.6.2-1 .7-1 1.3L8 43.5c0 .5.4.9.9.9l29.5-5.6c.5-.1.8-.5.8-1L38 5.5c0-.4-.3-.7-.7-.8zm-7.6.6c.5.5.9 1.2 1.2 2.1l-4.2 1.3c.4-1.5 1-2.8 1.7-3.7.5.1 1 .2 1.3.3zm-3.5-2.5c.3-.1.7-.1 1 .1.1 0 .2.1.3.2-.7 1-1.3 2.3-1.8 3.8l-3.1 1c.8-2.3 2-3.8 3.6-5.1zm1 4.9l5.5-1.7c.3 1.3.4 2.8.4 4.5 0 .2 0 .4 0 .6l-6.8 2.1c.1-1.9.4-3.7.9-5.5z"/>
-                </svg>
-                {loading ? 'Connecting...' : 'Connect with Shopify'}
-              </button>
-              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 10 }}>
-                🔒 Secure OAuth — we never store your password
-              </p>
+            <div style={{ marginBottom: 16 }}>
+              <ShopifyConnectButton />
             </div>
 
             <button className="auth-btn-ghost" onClick={() => { setStep(2) }} style={{ width: '100%', textAlign: 'center' }}>

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -61,6 +62,24 @@ public class ShopifyService {
     }
 
     @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> fetchCustomers(String domain, String token) {
+        try {
+            String url = "https://" + domain + "/admin/api/2024-01/customers.json?limit=250";
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = WebClient.create().get().uri(url)
+                    .header("X-Shopify-Access-Token", token)
+                    .retrieve().bodyToMono(Map.class).block();
+            if (response != null && response.containsKey("customers")) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> customers = (List<Map<String, Object>>) response.get("customers");
+                return customers;
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to fetch customers: " + e.getMessage());
+        }
+        return new ArrayList<>();
+    }
+
     public List<Map<String, Object>> fetchOrders(String domain, String token) {
         try {
             String url = "https://" + domain + "/admin/api/2023-10/orders.json?limit=250&status=any";

@@ -108,15 +108,19 @@ public class DashboardService {
                         topProducts.add(ps);
                     });
         } else {
-            // Fallback to demo products
-            productRepo.findByShopOrderByRevenueDesc(shop).stream().limit(3).forEach(p -> {
+            // Fallback to real Shopify products
+            shopifyProducts.stream().limit(3).forEach(p -> {
                 ProductSummary ps = new ProductSummary();
-                ps.setId(p.getId());
-                ps.setTitle(p.getTitle());
-                ps.setRevenue(p.getRevenue());
-                ps.setRevenueDelta(Math.round(Math.random() * 30 * 10.0) / 10.0);
-                ps.setImageUrl(p.getImageUrl());
-                ps.setOptimizationStatus(p.getOptimizationStatus());
+                ps.setId(Long.parseLong(p.getOrDefault("id", "0").toString()));
+                ps.setTitle((String) p.getOrDefault("title", "Product"));
+                ps.setRevenue(0.0);
+                ps.setRevenueDelta(0.0);
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> images = (List<Map<String, Object>>) p.get("images");
+                if (images != null && !images.isEmpty()) {
+                    ps.setImageUrl((String) images.get(0).get("src"));
+                }
+                ps.setOptimizationStatus("needs_attention");
                 topProducts.add(ps);
             });
         }

@@ -157,8 +157,8 @@ public class SuggestionController {
                 s.put("description", "Your current AOV is $" + String.format("%.2f", avgOrderValue) + ". Creating product bundles can increase it by 20-40%.");
                 s.put("impact", "+20-40% AOV");
                 s.put("effort", "15 min");
-                s.put("action", "create_bundle");
-                s.put("actionLabel", "Learn More");
+                s.put("action", "learn_more");
+                s.put("actionLabel", "Ask AI Assistant");
                 s.put("applied", false);
                 suggestions.add(s);
             }

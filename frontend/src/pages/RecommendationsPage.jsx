@@ -38,9 +38,17 @@ export default function RecommendationsPage() {
       case 'generate_description': navigate('/products'); break
       case 'create_ab_test': navigate('/abtesting'); break
       case 'connect_store': navigate('/profile'); break
+      case 'create_bundle':
+      case 'learn_more': navigate('/assistant'); break
       case 'add_images':
-      case 'restock': window.open(`https://admin.shopify.com/store/${window.location.hostname.split('.')[0]}/products/${suggestion.productId}`, '_blank'); break
-      default: break
+      case 'restock':
+        if (suggestion.productId) {
+          window.open(`https://admin.shopify.com/products/${suggestion.productId}`, '_blank')
+        } else {
+          navigate('/products')
+        }
+        break
+      default: navigate('/dashboard'); break
     }
     setApplied(prev => new Set([...prev, suggestion.id]))
   }

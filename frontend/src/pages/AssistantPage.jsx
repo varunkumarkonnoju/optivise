@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { chatApi } from '../utils/api'
 import { Send, Sparkles, Bot } from 'lucide-react'
 import './Assistant.css'
@@ -11,6 +12,7 @@ const QUICK = [
 ]
 
 export default function AssistantPage() {
+  const navigate = useNavigate()
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -52,15 +54,25 @@ export default function AssistantPage() {
       <div className="assistant-layout">
         {/* Header */}
         <div className="chat-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div className="chat-avatar-ai"><Sparkles size={16} /></div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>AI Assistant</div>
-              <div style={{ fontSize: 11, color: 'var(--green)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', display: 'inline-block' }} />
-                Online — connected to your store
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div className="chat-avatar-ai"><Sparkles size={16} /></div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>AI Assistant</div>
+                <div style={{ fontSize: 11, color: 'var(--green)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', display: 'inline-block' }} />
+                  Online — connected to your store
+                </div>
               </div>
             </div>
+            <button onClick={() => navigate(-1)} style={{
+              background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+              borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
+              color: 'var(--text-muted)', fontSize: 12, fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', gap: 6
+            }}>
+              ← Back
+            </button>
           </div>
         </div>
 

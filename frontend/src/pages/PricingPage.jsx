@@ -18,6 +18,11 @@ export default function PricingPage() {
   }, [])
 
   const handleUpgrade = async (planId) => {
+    // Free plan — just navigate to dashboard
+    if (planId === 'free') {
+      navigate('/dashboard')
+      return
+    }
     setLoading(planId); setError('')
     try {
       const res = await fetch('/api/billing/create-checkout', {

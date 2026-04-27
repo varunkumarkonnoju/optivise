@@ -16,6 +16,8 @@ import AssistantPage from './pages/AssistantPage'
 import RecommendationsPage from './pages/RecommendationsPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import ProductsPage from './pages/ProductsPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
+import OAuthSuccessPage from './pages/OAuthSuccessPage'
 import { InsightsPage, AutomationsPage } from './pages/StubPages'
 import './styles/global.css'
 
@@ -50,6 +52,8 @@ function AppRoutes() {
       <Route path="/automations" element={<ProtectedRoute><AutomationsPage /></ProtectedRoute>} />
       <Route path="/pricing" element={<ProtectedRoute><PricingPage /></ProtectedRoute>} />
       <Route path="/billing/success" element={<BillingSuccess />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/oauth/success" element={<OAuthSuccessPage />} />
       <Route path="/assistant" element={<ProtectedRoute><AssistantPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>

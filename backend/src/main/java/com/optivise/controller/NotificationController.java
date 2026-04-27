@@ -2,6 +2,7 @@ package com.optivise.controller;
 
 import com.optivise.model.User;
 import com.optivise.repository.UserRepository;
+import com.optivise.repository.AbTestRepository;
 import com.optivise.service.ShopifyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -20,6 +20,7 @@ public class NotificationController {
 
     @Autowired private UserRepository userRepo;
     @Autowired private ShopifyService shopifyService;
+    @Autowired private AbTestRepository abTestRepo;
 
     @Value("${shopify.store.access.token}")
     private String defaultToken;
@@ -36,86 +37,81 @@ public class NotificationController {
         try {
             List<Map<String, Object>> orders = shopifyService.fetchOrders(domain, token);
             List<Map<String, Object>> products = shopifyService.fetchProducts(domain, token);
+            List<Map<String, Object>> customers = shopifyService.fetchCustomers(domain, token);
 
             String today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
             String yesterday = LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE);
             String thisWeekStart = LocalDate.now().minusDays(7).format(DateTimeFormatter.ISO_LOCAL_DATE);
 
-            // Count today's orders and revenue
-            double todayRevenue = 0;
-            double yesterdayRevenue = 0;
-            double weekRevenue = 0;
-            int todayOrders = 0;
-            int weekOrders = 0;
+            double todayRevenue = 0, yesterdayRevenue = 0, weekRevenue = 0, totalRevenue = 0;
+            int todayOrders = 0, weekOrders = 0;
+            int abandonedCarts = 0;
+            Set<String> newCustomerEmails = new HashSet<>();
 
             for (Map<String, Object> order : orders) {
                 String createdAt = (String) order.getOrDefault("created_at", "");
                 String financial = (String) order.getOrDefault("financial_status", "");
                 if ("refunded".equals(financial) || "voided".equals(financial)) continue;
                 double total = Double.parseDouble(order.getOrDefault("total_price", "0").toString());
+                totalRevenue += total;
 
-                if (createdAt.startsWith(today)) {
-                    todayRevenue += total;
-                    todayOrders++;
-                } else if (createdAt.startsWith(yesterday)) {
-                    yesterdayRevenue += total;
+                if (createdAt.startsWith(today)) { todayRevenue += total; todayOrders++; }
+                if (createdAt.startsWith(yesterday)) yesterdayRevenue += total;
+                if (createdAt.compareTo(thisWeekStart) >= 0) { weekRevenue += total; weekOrders++; }
+
+                // Track new customers this week
+                Object customerObj = order.get("customer");
+                String email = "";
+                if (customerObj instanceof Map) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> customer = (Map<String, Object>) customerObj;
+                    email = (String) customer.getOrDefault("email", "");
                 }
-                if (createdAt.compareTo(thisWeekStart) >= 0) {
-                    weekRevenue += total;
-                    weekOrders++;
-                }
+                if (!email.isEmpty() && createdAt.compareTo(thisWeekStart) >= 0) newCustomerEmails.add(email);
             }
 
-            // ── New orders today ─────────────────────────────────
+            // Count abandoned checkouts
+            for (Map<String, Object> order : orders) {
+                String status = (String) order.getOrDefault("financial_status", "");
+                if ("pending".equals(status)) abandonedCarts++;
+            }
+
+            // ── 1. New orders today ───────────────────────────
             if (todayOrders > 0) {
-                Map<String, Object> n = new LinkedHashMap<>();
-                n.put("id", "orders-today");
-                n.put("type", "orders");
-                n.put("icon", "🛍️");
-                n.put("title", todayOrders + " new order" + (todayOrders > 1 ? "s" : "") + " today");
-                n.put("message", "Total revenue today: $" + String.format("%.2f", todayRevenue));
-                n.put("time", "Just now");
-                n.put("isNew", true);
-                n.put("color", "#6366F1");
-                n.put("actionUrl", "/analytics");
-                notifications.add(n);
+                notifications.add(notif("orders-today", "orders", "🛍️",
+                        todayOrders + " new order" + (todayOrders > 1 ? "s" : "") + " today",
+                        "Revenue today: $" + String.format("%.2f", todayRevenue),
+                        "Just now", true, "#6366F1", "/analytics"));
             } else {
-                // No orders today
-                Map<String, Object> n = new LinkedHashMap<>();
-                n.put("id", "no-orders-today");
-                n.put("type", "info");
-                n.put("icon", "📊");
-                n.put("title", "No orders yet today");
-                n.put("message", "This week: " + weekOrders + " orders · $" + String.format("%.2f", weekRevenue));
-                n.put("time", "Updated now");
-                n.put("isNew", false);
-                n.put("color", "#6366F1");
-                n.put("actionUrl", "/analytics");
-                notifications.add(n);
+                notifications.add(notif("no-orders-today", "info", "📊",
+                        "No orders yet today",
+                        "This week: " + weekOrders + " orders · $" + String.format("%.2f", weekRevenue),
+                        "Updated now", false, "#6366F1", "/analytics"));
             }
 
-            // ── Revenue change ────────────────────────────────────
+            // ── 2. Revenue change vs yesterday ────────────────
             if (yesterdayRevenue > 0 || todayRevenue > 0) {
-                double change = yesterdayRevenue > 0
-                        ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100
-                        : 0;
+                double change = yesterdayRevenue > 0 ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100 : 0;
                 String sign = change >= 0 ? "+" : "";
-                Map<String, Object> n = new LinkedHashMap<>();
-                n.put("id", "revenue-change");
-                n.put("type", "revenue");
-                n.put("icon", change >= 0 ? "📈" : "📉");
-                n.put("title", change == 0
-                        ? "Revenue tracking active"
-                        : "Revenue " + (change >= 0 ? "up" : "down") + " " + sign + String.format("%.1f", change) + "% vs yesterday");
-                n.put("message", "Yesterday: $" + String.format("%.2f", yesterdayRevenue) + " → Today: $" + String.format("%.2f", todayRevenue));
-                n.put("time", "1h ago");
-                n.put("isNew", change < -10);
-                n.put("color", change >= 0 ? "#34D399" : "#F87171");
-                n.put("actionUrl", "/analytics");
-                notifications.add(n);
+                notifications.add(notif("revenue-change", "revenue", change >= 0 ? "📈" : "📉",
+                        change == 0 ? "Revenue tracking active" : "Revenue " + (change >= 0 ? "up" : "down") + " " + sign + String.format("%.1f", change) + "% vs yesterday",
+                        "Yesterday: $" + String.format("%.2f", yesterdayRevenue) + " → Today: $" + String.format("%.2f", todayRevenue),
+                        "1h ago", change < -10, change >= 0 ? "#34D399" : "#F87171", "/analytics"));
             }
 
-            // ── Low stock alert ───────────────────────────────────
+            // ── 3. Revenue milestones ─────────────────────────
+            long[] milestones = {1000, 5000, 10000, 25000, 50000, 100000};
+            for (long milestone : milestones) {
+                if (totalRevenue >= milestone && totalRevenue < milestone * 1.1) {
+                    notifications.add(notif("milestone-" + milestone, "milestone", "🌟",
+                            "🎉 Revenue milestone: $" + String.format("%,d", milestone) + " reached!",
+                            "Total all-time revenue: $" + String.format("%.2f", totalRevenue),
+                            "Achievement unlocked", true, "#F59E0B", "/analytics"));
+                    break;
+                }
+            }
+
+            // ── 4. Low stock alert ────────────────────────────
             int lowStockCount = 0;
             List<String> lowStockProducts = new ArrayList<>();
             for (Map<String, Object> product : products) {
@@ -123,78 +119,85 @@ public class NotificationController {
                 List<Map<String, Object>> variants = (List<Map<String, Object>>) product.getOrDefault("variants", List.of());
                 for (Map<String, Object> variant : variants) {
                     Object inv = variant.get("inventory_quantity");
-                    if (inv != null) {
-                        int qty = Integer.parseInt(inv.toString());
-                        if (qty >= 0 && qty <= 5) {
-                            lowStockCount++;
-                            if (lowStockProducts.size() < 2)
-                                lowStockProducts.add((String) product.getOrDefault("title", "Product"));
-                        }
+                    if (inv != null && Integer.parseInt(inv.toString()) <= 5 && Integer.parseInt(inv.toString()) >= 0) {
+                        lowStockCount++;
+                        if (lowStockProducts.size() < 2) lowStockProducts.add((String) product.getOrDefault("title", "Product"));
                     }
                 }
             }
             if (lowStockCount > 0) {
-                Map<String, Object> n = new LinkedHashMap<>();
-                n.put("id", "low-stock");
-                n.put("type", "warning");
-                n.put("icon", "⚠️");
-                n.put("title", lowStockCount + " product" + (lowStockCount > 1 ? "s" : "") + " low on stock");
-                n.put("message", String.join(", ", lowStockProducts) + (lowStockCount > 2 ? " and " + (lowStockCount - 2) + " more" : ""));
-                n.put("time", "2h ago");
-                n.put("isNew", true);
-                n.put("color", "#F59E0B");
-                n.put("actionUrl", "/products");
-                notifications.add(n);
+                notifications.add(notif("low-stock", "warning", "⚠️",
+                        lowStockCount + " product" + (lowStockCount > 1 ? "s" : "") + " low on stock",
+                        String.join(", ", lowStockProducts) + (lowStockCount > 2 ? " +" + (lowStockCount - 2) + " more" : ""),
+                        "2h ago", true, "#F59E0B", "/products"));
             }
 
-            // ── Products without descriptions ─────────────────────
+            // ── 5. Missing descriptions ───────────────────────
             long noDescCount = products.stream().filter(p -> {
                 String body = (String) p.getOrDefault("body_html", "");
                 return body == null || body.trim().isEmpty();
             }).count();
-
             if (noDescCount > 0) {
-                Map<String, Object> n = new LinkedHashMap<>();
-                n.put("id", "missing-descriptions");
-                n.put("type", "ai");
-                n.put("icon", "✨");
-                n.put("title", noDescCount + " product" + (noDescCount > 1 ? "s" : "") + " missing AI descriptions");
-                n.put("message", "Add descriptions to boost conversions by up to 30%");
-                n.put("time", "3h ago");
-                n.put("isNew", noDescCount > 2);
-                n.put("color", "#818CF8");
-                n.put("actionUrl", "/products");
-                notifications.add(n);
+                notifications.add(notif("missing-descriptions", "ai", "✨",
+                        noDescCount + " product" + (noDescCount > 1 ? "s" : "") + " missing AI descriptions",
+                        "Add descriptions to boost conversions by up to 30%",
+                        "3h ago", noDescCount > 2, "#818CF8", "/products"));
             }
 
-            // ── Store health ──────────────────────────────────────
-            Map<String, Object> health = new LinkedHashMap<>();
-            health.put("id", "store-health");
-            health.put("type", "info");
-            health.put("icon", "✅");
-            health.put("title", "Store health check complete");
-            health.put("message", products.size() + " products · " + orders.size() + " total orders · $" + String.format("%.0f", weekRevenue) + " this week");
-            health.put("time", "5h ago");
-            health.put("isNew", false);
-            health.put("color", "#06B6D4");
-            health.put("actionUrl", "/analytics");
-            notifications.add(health);
+            // ── 6. New customers this week ────────────────────
+            if (!newCustomerEmails.isEmpty()) {
+                notifications.add(notif("new-customers", "customers", "👤",
+                        newCustomerEmails.size() + " new customer" + (newCustomerEmails.size() > 1 ? "s" : "") + " this week",
+                        "Growing your customer base! Keep it up.",
+                        "4h ago", newCustomerEmails.size() > 3, "#06B6D4", "/analytics"));
+            }
+
+            // ── 7. Abandoned carts ────────────────────────────
+            if (abandonedCarts > 0) {
+                double recoveryPotential = abandonedCarts * (weekRevenue / Math.max(weekOrders, 1));
+                notifications.add(notif("abandoned-carts", "warning", "🔄",
+                        abandonedCarts + " pending order" + (abandonedCarts > 1 ? "s" : "") + " need attention",
+                        "Potential recovery: $" + String.format("%.0f", recoveryPotential),
+                        "5h ago", true, "#F59E0B", "/analytics"));
+            }
+
+            // ── 8. A/B test winner ────────────────────────────
+            try {
+                abTestRepo.findByShopAndStatus(domain, "running").forEach(test -> {
+                    double aConv = test.getVariantAConversion();
+                    double bConv = test.getVariantBConversion();
+                    double diff = Math.abs(aConv - bConv);
+                    if (diff > 1.0 && test.getVariantATraffic() + test.getVariantBTraffic() > 100) {
+                        String winner = bConv > aConv ? test.getVariantBLabel() : test.getVariantALabel();
+                        notifications.add(notif("abtest-winner-" + test.getId(), "abtesting", "🎯",
+                                "A/B test winner detected: " + test.getName(),
+                                winner + " is winning with " + String.format("%.1f", diff) + "% higher conversion",
+                                "6h ago", true, "#6366F1", "/abtesting"));
+                    }
+                });
+            } catch (Exception ignored) {}
+
+            // ── 9. Store health ───────────────────────────────
+            notifications.add(notif("store-health", "info", "✅",
+                    "Store health check complete",
+                    products.size() + " products · " + orders.size() + " total orders · $" + String.format("%.0f", weekRevenue) + " this week",
+                    "5h ago", false, "#06B6D4", "/analytics"));
 
         } catch (Exception e) {
-            // Store not connected
-            Map<String, Object> n = new LinkedHashMap<>();
-            n.put("id", "connect-store");
-            n.put("type", "info");
-            n.put("icon", "🔗");
-            n.put("title", "Connect your Shopify store");
-            n.put("message", "Click here to connect your store and see real notifications");
-            n.put("time", "Just now");
-            n.put("isNew", true);
-            n.put("color", "#6366F1");
-            n.put("actionUrl", "/profile");
-            notifications.add(n);
+            notifications.add(notif("connect-store", "info", "🔗",
+                    "Connect your Shopify store",
+                    "Click here to connect your store and see real notifications",
+                    "Just now", true, "#6366F1", "/profile"));
         }
 
         return ResponseEntity.ok(notifications);
+    }
+
+    private Map<String, Object> notif(String id, String type, String icon, String title, String message, String time, boolean isNew, String color, String actionUrl) {
+        Map<String, Object> n = new LinkedHashMap<>();
+        n.put("id", id); n.put("type", type); n.put("icon", icon);
+        n.put("title", title); n.put("message", message); n.put("time", time);
+        n.put("isNew", isNew); n.put("color", color); n.put("actionUrl", actionUrl);
+        return n;
     }
 }

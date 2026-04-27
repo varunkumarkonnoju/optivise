@@ -33,6 +33,15 @@ export default function AssistantPage() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
+  const clearHistory = async () => {
+    if (!window.confirm('Clear all chat history?')) return
+    await fetch('/api/chat', {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+    })
+    setMessages([{ role: 'assistant', content: "Hi! I'm your Optivise AI assistant. Chat history cleared. How can I help you?" }])
+  }
+
   const send = async (text) => {
     const msg = text || input.trim()
     if (!msg || loading) return

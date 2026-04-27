@@ -1,304 +1,237 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { dashboardApi } from '../utils/api'
 import { useAuth } from '../hooks/useAuth'
+import {
+  AreaChart, Area, LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid
+} from 'recharts'
+import { TrendingUp, TrendingDown, Sparkles, TestTube2, DollarSign, Percent, ChevronRight, ExternalLink } from 'lucide-react'
 import './Dashboard.css'
 
+const fmtCurrency = n => '$' + (n >= 1000 ? (n / 1000).toFixed(1) + 'k' : Math.round(n).toLocaleString())
+
+function MetricCard({ label, value, delta, deltaLabel, icon: Icon, color, suffix = '' }) {
+  const up = delta >= 0
+  return (
+    <div className="metric-card card">
+      <div className="metric-top">
+        <span className="metric-label">{label}</span>
+        <div className="metric-icon" style={{ background: color + '22', color }}>
+          <Icon size={14} />
+        </div>
+      </div>
+      <div className="metric-value">{value}{suffix}</div>
+      <div className={up ? 'delta-up' : 'delta-down'} style={{ marginTop: 6 }}>
+        {up ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+        {' '}{up ? '+' : ''}{delta}% {deltaLabel}
+      </div>
+      <div className="metric-sparkline">
+        <ResponsiveContainer width="100%" height={40}>
+          <AreaChart data={Array.from({length: 7}, (_, i) => ({ v: Math.random() * 100 + 50 }))}>
+            <defs>
+              <linearGradient id={`g-${label}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={color} stopOpacity={0.3}/>
+                <stop offset="95%" stopColor={color} stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <Area type="monotone" dataKey="v" stroke={color} strokeWidth={1.5} fill={`url(#g-${label})`} dot={false} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null
+  return (
+    <div style={{ background: '#0D1625', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px 14px', fontSize: 12 }}>
+      <div style={{ color: '#94A3B8', marginBottom: 6 }}>{label}</div>
+      {payload.map((p, i) => (
+        <div key={i} style={{ color: p.color, fontWeight: 600 }}>
+          {p.name}: {p.name === 'Revenue' ? '$' + p.value?.toFixed(0) : p.value?.toFixed(2) + (p.name === 'Conversion' ? '%' : '')}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function GrowthScore({ score, label }) {
+  const r = 54, circ = 2 * Math.PI * r
+  const pct = score / 100
+  const offset = circ * (1 - pct)
+  const color = score >= 80 ? '#10B981' : score >= 60 ? '#6366F1' : '#F59E0B'
+  return (
+    <div className="growth-score-wrap">
+      <div className="growth-donut">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10"/>
+          <circle cx="70" cy="70" r={r} fill="none" stroke={color} strokeWidth="10"
+            strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset}
+            style={{ transform: 'rotate(-90deg)', transformOrigin: '70px 70px', transition: 'stroke-dashoffset 1s ease' }}
+          />
+        </svg>
+        <div className="donut-center">
+          <div className="donut-number" style={{ color }}>{score}</div>
+          <div className="donut-sub">/100</div>
+        </div>
+      </div>
+      <div className="growth-label" style={{ color }}>{label}</div>
+      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6, textAlign: 'center' }}>
+        You're performing better than<br />
+        <strong style={{ color: 'var(--text-secondary)' }}>78% of similar stores</strong>
+      </div>
+    </div>
+  )
+}
+
 export default function DashboardPage() {
-  const { user } = useAuth()
-  const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [chartMode, setChartMode] = useState('revenue')
+  const { user } = useAuth()
 
   useEffect(() => {
-    fetch('/api/dashboard/summary', {
-      headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
-    })
-      .then(r => r.json())
-      .then(d => { setData(d); setLoading(false) })
-      .catch(() => setLoading(false))
+    dashboardApi.get().then(r => setData(r.data)).finally(() => setLoading(false))
   }, [])
 
+  if (loading) return <div className="spinner" />
+  if (!data) return null
+
+  const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
-  const fmt = n => {
-    if (!n && n !== 0) return '$0'
-    if (n >= 1000) return '$' + (n / 1000).toFixed(1) + 'k'
-    return '$' + Math.round(n)
-  }
-
-  const impactColor = i => {
-    if (!i) return '#6b7280'
-    const v = i.toLowerCase()
-    if (v === 'high') return '#ef4444'
-    if (v === 'medium') return '#f59e0b'
-    return '#10b981'
-  }
-
-  const catIcon = c => {
-    if (!c) return '💡'
-    const v = c.toLowerCase()
-    if (v === 'revenue') return '💰'
-    if (v === 'optimization') return '🚀'
-    if (v === 'testing') return '🧪'
-    return '💡'
-  }
-
-  if (loading) return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', color:'rgba(255,255,255,0.4)' }}>
-      Loading your dashboard...
-    </div>
-  )
-
-  const score = data?.aiGrowthScore || 0
-  const circumference = 2 * Math.PI * 50
-  const dashOffset = circumference - (score / 100) * circumference
-
   return (
-    <div className="dashboard-page">
-
-      {/* Header */}
-      <div className="dashboard-header">
+    <div className="dashboard">
+      {/* Greeting */}
+      <div className="dash-greeting">
         <div>
-          <h1>{greeting}, {user?.name?.split(' ')[0] || 'there'}! 👋</h1>
-          <p>Here's what's happening with your store today.</p>
+          <h1 className="greeting-title">{greeting}, {user?.name?.split(' ')[0] || 'there'}! 👋</h1>
+          <p className="greeting-sub">Here's what's happening with your store today.</p>
         </div>
-        <div style={{ display:'flex', gap:10 }}>
-          <button className="btn-secondary" onClick={() => navigate('/analytics')}>📊 Analytics</button>
-          <button className="btn-primary" onClick={() => navigate('/products')}>✨ Generate Descriptions</button>
-        </div>
+        <div className="date-badge">{today}</div>
       </div>
 
       {/* Metric Cards */}
       <div className="metrics-grid">
-        <div className="metric-card" onClick={() => navigate('/analytics')} style={{ cursor:'pointer' }}>
-          <div className="metric-card-header">
-            <span className="metric-label">Total Revenue</span>
-            <span className="metric-icon" style={{ background:'rgba(99,102,241,0.15)', color:'#6366f1' }}>$</span>
-          </div>
-          <div className="metric-value">{fmt(data?.totalRevenue)}</div>
-          <div className="metric-delta" style={{ color: (data?.revenueDelta||0) >= 0 ? '#10b981' : '#ef4444' }}>
-            {(data?.revenueDelta||0) >= 0 ? '↑' : '↓'} {Math.abs(data?.revenueDelta||0)}% vs last month
-          </div>
-        </div>
-
-        <div className="metric-card" onClick={() => navigate('/analytics')} style={{ cursor:'pointer' }}>
-          <div className="metric-card-header">
-            <span className="metric-label">Conversion Rate</span>
-            <span className="metric-icon" style={{ background:'rgba(16,185,129,0.15)', color:'#10b981' }}>%</span>
-          </div>
-          <div className="metric-value">{(data?.conversionRate||0).toFixed(2)}%</div>
-          <div className="metric-delta" style={{ color:'#10b981' }}>↑ +{data?.conversionDelta||0}% vs last month</div>
-        </div>
-
-        <div className="metric-card" onClick={() => navigate('/abtesting')} style={{ cursor:'pointer' }}>
-          <div className="metric-card-header">
-            <span className="metric-label">Active A/B Tests</span>
-            <span className="metric-icon" style={{ background:'rgba(245,158,11,0.15)', color:'#f59e0b' }}>✏</span>
-          </div>
-          <div className="metric-value">{data?.activeAbTests || 0}</div>
-          <div className="metric-delta" style={{ color:'#10b981' }}>↑ +{data?.abTestsDelta||0}% new this week</div>
-        </div>
-
-        <div className="metric-card" onClick={() => navigate('/recommendations')} style={{ cursor:'pointer' }}>
-          <div className="metric-card-header">
+        <MetricCard label="Total Revenue" value={fmtCurrency(data.totalRevenue)} delta={data.revenueDelta} deltaLabel="vs last month" icon={DollarSign} color="#6366F1" />
+        <MetricCard label="Conversion Rate" value={data.conversionRate?.toFixed(2)} suffix="%" delta={data.conversionDelta} deltaLabel="vs last month" icon={Percent} color="#06B6D4" />
+        <MetricCard label="Active A/B Tests" value={data.activeAbTests} delta={data.abTestsDelta} deltaLabel="new this week" icon={TestTube2} color="#10B981" />
+        <div className="metric-card card" style={{ position: 'relative' }}>
+          <div className="metric-top">
             <span className="metric-label">AI Suggestions</span>
-            {(data?.aiSuggestionsNew||0) > 0 &&
-              <span className="metric-badge">New</span>}
+            <span className="badge badge-new">New</span>
           </div>
-          <div className="metric-value">{data?.aiSuggestions || 0}</div>
-          <div className="metric-delta" style={{ color:'#a78bfa' }}>
-            {data?.aiSuggestions||0} new recommendations →
+          <div className="metric-value">{data.aiSuggestions}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>{data.aiSuggestionsNew} new recommendations</div>
+          <div className="metric-sparkline">
+            <ResponsiveContainer width="100%" height={40}>
+              <AreaChart data={Array.from({length: 7}, () => ({ v: Math.random() * 80 + 40 }))}>
+                <defs><linearGradient id="gAmber" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#F59E0B" stopOpacity={0}/>
+                </linearGradient></defs>
+                <Area type="monotone" dataKey="v" stroke="#F59E0B" strokeWidth={1.5} fill="url(#gAmber)" dot={false} />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* Middle Row */}
-      <div className="dashboard-middle">
-
+      {/* Middle Row: Growth Score + Recommended Actions */}
+      <div className="mid-row">
         {/* AI Growth Score */}
-        <div className="score-card">
-          <h3>AI Growth Score</h3>
-          <div className="score-ring">
-            <svg viewBox="0 0 120 120" width="140" height="140">
-              <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10"/>
-              <circle cx="60" cy="60" r="50" fill="none"
-                stroke="url(#scoreGrad)" strokeWidth="10" strokeLinecap="round"
-                strokeDasharray={circumference} strokeDashoffset={dashOffset}
-                transform="rotate(-90 60 60)"
-                style={{ transition:'stroke-dashoffset 1s ease' }}/>
-              <defs>
-                <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#6366f1"/>
-                  <stop offset="100%" stopColor="#06b6d4"/>
-                </linearGradient>
-              </defs>
-              <text x="60" y="55" textAnchor="middle" fill="white" fontSize="22" fontWeight="700">{score}</text>
-              <text x="60" y="70" textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="11">/100</text>
-            </svg>
+        <div className="card growth-card">
+          <div className="card-header-row">
+            <span className="section-title" style={{ marginBottom: 0 }}>AI Growth Score</span>
           </div>
-          <div className="score-label">{data?.growthLabel || 'Getting started'}</div>
-          <p style={{ fontSize:12, color:'rgba(255,255,255,0.4)', textAlign:'center', marginTop:6 }}>
-            Performing better than 78% of similar stores
-          </p>
+          <GrowthScore score={data.aiGrowthScore} label={data.growthLabel} />
         </div>
 
-        {/* AI Recommended Actions */}
-        <div className="actions-card">
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-            <h3 style={{ margin:0, fontSize:15, fontWeight:700 }}>AI Recommended Actions</h3>
-            <button onClick={() => navigate('/recommendations')}
-              style={{ background:'none', border:'none', color:'#a78bfa', cursor:'pointer', fontSize:13, fontWeight:600 }}>
-              View all →
-            </button>
+        {/* Recommended Actions */}
+        <div className="card actions-card">
+          <div className="card-header-row">
+            <span className="section-title" style={{ marginBottom: 0 }}>AI Recommended Actions</span>
+            <a href="/recommendations" style={{ fontSize: 12, color: 'var(--purple-light)' }}>View all</a>
           </div>
-
-          {(!data?.recommendedActions || data.recommendedActions.length === 0) ? (
-            <div style={{ textAlign:'center', padding:'30px 0', color:'rgba(255,255,255,0.4)' }}>
-              <div style={{ fontSize:28, marginBottom:8 }}>🎉</div>
-              <div style={{ fontWeight:600, marginBottom:4 }}>All caught up!</div>
-              <div style={{ fontSize:13 }}>No pending actions right now.</div>
-            </div>
-          ) : (
-            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-              {data.recommendedActions.map((a, i) => (
-                <div key={i} onClick={() => navigate('/recommendations')}
-                  style={{
-                    background:'rgba(255,255,255,0.04)',
-                    border:'1px solid rgba(255,255,255,0.07)',
-                    borderRadius:10, padding:'12px 14px', cursor:'pointer',
-                    display:'flex', alignItems:'flex-start', gap:12
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background='rgba(99,102,241,0.1)'}
-                  onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.04)'}
-                >
-                  <span style={{ fontSize:20, flexShrink:0 }}>{catIcon(a.category)}</span>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontWeight:600, fontSize:13, marginBottom:3 }}>{a.title}</div>
-                    <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', lineHeight:1.4 }}>
-                      {(a.description||'').length > 80
-                        ? a.description.substring(0,80)+'...'
-                        : a.description}
-                    </div>
-                  </div>
-                  <span style={{
-                    fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:20,
-                    background:`${impactColor(a.impact)}22`, color:impactColor(a.impact),
-                    flexShrink:0, textTransform:'uppercase', letterSpacing:'0.5px'
-                  }}>{a.impact||'low'}</span>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>Based on your store data</p>
+          <div className="actions-list">
+            {data.recommendedActions?.map((a, i) => (
+              <div key={i} className="action-item">
+                <div className="action-icon" style={{ background: a.category === 'product' ? 'var(--purple-dim)' : a.category === 'conversion' ? 'var(--teal-dim)' : 'var(--amber-dim)' }}>
+                  <Sparkles size={12} style={{ color: a.category === 'product' ? 'var(--purple-light)' : a.category === 'conversion' ? 'var(--teal)' : 'var(--amber)' }} />
                 </div>
-              ))}
-            </div>
-          )}
+                <div className="action-body">
+                  <div className="action-title">{a.title}</div>
+                  <div className="action-desc">{a.description}</div>
+                </div>
+                <span className={`badge badge-${a.impact?.toLowerCase()}`}>{a.impact}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Bottom Row */}
-      <div className="dashboard-bottom">
-
-        {/* Chart */}
-        <div className="chart-card">
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-            <h3 style={{ margin:0, fontSize:15, fontWeight:700 }}>Performance Overview</h3>
-            <div style={{ display:'flex', gap:6 }}>
-              {['revenue','conversion','sessions'].map(k => (
-                <button key={k} onClick={() => setChartMode(k)} style={{
-                  padding:'4px 10px', borderRadius:6, fontSize:11, fontWeight:600,
-                  cursor:'pointer', border:'none',
-                  background: chartMode===k ? 'rgba(99,102,241,0.2)' : 'transparent',
-                  color: chartMode===k ? '#a78bfa' : 'rgba(255,255,255,0.4)'
-                }}>{k.charAt(0).toUpperCase()+k.slice(1)}</button>
-              ))}
+      {/* Performance Chart + Top Products */}
+      <div className="bottom-row">
+        <div className="card chart-card">
+          <div className="card-header-row" style={{ marginBottom: 18 }}>
+            <span className="section-title" style={{ marginBottom: 0 }}>Performance Overview</span>
+            <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+              <LegendDot color="#6366F1" label="Revenue" />
+              <LegendDot color="#06B6D4" label="Conversion Rate" />
+              <LegendDot color="#F59E0B" label="Sessions" />
             </div>
           </div>
-
-          {data?.revenueChart?.length > 0 ? (() => {
-            const pts = data.revenueChart
-            const vals = pts.map(p =>
-              chartMode==='revenue'    ? (p.revenue||0) :
-              chartMode==='conversion' ? (p.conversion||0)*15 :
-              (p.sessions||0)/4
-            )
-            const max = Math.max(...vals, 1)
-            const W = 700, H = 160, PAD = 30
-            const coords = pts.map((_, i) => [
-              PAD + (i / (pts.length - 1)) * (W - PAD*2),
-              H - 20 - ((vals[i]/max) * (H - 40))
-            ])
-            const line = coords.map(([x,y]) => `${x},${y}`).join(' ')
-            const area = `${coords[0][0]},${H-20} ${line} ${coords[coords.length-1][0]},${H-20}`
-            return (
-              <svg viewBox={`0 0 ${W} ${H}`} style={{ width:'100%', height:180 }} preserveAspectRatio="xMidYMid meet">
-                <defs>
-                  <linearGradient id="chartGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#6366f1" stopOpacity="0.35"/>
-                    <stop offset="100%" stopColor="#6366f1" stopOpacity="0"/>
-                  </linearGradient>
-                </defs>
-                <polygon points={area} fill="url(#chartGrad)"/>
-                <polyline points={line} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinejoin="round"/>
-                {pts.map((p, i) => (
-                  <g key={i}>
-                    <circle cx={coords[i][0]} cy={coords[i][1]} r="4" fill="#6366f1"/>
-                    <text x={coords[i][0]} y={H-4} textAnchor="middle"
-                      fill="rgba(255,255,255,0.35)" fontSize="10">{p.label}</text>
-                  </g>
-                ))}
-              </svg>
-            )
-          })() : (
-            <div style={{ height:180, display:'flex', alignItems:'center', justifyContent:'center',
-              color:'rgba(255,255,255,0.3)', fontSize:13 }}>
-              Add orders in Shopify to see chart data
-            </div>
-          )}
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={data.revenueChart || []} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#4A5568' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#4A5568' }} axisLine={false} tickLine={false} width={40} tickFormatter={v => '$' + (v/1000).toFixed(0) + 'k'} />
+              <Tooltip content={<CustomTooltip />} />
+              <Line type="monotone" name="Revenue" dataKey="revenue" stroke="#6366F1" strokeWidth={2} dot={false} />
+              <Line type="monotone" name="Conversion" dataKey="conversion" stroke="#06B6D4" strokeWidth={2} dot={false} />
+              <Line type="monotone" name="Sessions" dataKey="sessions" stroke="#F59E0B" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
 
-        {/* Top Products */}
-        <div className="top-products-card">
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
-            <h3 style={{ margin:0, fontSize:15, fontWeight:700 }}>Top Products</h3>
-            <button onClick={() => navigate('/products')}
-              style={{ background:'none', border:'none', color:'#a78bfa', cursor:'pointer', fontSize:13, fontWeight:600 }}>
-              View all →
-            </button>
+        <div className="card products-card">
+          <div className="card-header-row">
+            <span className="section-title" style={{ marginBottom: 0 }}>Top Products</span>
+            <a href="/products" style={{ fontSize: 12, color: 'var(--purple-light)' }}>View all</a>
           </div>
-          <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', margin:'0 0 14px' }}>By revenue</p>
-          <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
-            {(data?.topProducts||[]).map((p, i, arr) => (
-              <div key={i} onClick={() => navigate('/products')}
-                style={{
-                  display:'flex', alignItems:'center', gap:12, cursor:'pointer',
-                  padding:'10px 0',
-                  borderBottom: i < arr.length-1 ? '1px solid rgba(255,255,255,0.05)' : 'none'
-                }}>
-                <div style={{ width:40, height:40, borderRadius:8, overflow:'hidden', flexShrink:0,
-                  background:'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  {p.imageUrl
-                    ? <img src={p.imageUrl} alt={p.title} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
-                    : <span style={{ fontSize:18 }}>📦</span>}
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 14 }}>By revenue</p>
+          <div className="products-list">
+            {data.topProducts?.map((p, i) => (
+              <div key={i} className="product-row">
+                <img src={p.imageUrl} alt={p.title} className="product-thumb"
+                  onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex' }}
+                />
+                <div className="product-thumb-fallback" style={{ display: 'none' }}>📦</div>
+                <div className="product-info">
+                  <div className="product-name">{p.title}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    {p.optimizationStatus === 'optimized' ? '🟢' : p.optimizationStatus === 'needs-attention' ? '🟡' : '🔴'} {p.optimizationStatus}
+                  </div>
                 </div>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:13, fontWeight:600, whiteSpace:'nowrap',
-                    overflow:'hidden', textOverflow:'ellipsis' }}>{p.title}</div>
-                  <div style={{ fontSize:11, color:'#10b981' }}>● optimized</div>
-                </div>
-                <div style={{ textAlign:'right', flexShrink:0 }}>
-                  <div style={{ fontSize:13, fontWeight:700 }}>{fmt(p.revenue)}</div>
-                  <div style={{ fontSize:11, color:'#10b981' }}>+{p.revenueDelta||5}%</div>
+                <div className="product-rev">
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{fmtCurrency(p.revenue)}</div>
+                  <div className="delta-up">+{p.revenueDelta?.toFixed(1)}%</div>
                 </div>
               </div>
             ))}
-            {(!data?.topProducts || data.topProducts.length === 0) && (
-              <div style={{ color:'rgba(255,255,255,0.3)', fontSize:13, textAlign:'center', padding:'20px 0' }}>
-                Connect your Shopify store to see top products
-              </div>
-            )}
           </div>
         </div>
-
       </div>
+    </div>
+  )
+}
+
+function LegendDot({ color, label }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--text-muted)' }}>
+      <div style={{ width: 8, height: 8, borderRadius: 2, background: color }} />
+      {label}
     </div>
   )
 }

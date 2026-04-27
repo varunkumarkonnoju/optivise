@@ -25,7 +25,7 @@ public class ShopifyOAuthController {
     @Value("${shopify.oauth.client.id}")
     private String clientId;
 
-    @Value("${shopify.oauth.client.secret}")
+    @Value("${shopify.oauth.client.key}")
     private String clientSecret;
 
     @Value("${shopify.oauth.redirect.uri:https://www.optiviseai.io/api/auth/shopify/callback}")

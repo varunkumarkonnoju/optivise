@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import ShopifyConnectButton from '../components/ShopifyConnectButton'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
+import ShopifyConnectButton from '../components/ShopifyConnectButton'
 import './Auth.css'
 
 export default function ProfilePage() {
@@ -10,35 +10,24 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
-  const [showToken, setShowToken] = useState(false)
   const [form, setForm] = useState({
-    name:                user?.name || '',
-    email:               user?.email || '',
-    shopDomain:          user?.shopDomain || '',
-    shopifyAccessToken:  '',
+    name: user?.name || '',
+    email: user?.email || '',
+    shopDomain: user?.shopDomain || '',
   })
 
   const handleSave = async (e) => {
     e.preventDefault()
     setSaving(true); setError(''); setSaved(false)
     try {
-      const body = {
-        name:       form.name,
-        email:      form.email,
-        shopDomain: form.shopDomain,
-      }
-      if (form.shopifyAccessToken.trim()) {
-        body.shopifyAccessToken = form.shopifyAccessToken.trim()
-      }
       const res = await fetch('/api/users/me', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
-        body: JSON.stringify(body)
+        body: JSON.stringify({ name: form.name, email: form.email, shopDomain: form.shopDomain })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to save')
       setSaved(true)
-      setForm(f => ({ ...f, shopifyAccessToken: '' }))
       setTimeout(() => setSaved(false), 3000)
     } catch (e) {
       setError(e.message)
@@ -79,29 +68,13 @@ export default function ProfilePage() {
             <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}/>
           </div>
 
-          <div style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 10, padding: '16px', marginBottom: 16 }}>
+          {/* Shopify Store Connection */}
+          <div style={{ background: 'rgba(150,191,72,0.05)', border: '1px solid rgba(150,191,72,0.3)', borderRadius: 10, padding: '16px', marginBottom: 16 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>🛍 Shopify Store Connection</div>
-
-            <div className="auth-field" style={{ marginBottom: 12 }}>
-              <label>Store domain</label>
-              <input type="text" value={form.shopDomain} onChange={e => setForm({...form, shopDomain: e.target.value})} placeholder="your-store.myshopify.com"/>
-            </div>
-
-            <div className="auth-field" style={{ marginBottom: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
-                <label style={{ margin: 0 }}>Admin API access token</label>
-                {user?.hasShopifyToken && <span style={{ fontSize: 11, color: 'var(--green)', fontWeight: 600 }}>✓ Token saved</span>}
-              </div>
-              <input
-                type={showToken ? 'text' : 'password'}
-                value={form.shopifyAccessToken}
-                onChange={e => setForm({...form, shopifyAccessToken: e.target.value})}
-                placeholder={user?.hasShopifyToken ? 'Enter new token to update' : 'shpat_xxxxxxxxxxxxxxxxxxxx'}
-              />
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
-                Find in Shopify Admin → Settings → Apps → Develop apps → Your app → API credentials
-              </div>
-            </div>
+            {user?.hasShopifyToken && (
+              <div style={{ fontSize: 12, color: '#34D399', fontWeight: 600, marginBottom: 12 }}>✓ Store connected: {form.shopDomain}</div>
+            )}
+            <ShopifyConnectButton shopDomain={form.shopDomain} />
           </div>
 
           {saved && <div style={{ background: 'var(--green-dim)', border: '1px solid var(--green)', borderRadius: 8, padding: '10px 14px', color: 'var(--green)', fontSize: 13, fontWeight: 600, marginBottom: 12 }}>✓ Profile saved successfully!</div>}
@@ -110,24 +83,6 @@ export default function ProfilePage() {
             {saving ? 'Saving...' : 'Save changes'}
           </button>
         </form>
-      </div>
-
-      {/* How to get Shopify token */}
-      <div className="card" style={{ padding: 20, marginBottom: 16, borderColor: 'rgba(99,102,241,0.2)' }}>
-        <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10, color: 'var(--purple-light)' }}>📋 How to get your Shopify API token</div>
-        {[
-          'Go to your Shopify Admin → Settings',
-          'Click "Apps and sales channels"',
-          'Click "Develop apps" → "Create an app"',
-          'Name it "Optivise" → Configure Admin API scopes',
-          'Enable: read_products, write_products, read_orders',
-          'Click "Install app" → Copy the API access token',
-        ].map((step, i) => (
-          <div key={i} style={{ fontSize: 12, color: 'var(--text-muted)', padding: '4px 0', display: 'flex', gap: 8 }}>
-            <span style={{ color: 'var(--purple-light)', fontWeight: 700, flexShrink: 0 }}>{i + 1}.</span>
-            {step}
-          </div>
-        ))}
       </div>
 
       {/* Billing */}

@@ -144,20 +144,48 @@ public class DashboardService {
                 : 0;
 
         // ── Suggestions & Tests ───────────────────────────
-        List<AiSuggestion> suggestions = suggestionRepo.findByShopAndAppliedFalseOrderByCreatedAtDesc(shop);
         List<AbTest> activeTests = abTestRepo.findByShopAndStatus(shop, "running");
 
-        List<SuggestionDTO> topSuggestions = suggestions.stream().limit(3).map(s -> {
-            SuggestionDTO dto = new SuggestionDTO();
-            dto.setId(s.getId());
-            dto.setTitle(s.getTitle());
-            dto.setDescription(s.getDescription());
-            dto.setImpact(s.getImpact());
-            dto.setCategory(s.getCategory());
-            dto.setApplied(s.getApplied());
-            dto.setCreatedAt(s.getCreatedAt());
-            return dto;
-        }).collect(Collectors.toList());
+        // Build real suggestions from Shopify data
+        List<SuggestionDTO> topSuggestions = new ArrayList<>();
+
+        // Check for missing descriptions
+        long noDescCount = shopifyProducts.stream().filter(p -> {
+            String body = (String) p.getOrDefault("body_html", "");
+            return body == null || body.trim().isEmpty();
+        }).count();
+        if (noDescCount > 0) {
+            SuggestionDTO s = new SuggestionDTO();
+            s.setTitle("Add AI descriptions to " + noDescCount + " products");
+            s.setDescription("Products missing descriptions have 30% lower conversion rates.");
+            s.setImpact("High");
+            s.setCategory("product");
+            s.setApplied(false);
+            topSuggestions.add(s);
+        }
+
+        // Check AOV
+        double avgOrderValue = ordersFetched.isEmpty() ? 0 : totalRevenue / ordersFetched.size();
+        if (avgOrderValue > 0) {
+            SuggestionDTO s = new SuggestionDTO();
+            s.setTitle("Increase AOV with product bundles");
+            s.setDescription("Your current AOV is $" + String.format("%.2f", avgOrderValue) + ". Bundles can increase it by 20-40%.");
+            s.setImpact("Medium");
+            s.setCategory("revenue");
+            s.setApplied(false);
+            topSuggestions.add(s);
+        }
+
+        // Suggest A/B test
+        if (topSuggestions.size() < 3) {
+            SuggestionDTO s = new SuggestionDTO();
+            s.setTitle("Run an A/B test on your best seller");
+            s.setDescription("A/B testing product descriptions can increase conversions by 10-25%.");
+            s.setImpact("Medium");
+            s.setCategory("abtesting");
+            s.setApplied(false);
+            topSuggestions.add(s);
+        }
 
         // ── Build response ────────────────────────────────
         DashboardSummary summary = new DashboardSummary();
@@ -167,8 +195,8 @@ public class DashboardService {
         summary.setConversionDelta(Math.round((Math.random() * 10 - 2) * 10.0) / 10.0);
         summary.setActiveAbTests(activeTests.size());
         summary.setAbTestsDelta(2);
-        summary.setAiSuggestions(suggestions.size());
-        summary.setAiSuggestionsNew(Math.min(3, suggestions.size()));
+        summary.setAiSuggestions(topSuggestions.size());
+        summary.setAiSuggestionsNew(Math.min(3, topSuggestions.size()));
         summary.setAiGrowthScore(growthScore);
         summary.setGrowthLabel(growthLabel);
         summary.setRevenueChart(chartDisplay);

@@ -44,6 +44,13 @@ public class ChatController {
         );
     }
 
+    @DeleteMapping
+    public ResponseEntity<?> clearHistory(Principal principal) {
+        User user = userRepo.findByEmail(principal.getName()).orElseThrow();
+        chatRepo.deleteByShop(user.getShopDomain());
+        return ResponseEntity.ok(Map.of("message", "History cleared"));
+    }
+
     @PostMapping
     public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest req, Principal principal) {
         User user = userRepo.findByEmail(principal.getName()).orElseThrow();

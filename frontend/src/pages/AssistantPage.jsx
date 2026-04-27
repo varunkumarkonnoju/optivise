@@ -65,14 +65,24 @@ export default function AssistantPage() {
                 </div>
               </div>
             </div>
-            <button onClick={() => navigate(-1)} style={{
-              background: 'var(--bg-secondary)', border: '1px solid var(--border)',
-              borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
-              color: 'var(--text-muted)', fontSize: 12, fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 6
-            }}>
-              ← Back
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={clearHistory} style={{
+                background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
+                color: 'var(--red)', fontSize: 12, fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 6
+              }}>
+                🗑️ Clear
+              </button>
+              <button onClick={() => navigate(-1)} style={{
+                background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
+                color: 'var(--text-muted)', fontSize: 12, fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 6
+              }}>
+                ← Back
+              </button>
+            </div>
           </div>
         </div>
 

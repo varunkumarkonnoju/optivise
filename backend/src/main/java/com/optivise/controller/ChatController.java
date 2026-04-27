@@ -6,39 +6,41 @@ import com.optivise.dto.ChatResponse;
 import com.optivise.model.ChatMessage;
 import com.optivise.model.User;
 import com.optivise.repository.ChatMessageRepository;
-import com.optivise.repository.MetricSnapshotRepository;
 import com.optivise.repository.UserRepository;
 import com.optivise.service.ClaudeService;
-import lombok.RequiredArgsConstructor;
+import com.optivise.service.ShopifyService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/chat")
-@RequiredArgsConstructor
 public class ChatController {
 
-    private final ChatMessageRepository chatRepo;
-    private final UserRepository userRepo;
-    private final ClaudeService claude;
-    private final MetricSnapshotRepository metricRepo;
+    @Autowired private ChatMessageRepository chatRepo;
+    @Autowired private UserRepository userRepo;
+    @Autowired private ClaudeService claude;
+    @Autowired private ShopifyService shopifyService;
+
+    @Value("${shopify.store.access.token}")
+    private String defaultToken;
 
     @GetMapping
     public ResponseEntity<List<ChatMessageDTO>> getHistory(Principal principal) {
         User user = userRepo.findByEmail(principal.getName()).orElseThrow();
         return ResponseEntity.ok(
-            chatRepo.findByShopOrderByCreatedAtAsc(user.getShopDomain())
-                .stream().map(m -> ChatMessageDTO.builder()
-                        .role(m.getRole()).content(m.getContent())
-                        .createdAt(m.getCreatedAt()).build())
-                .collect(Collectors.toList())
+                chatRepo.findByShopOrderByCreatedAtAsc(user.getShopDomain())
+                        .stream().map(m -> ChatMessageDTO.builder()
+                                .role(m.getRole()).content(m.getContent())
+                                .createdAt(m.getCreatedAt()).build())
+                        .collect(Collectors.toList())
         );
     }
 
@@ -46,29 +48,122 @@ public class ChatController {
     public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest req, Principal principal) {
         User user = userRepo.findByEmail(principal.getName()).orElseThrow();
         String shop = user.getShopDomain();
+        String token = user.getShopifyAccessToken() != null && !user.getShopifyAccessToken().isBlank()
+                ? user.getShopifyAccessToken() : defaultToken;
 
+        // Save user message
         chatRepo.save(ChatMessage.builder().shop(shop).role("user").content(req.getMessage()).build());
 
-        var metrics = metricRepo.findLast30Days(shop);
-        double totalRevenue = metrics.stream()
-                .mapToDouble(m -> m.getTotalRevenue() != null ? m.getTotalRevenue() : 0).sum();
-        double avgConversion = metrics.stream()
-                .mapToDouble(m -> m.getConversionRate() != null ? m.getConversionRate() : 0)
-                .average().orElse(0);
-        String storeStats = "Total Revenue (30d): $%.0f | Avg Conversion: %.2f%% | Sessions/day: ~%s"
-                .formatted(totalRevenue, avgConversion,
-                        metrics.isEmpty() ? "2500" : metrics.get(0).getSessions());
+        // Build real store context from Shopify
+        String storeStats = buildRealStoreContext(shop, token);
 
+        // Get chat history
         List<Map<String, String>> history = chatRepo.findRecentByShop(shop).stream()
                 .map(m -> Map.of("role", m.getRole(), "content", m.getContent()))
                 .collect(Collectors.toList());
         Collections.reverse(history);
         if (!history.isEmpty()) history = history.subList(0, history.size() - 1);
 
-        String systemPrompt = claude.buildStoreSystemPrompt(user.getName(), storeStats);
+        String systemPrompt = buildSystemPrompt(user.getName(), shop, storeStats);
         String reply = claude.chat(systemPrompt, history, req.getMessage());
 
         chatRepo.save(ChatMessage.builder().shop(shop).role("assistant").content(reply).build());
         return ResponseEntity.ok(ChatResponse.builder().reply(reply).build());
+    }
+
+    private String buildRealStoreContext(String shop, String token) {
+        try {
+            List<Map<String, Object>> products = shopifyService.fetchProducts(shop, token);
+            List<Map<String, Object>> orders = shopifyService.fetchOrders(shop, token);
+
+            // Calculate real metrics
+            double totalRevenue = 0;
+            double thisWeekRevenue = 0;
+            int thisWeekOrders = 0;
+            String thisWeekStart = LocalDate.now().minusDays(7).format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+            Map<String, Double> revenueByProduct = new HashMap<>();
+            Map<String, Integer> qtyByProduct = new HashMap<>();
+
+            for (Map<String, Object> order : orders) {
+                String status = (String) order.getOrDefault("financial_status", "");
+                if ("refunded".equals(status) || "voided".equals(status)) continue;
+                double total = Double.parseDouble(order.getOrDefault("total_price", "0").toString());
+                totalRevenue += total;
+                String createdAt = (String) order.getOrDefault("created_at", "");
+                if (createdAt.compareTo(thisWeekStart) >= 0) {
+                    thisWeekRevenue += total;
+                    thisWeekOrders++;
+                }
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> lineItems = (List<Map<String, Object>>) order.getOrDefault("line_items", List.of());
+                for (Map<String, Object> item : lineItems) {
+                    String pid = item.getOrDefault("product_id", "").toString();
+                    String title = (String) item.getOrDefault("title", "Unknown");
+                    double price = Double.parseDouble(item.getOrDefault("price", "0").toString());
+                    int qty = Integer.parseInt(item.getOrDefault("quantity", "1").toString());
+                    revenueByProduct.merge(pid + "|" + title, price * qty, Double::sum);
+                    qtyByProduct.merge(pid + "|" + title, qty, Integer::sum);
+                }
+            }
+
+            // Top 3 products by revenue
+            List<String> topProducts = revenueByProduct.entrySet().stream()
+                    .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                    .limit(3)
+                    .map(e -> e.getKey().split("\\|")[1] + " ($" + String.format("%.0f", e.getValue()) + ")")
+                    .collect(Collectors.toList());
+
+            // Products without descriptions
+            long noDesc = products.stream().filter(p -> {
+                String body = (String) p.getOrDefault("body_html", "");
+                return body == null || body.trim().isEmpty();
+            }).count();
+
+            double avgOrderValue = orders.isEmpty() ? 0 : totalRevenue / orders.size();
+
+            return """
+                Store: %s
+                Total Products: %d
+                Total Orders: %d
+                Total Revenue (all time): $%.2f
+                This Week Revenue: $%.2f
+                This Week Orders: %d
+                Average Order Value: $%.2f
+                Top Products by Revenue: %s
+                Products Missing Descriptions: %d
+                """.formatted(
+                    shop,
+                    products.size(),
+                    orders.size(),
+                    totalRevenue,
+                    thisWeekRevenue,
+                    thisWeekOrders,
+                    avgOrderValue,
+                    topProducts.isEmpty() ? "No data yet" : String.join(", ", topProducts),
+                    noDesc
+            );
+        } catch (Exception e) {
+            return "Store: " + shop + " (data loading error: " + e.getMessage() + ")";
+        }
+    }
+
+    private String buildSystemPrompt(String ownerName, String shop, String storeStats) {
+        return """
+            You are an expert AI growth assistant for Optivise, helping Shopify store owner %s optimize their store at %s.
+            
+            Here is their REAL store data:
+            %s
+            
+            Your role:
+            - Answer questions about their store using the real data above
+            - Give specific, actionable recommendations based on their actual metrics
+            - Help optimize products, increase revenue, reduce cart abandonment
+            - Be concise, friendly, and data-driven
+            - Always reference specific numbers from their real store data when relevant
+            - Format responses clearly with bullet points when listing multiple items
+            
+            Never make up data — only use the real store data provided above.
+            """.formatted(ownerName, shop, storeStats);
     }
 }

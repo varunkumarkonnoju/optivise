@@ -21,6 +21,6 @@ public class DashboardController {
     @GetMapping
     public ResponseEntity<DashboardSummary> getDashboard(Principal principal) {
         User user = userRepo.findByEmail(principal.getName()).orElseThrow();
-        return ResponseEntity.ok(dashboardService.getDashboard(user.getShopDomain()));
+        return ResponseEntity.ok(dashboardService.getDashboardSummary());
     }
 }

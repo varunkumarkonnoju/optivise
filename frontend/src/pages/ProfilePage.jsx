@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ShopifyConnectButton from '../components/ShopifyConnectButton'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import './Auth.css'

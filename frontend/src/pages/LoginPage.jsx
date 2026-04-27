@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { Eye, EyeOff } from 'lucide-react'
 import './Auth.css'
 
 export default function LoginPage() {

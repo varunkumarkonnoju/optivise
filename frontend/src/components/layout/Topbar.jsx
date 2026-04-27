@@ -10,13 +10,16 @@ export default function Topbar({ onMenuClick }) {
   const [showNotif, setShowNotif] = useState(false)
   const [showUser, setShowUser] = useState(false)
   const [notifications, setNotifications] = useState([])
-  const [dismissed, setDismissed] = useState(new Set())
+  const [dismissed, setDismissed] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('dismissed_notifs') || '[]')) }
+    catch { return new Set() }
+  })
+  const [allRead, setAllRead] = useState(false)
   const [loadingNotif, setLoadingNotif] = useState(false)
   const newRef = useRef(null)
   const notifRef = useRef(null)
   const userRef = useRef(null)
 
-  // Fetch real notifications
   const fetchNotifications = async () => {
     setLoadingNotif(true)
     try {
@@ -26,6 +29,7 @@ export default function Topbar({ onMenuClick }) {
       if (res.ok) {
         const data = await res.json()
         setNotifications(data)
+        setAllRead(false)
       }
     } catch (e) {
       console.error('Failed to fetch notifications', e)
@@ -36,10 +40,28 @@ export default function Topbar({ onMenuClick }) {
 
   useEffect(() => {
     fetchNotifications()
-    // Refresh every 5 minutes
     const interval = setInterval(fetchNotifications, 5 * 60 * 1000)
     return () => clearInterval(interval)
   }, [])
+
+  // Persist dismissed notifications
+  const dismiss = (id) => {
+    setDismissed(prev => {
+      const next = new Set([...prev, id])
+      localStorage.setItem('dismissed_notifs', JSON.stringify([...next]))
+      return next
+    })
+  }
+
+  const markAllRead = () => {
+    const allIds = notifications.map(n => n.id)
+    setDismissed(prev => {
+      const next = new Set([...prev, ...allIds])
+      localStorage.setItem('dismissed_notifs', JSON.stringify([...next]))
+      return next
+    })
+    setAllRead(true)
+  }
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -52,7 +74,8 @@ export default function Topbar({ onMenuClick }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const newCount = notifications.filter(n => n.isNew).length
+  const visibleNotifs = notifications.filter(n => !dismissed.has(n.id))
+  const newCount = visibleNotifs.filter(n => n.isNew).length
 
   return (
     <header style={{
@@ -80,7 +103,7 @@ export default function Topbar({ onMenuClick }) {
 
       {/* Right */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        {/* New button with dropdown */}
+        {/* New button */}
         <div style={{ position: 'relative' }} ref={newRef}>
           <button onClick={() => { setShowNew(!showNew); setShowNotif(false); setShowUser(false) }} style={{
             display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, #6366F1, #06B6D4)',
@@ -147,35 +170,39 @@ export default function Topbar({ onMenuClick }) {
                   Notifications {newCount > 0 && <span style={{ background: '#EF4444', color: 'white', borderRadius: 10, padding: '1px 7px', fontSize: 11, marginLeft: 6 }}>{newCount}</span>}
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <button onClick={fetchNotifications} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 11 }}>
-                    {loadingNotif ? '⟳' : 'Refresh'}
+                  <button onClick={fetchNotifications} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--purple-light)', fontSize: 11, fontFamily: 'inherit' }}>
+                    {loadingNotif ? '⟳ Loading...' : '↻ Refresh'}
                   </button>
-                  <span style={{ fontSize: 11, color: 'var(--purple-light)', cursor: 'pointer' }} onClick={() => setDismissed(new Set(notifications.map(n => n.id)))}>Mark all read</span>
+                  <span style={{ fontSize: 11, color: 'var(--purple-light)', cursor: 'pointer', fontWeight: 600 }} onClick={markAllRead}>
+                    Mark all read
+                  </span>
                 </div>
               </div>
 
               {/* Notification list */}
               <div style={{ maxHeight: 380, overflowY: 'auto' }}>
-                {loadingNotif && notifications.length === 0 ? (
-                  <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                    Loading notifications...
+                {loadingNotif && visibleNotifs.length === 0 ? (
+                  <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Loading...</div>
+                ) : visibleNotifs.length === 0 ? (
+                  <div style={{ padding: '32px 24px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>✅</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>All caught up!</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>No new notifications</div>
+                    <button onClick={fetchNotifications} style={{ marginTop: 12, background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', color: 'var(--purple-light)', fontSize: 12, fontFamily: 'inherit' }}>
+                      Refresh
+                    </button>
                   </div>
-                ) : notifications.length === 0 ? (
-                  <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                    No notifications yet
-                  </div>
-                ) : notifications.map((n, i) => (
+                ) : visibleNotifs.map((n, i) => (
                   <div key={n.id || i} style={{
                     padding: '12px 16px', borderBottom: '1px solid var(--border)',
-                    display: dismissed.has(n.id) ? 'none' : 'flex', gap: 12, alignItems: 'flex-start',
+                    display: 'flex', gap: 12, alignItems: 'flex-start',
                     background: n.isNew ? 'rgba(99,102,241,0.04)' : 'transparent',
-                    cursor: 'pointer', transition: 'background .15s'
+                    cursor: n.actionUrl ? 'pointer' : 'default', transition: 'background .15s'
                   }}
-                  onClick={() => { if (n.actionUrl) { navigate(n.actionUrl); setShowNotif(false) } }}
+                  onClick={() => { if (n.actionUrl) { navigate(n.actionUrl); setShowNotif(false); dismiss(n.id) } }}
                   onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
                   onMouseLeave={e => e.currentTarget.style.background = n.isNew ? 'rgba(99,102,241,0.04)' : 'transparent'}
                   >
-                    {/* Icon */}
                     <div style={{
                       width: 36, height: 36, borderRadius: 9, flexShrink: 0,
                       background: (n.color || '#6366F1') + '15',
@@ -183,16 +210,20 @@ export default function Topbar({ onMenuClick }) {
                     }}>
                       {n.icon}
                     </div>
-                    {/* Content */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.4 }}>{n.title}</div>
-                        {n.isNew && <span style={{ background: '#6366F1', color: 'white', borderRadius: 10, padding: '1px 7px', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>New</span>}
+                        {n.isNew && !dismissed.has(n.id) && <span style={{ background: '#6366F1', color: 'white', borderRadius: 10, padding: '1px 7px', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>New</span>}
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.4 }}>{n.message}</div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
                         <div style={{ fontSize: 11, color: 'var(--text-muted)', opacity: 0.7 }}>{n.time}</div>
-                        <button onClick={e => { e.stopPropagation(); setDismissed(prev => new Set([...prev, n.id])) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 11, padding: '2px 6px', borderRadius: 4 }} onMouseEnter={e => e.currentTarget.style.color = '#EF4444'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>✕</button>
+                        <button
+                          onClick={e => { e.stopPropagation(); dismiss(n.id) }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 11, padding: '2px 6px', borderRadius: 4 }}
+                          onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
+                          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+                        >✕</button>
                       </div>
                     </div>
                   </div>
@@ -201,8 +232,11 @@ export default function Topbar({ onMenuClick }) {
 
               {/* Footer */}
               <div style={{ padding: '10px 16px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
-                <span style={{ fontSize: 12, color: 'var(--purple-light)', cursor: 'pointer', fontWeight: 600 }}>
-                  View all notifications →
+                <span
+                  onClick={() => { navigate('/analytics'); setShowNotif(false) }}
+                  style={{ fontSize: 12, color: 'var(--purple-light)', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  View all activity →
                 </span>
               </div>
             </div>

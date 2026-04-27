@@ -180,45 +180,72 @@ export default function RegisterPage() {
           </div>
         )}
 
-        {/* Step 2 — Shopify API token */}
+        {/* Step 2 — Connect with Shopify OAuth */}
         {step === 2 && (
           <div className="auth-step">
             <h2 className="auth-title">Connect your store</h2>
-            <p className="auth-sub">Add your Shopify API token to see real data. You can skip this and add it later from your profile.</p>
+            <p className="auth-sub">Connect your Shopify store with one click. No manual setup needed.</p>
             {error && <div className="auth-error">{error}</div>}
 
-            {/* How to get token */}
-            <div style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--purple-light)', marginBottom: 10 }}>📋 How to get your API token (2 minutes):</div>
-              {[
-                'Go to Shopify Admin → Settings → Apps',
-                'Click "Develop apps" → "Create an app"',
-                'Name it "Optivise" → click Configure',
-                'Enable: read_products, write_products, read_orders',
-                'Click Install app → copy the access token',
-              ].map((s, i) => (
-                <div key={i} style={{ fontSize: 12, color: 'var(--text-muted)', padding: '3px 0', display: 'flex', gap: 8 }}>
-                  <span style={{ color: 'var(--purple-light)', fontWeight: 700, flexShrink: 0 }}>{i+1}.</span>{s}
-                </div>
-              ))}
-            </div>
+            <div style={{ background: 'rgba(150,191,72,0.05)', border: '1px solid rgba(150,191,72,0.3)', borderRadius: 12, padding: '20px', marginBottom: 16, textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>🛍️</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>One-click Shopify connection</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 20 }}>Securely connect your store using Shopify OAuth. We never store your password.</div>
+              
+              <div style={{ marginBottom: 12 }}>
+                <input
+                  type="text"
+                  placeholder="your-store.myshopify.com"
+                  value={form.shopDomain}
+                  onChange={e => set('shopDomain', e.target.value)}
+                  style={{
+                    width: '100%', background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                    borderRadius: 8, padding: '10px 12px', color: 'var(--text-primary)',
+                    fontSize: 13, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box'
+                  }}
+                />
+              </div>
 
-            <div className="auth-field">
-              <label>Shopify Admin API access token</label>
-              <input type="password" placeholder="shpat_xxxxxxxxxxxxxxxxxxxxxxxx"
-                value={form.shopifyAccessToken} onChange={e => set('shopifyAccessToken', e.target.value)}/>
-              <div className="auth-field-hint">Starts with shpat_ — kept secure and never shared</div>
+              <button
+                onClick={async () => {
+                  if (!form.shopDomain.trim()) { setError('Please enter your store URL'); return }
+                  setLoading(true); setError('')
+                  try {
+                    // First create the account
+                    await nextStep()
+                    // Then redirect to Shopify OAuth
+                    let domain = form.shopDomain.trim().replace(/https?:\/\//, '').replace(/\/$/, '')
+                    if (!domain.includes('.myshopify.com')) domain = domain + '.myshopify.com'
+                    const res = await fetch('/api/auth/shopify/install?shop=' + domain)
+                    const data = await res.json()
+                    if (data.authUrl) window.location.href = data.authUrl
+                  } catch(e) {
+                    setError('Connection failed. Try again.')
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                style={{
+                  width: '100%', padding: '12px', borderRadius: 10, border: 'none',
+                  background: '#96BF48', color: 'white', fontSize: 14, fontWeight: 700,
+                  cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  opacity: loading ? 0.7 : 1, marginBottom: 12
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M15.337 23.979l7.216-1.561-2.625-17.679c-.018-.099-.107-.167-.206-.167-.098 0-3.375.655-3.375.655s-1.776-1.714-2.464-2.308c-.624-.539-1.836-1.028-2.955-.616C9.777 2.77 9.013 5.29 8.771 6.11c-.799.248-1.371.426-1.371.426L2.728 9.063C2.952 7.65 2.937 7.665 2.728 9.063c-.165 1.082-4.1 31.598-4.1 31.598h26.063l-9.354-1.563z"/></svg>
+                {loading ? 'Connecting...' : 'Connect with Shopify'}
+              </button>
             </div>
 
             <div className="auth-actions">
               <button className="auth-btn-ghost" onClick={() => setStep(1)}>← Back</button>
               <button className="auth-btn-primary" onClick={nextStep} disabled={loading}>
-                {loading ? 'Creating account...' : 'Create account →'}
+                {loading ? 'Creating account...' : 'Skip & create account →'}
               </button>
             </div>
-            <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-muted)', marginTop: 12 }}>
-              <span style={{ cursor: 'pointer', color: 'var(--purple-light)', textDecoration: 'underline' }}
-                onClick={nextStep}>Skip for now — add token later from profile</span>
+            <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+              Skip to connect your store later from Profile settings
             </p>
           </div>
         )}

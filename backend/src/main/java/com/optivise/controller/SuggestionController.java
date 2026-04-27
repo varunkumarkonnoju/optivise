@@ -163,6 +163,50 @@ public class SuggestionController {
                 suggestions.add(s);
             }
 
+            // Add more smart recommendations
+
+            // Recommendation: Run A/B test if no tests running
+            Map<String, Object> abTest = new LinkedHashMap<>();
+            abTest.put("id", suggestionId++);
+            abTest.put("type", "abtesting");
+            abTest.put("priority", "medium");
+            abTest.put("title", "Run an A/B test on your best seller");
+            abTest.put("description", "A/B testing product descriptions can increase conversions by 10-25%. Start with your highest revenue product.");
+            abTest.put("impact", "+10-25% conversions");
+            abTest.put("effort", "5 min");
+            abTest.put("action", "create_ab_test");
+            abTest.put("actionLabel", "Create A/B Test");
+            abTest.put("applied", false);
+            suggestions.add(abTest);
+
+            // Recommendation: Ask AI for store analysis
+            Map<String, Object> aiRec = new LinkedHashMap<>();
+            aiRec.put("id", suggestionId++);
+            aiRec.put("type", "ai");
+            aiRec.put("priority", "low");
+            aiRec.put("title", "Get a full AI store analysis");
+            aiRec.put("description", "Ask the AI Assistant to analyze your store performance and identify hidden growth opportunities.");
+            aiRec.put("impact", "Discover new opportunities");
+            aiRec.put("effort", "2 min");
+            aiRec.put("action", "learn_more");
+            aiRec.put("actionLabel", "Ask AI Assistant");
+            aiRec.put("applied", false);
+            suggestions.add(aiRec);
+
+            // Recommendation: Review analytics
+            Map<String, Object> analyticsRec = new LinkedHashMap<>();
+            analyticsRec.put("id", suggestionId++);
+            analyticsRec.put("type", "revenue");
+            analyticsRec.put("priority", "low");
+            analyticsRec.put("title", "Review your weekly performance trends");
+            analyticsRec.put("description", "Check your analytics dashboard to spot revenue patterns and identify which days/times drive the most sales.");
+            analyticsRec.put("impact", "Better insights");
+            analyticsRec.put("effort", "5 min");
+            analyticsRec.put("action", "view_analytics");
+            analyticsRec.put("actionLabel", "View Analytics");
+            analyticsRec.put("applied", false);
+            suggestions.add(analyticsRec);
+
             // Sort by priority
             suggestions.sort((a, b) -> {
                 Map<String, Integer> pri = Map.of("high", 0, "medium", 1, "low", 2);

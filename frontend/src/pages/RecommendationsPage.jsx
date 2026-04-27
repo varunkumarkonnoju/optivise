@@ -40,6 +40,7 @@ export default function RecommendationsPage() {
       case 'connect_store': navigate('/profile'); break
       case 'create_bundle':
       case 'learn_more': navigate('/assistant'); break
+      case 'view_analytics': navigate('/analytics'); break
       case 'add_images':
       case 'restock':
         if (suggestion.productId) {

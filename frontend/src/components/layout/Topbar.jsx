@@ -273,7 +273,7 @@ export default function Topbar({ onMenuClick }) {
             }}>
               {[
                 { icon: <User size={14}/>, label: 'Profile', action: () => navigate('/profile') },
-                { icon: <Settings size={14}/>, label: 'Settings', action: () => navigate('/profile') },
+                { icon: <Settings size={14}/>, label: 'Settings', action: () => navigate('/settings') },
                 { icon: <HelpCircle size={14}/>, label: 'Help & Support', action: () => {} },
               ].map((item, i) => (
                 <button key={i} onClick={() => { setShowUser(false); setTimeout(() => item.action(), 50) }} style={{

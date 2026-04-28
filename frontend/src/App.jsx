@@ -19,6 +19,7 @@ import ProductsPage from './pages/ProductsPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import OAuthSuccessPage from './pages/OAuthSuccessPage'
 import { InsightsPage, AutomationsPage } from './pages/StubPages'
+import SettingsPage from './pages/SettingsPage'
 import './styles/global.css'
 
 function ProtectedRoute({ children }) {
@@ -55,6 +56,7 @@ function AppRoutes() {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/oauth/success" element={<OAuthSuccessPage />} />
       <Route path="/assistant" element={<ProtectedRoute><AssistantPage /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )

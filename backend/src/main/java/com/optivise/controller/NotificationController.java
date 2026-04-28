@@ -40,7 +40,10 @@ public class NotificationController {
 
         try {
             List<Map<String, Object>> orders = shopifyService.fetchOrders(domain, token);
+            // Limit to last 50 orders to save memory
+            if (orders.size() > 50) orders = orders.subList(0, 50);
             List<Map<String, Object>> products = shopifyService.fetchProducts(domain, token);
+            if (products.size() > 50) products = products.subList(0, 50);
 
             String today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
             String yesterday = LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE);

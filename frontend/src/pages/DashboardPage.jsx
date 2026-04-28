@@ -5,9 +5,9 @@ import {
   AreaChart, Area, LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid
 } from 'recharts'
 import { TrendingUp, TrendingDown, Sparkles, TestTube2, DollarSign, Percent, ChevronRight, ExternalLink } from 'lucide-react'
+import { useSettings } from '../hooks/useSettings'
 import './Dashboard.css'
 
-const fmtCurrency = n => '$' + (n >= 1000 ? (n / 1000).toFixed(1) + 'k' : Math.round(n).toLocaleString())
 
 function MetricCard({ label, value, delta, deltaLabel, icon: Icon, color, suffix = '' }) {
   const up = delta >= 0
@@ -48,7 +48,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       <div style={{ color: '#94A3B8', marginBottom: 6 }}>{label}</div>
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color, fontWeight: 600 }}>
-          {p.name}: {p.name === 'Revenue' ? '$' + p.value?.toFixed(0) : p.value?.toFixed(2) + (p.name === 'Conversion' ? '%' : '')}
+          {p.name}: {p.name === 'Revenue' ? formatCurrency(p.value) : p.value?.toFixed(2) + (p.name === 'Conversion' ? '%' : '')}
         </div>
       ))}
     </div>
@@ -85,6 +85,7 @@ function GrowthScore({ score, label }) {
 }
 
 export default function DashboardPage() {
+  const { formatCurrency } = useSettings()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
@@ -113,7 +114,7 @@ export default function DashboardPage() {
 
       {/* Metric Cards */}
       <div className="metrics-grid">
-        <MetricCard label="Total Revenue" value={fmtCurrency(data.totalRevenue)} delta={data.revenueDelta} deltaLabel="vs last month" icon={DollarSign} color="#6366F1" />
+        <MetricCard label="Total Revenue" value={formatCurrency(data.totalRevenue)} delta={data.revenueDelta} deltaLabel="vs last month" icon={DollarSign} color="#6366F1" />
         <MetricCard label="Conversion Rate" value={data.conversionRate?.toFixed(2)} suffix="%" delta={data.conversionDelta} deltaLabel="vs last month" icon={Percent} color="#06B6D4" />
         <MetricCard label="Active A/B Tests" value={data.activeAbTests} delta={data.abTestsDelta} deltaLabel="new this week" icon={TestTube2} color="#10B981" />
         <div className="metric-card card" style={{ position: 'relative' }}>
@@ -215,7 +216,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className="product-rev">
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{fmtCurrency(p.revenue)}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{formatCurrency(p.revenue)}</div>
                   <div className="delta-up">+{p.revenueDelta?.toFixed(1)}%</div>
                 </div>
               </div>

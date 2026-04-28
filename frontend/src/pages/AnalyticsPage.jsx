@@ -4,6 +4,7 @@ import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid
 } from 'recharts'
+import { useSettings } from '../hooks/useSettings'
 import './Analytics.css'
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -21,6 +22,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function AnalyticsPage() {
+  const { formatCurrency, formatDate } = useSettings()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState('30d')

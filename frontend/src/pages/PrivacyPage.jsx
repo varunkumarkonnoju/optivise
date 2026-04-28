@@ -29,7 +29,7 @@ export default function PrivacyPage() {
 
         <div className="legal-body">
           <Section title="1. Introduction">
-            Welcome to Optivise ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, and share information about you when you use our services at optivise.io (the "Service").
+            Welcome to Optivise ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, and share information about you when you use our services at optiviseai.io (the "Service").
           </Section>
 
           <Section title="2. Information We Collect">
@@ -102,7 +102,7 @@ export default function PrivacyPage() {
               <li>Export your data</li>
               <li>Opt out of marketing emails</li>
             </ul>
-            To exercise these rights, contact us at privacy@optivise.io
+            To exercise these rights, contact us at privacy@optiviseai.io
           </Section>
 
           <Section title="11. Cookies">
@@ -120,8 +120,8 @@ export default function PrivacyPage() {
           <Section title="14. Contact Us">
             If you have questions about this Privacy Policy, please contact us at:
             <ul>
-              <li>Email: privacy@optivise.io</li>
-              <li>Website: optivise.io</li>
+              <li>Email: privacy@optiviseai.io</li>
+              <li>Website: optiviseai.io</li>
             </ul>
           </Section>
         </div>

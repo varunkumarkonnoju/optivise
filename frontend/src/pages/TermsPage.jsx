@@ -29,7 +29,7 @@ export default function TermsPage() {
 
         <div className="legal-body">
           <Section title="1. Acceptance of Terms">
-            By accessing or using Optivise ("Service") at optivise.io, you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service. These terms apply to all users, including free and paid accounts.
+            By accessing or using Optivise ("Service") at optiviseai.io, you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service. These terms apply to all users, including free and paid accounts.
           </Section>
 
           <Section title="2. Description of Service">
@@ -125,8 +125,8 @@ export default function TermsPage() {
           <Section title="15. Contact Us">
             If you have questions about these Terms, please contact us at:
             <ul>
-              <li>Email: legal@optivise.io</li>
-              <li>Website: optivise.io</li>
+              <li>Email: legal@optiviseai.io</li>
+              <li>Website: optiviseai.io</li>
             </ul>
           </Section>
         </div>

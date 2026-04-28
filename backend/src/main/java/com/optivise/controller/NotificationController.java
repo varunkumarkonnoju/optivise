@@ -37,7 +37,6 @@ public class NotificationController {
         try {
             List<Map<String, Object>> orders = shopifyService.fetchOrders(domain, token);
             List<Map<String, Object>> products = shopifyService.fetchProducts(domain, token);
-            List<Map<String, Object>> customers = shopifyService.fetchCustomers(domain, token);
 
             String today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
             String yesterday = LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -59,15 +58,16 @@ public class NotificationController {
                 if (createdAt.startsWith(yesterday)) yesterdayRevenue += total;
                 if (createdAt.compareTo(thisWeekStart) >= 0) { weekRevenue += total; weekOrders++; }
 
-                // Track new customers this week
+                // Track new customers this week via orders
                 Object customerObj = order.get("customer");
-                String email = "";
                 if (customerObj instanceof Map) {
                     @SuppressWarnings("unchecked")
                     Map<String, Object> customer = (Map<String, Object>) customerObj;
-                    email = (String) customer.getOrDefault("email", "");
+                    String custEmail = (String) customer.getOrDefault("email", "");
+                    if (!custEmail.isEmpty() && createdAt.compareTo(thisWeekStart) >= 0) {
+                        newCustomerEmails.add(custEmail);
+                    }
                 }
-                if (!email.isEmpty() && createdAt.compareTo(thisWeekStart) >= 0) newCustomerEmails.add(email);
             }
 
             // Count abandoned checkouts

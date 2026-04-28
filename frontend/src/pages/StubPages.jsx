@@ -9,9 +9,16 @@ function ComingSoonPage({ icon, title, description, features, color }) {
   const handleJoin = async (e) => {
     e.preventDefault()
     // Store in localStorage for now
-    const waitlist = JSON.parse(localStorage.getItem('waitlist') || '[]')
-    waitlist.push({ email, feature: title, date: new Date().toISOString() })
-    localStorage.setItem('waitlist', JSON.stringify(waitlist))
+    try {
+      // Save to backend
+      await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, feature: title })
+      })
+    } catch (e) {
+      console.error('Waitlist save failed', e)
+    }
     setJoined(true)
   }
 

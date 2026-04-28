@@ -1,7 +1,9 @@
 package com.optivise.controller;
 
 import com.optivise.model.User;
+import com.optivise.model.UserSettings;
 import com.optivise.repository.UserRepository;
+import com.optivise.repository.UserSettingsRepository;
 import com.optivise.repository.AbTestRepository;
 import com.optivise.service.ShopifyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,7 @@ import java.util.*;
 public class NotificationController {
 
     @Autowired private UserRepository userRepo;
+    @Autowired private UserSettingsRepository settingsRepo;
     @Autowired private ShopifyService shopifyService;
     @Autowired private AbTestRepository abTestRepo;
 
@@ -28,6 +31,7 @@ public class NotificationController {
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getNotifications(Principal principal) {
         User user = userRepo.findByEmail(principal.getName()).orElseThrow();
+        UserSettings settings = settingsRepo.findByEmail(principal.getName()).orElse(new UserSettings());
         String domain = user.getShopDomain();
         String token = user.getShopifyAccessToken() != null && !user.getShopifyAccessToken().isBlank()
                 ? user.getShopifyAccessToken() : defaultToken;
@@ -77,7 +81,7 @@ public class NotificationController {
             }
 
             // ── 1. New orders today ───────────────────────────
-            if (todayOrders > 0) {
+            if (todayOrders > 0 && settings.isNewOrderAlerts()) {
                 notifications.add(notif("orders-today", "orders", "🛍️",
                         todayOrders + " new order" + (todayOrders > 1 ? "s" : "") + " today",
                         "Revenue today: $" + String.format("%.2f", todayRevenue),
@@ -125,7 +129,7 @@ public class NotificationController {
                     }
                 }
             }
-            if (lowStockCount > 0) {
+            if (lowStockCount > 0 && settings.isLowStockAlerts()) {
                 notifications.add(notif("low-stock", "warning", "⚠️",
                         lowStockCount + " product" + (lowStockCount > 1 ? "s" : "") + " low on stock",
                         String.join(", ", lowStockProducts) + (lowStockCount > 2 ? " +" + (lowStockCount - 2) + " more" : ""),
@@ -137,7 +141,7 @@ public class NotificationController {
                 String body = (String) p.getOrDefault("body_html", "");
                 return body == null || body.trim().isEmpty();
             }).count();
-            if (noDescCount > 0) {
+            if (noDescCount > 0 && settings.isAiSuggestions()) {
                 notifications.add(notif("missing-descriptions", "ai", "✨",
                         noDescCount + " product" + (noDescCount > 1 ? "s" : "") + " missing AI descriptions",
                         "Add descriptions to boost conversions by up to 30%",

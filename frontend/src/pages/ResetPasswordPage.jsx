@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { Eye, EyeOff } from 'lucide-react'
 import './Auth.css'
 
 export default function ResetPasswordPage() {
@@ -11,6 +12,8 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -58,13 +61,37 @@ export default function ResetPasswordPage() {
             <form onSubmit={handleSubmit}>
               <div className="auth-field">
                 <label>New password</label>
-                <input type="password" placeholder="Min. 8 characters"
-                  value={password} onChange={e => setPassword(e.target.value)} required autoFocus/>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Min. 8 characters"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required autoFocus
+                    style={{ paddingRight: 40 }}
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)}
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', padding: 0 }}>
+                    {showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}
+                  </button>
+                </div>
               </div>
               <div className="auth-field">
                 <label>Confirm new password</label>
-                <input type="password" placeholder="Repeat your password"
-                  value={confirm} onChange={e => setConfirm(e.target.value)} required/>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showConfirm ? 'text' : 'password'}
+                    placeholder="Repeat your password"
+                    value={confirm}
+                    onChange={e => setConfirm(e.target.value)}
+                    required
+                    style={{ paddingRight: 40 }}
+                  />
+                  <button type="button" onClick={() => setShowConfirm(!showConfirm)}
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', padding: 0 }}>
+                    {showConfirm ? <EyeOff size={16}/> : <Eye size={16}/>}
+                  </button>
+                </div>
               </div>
               <button type="submit" className="auth-btn-primary" disabled={loading}>
                 {loading ? 'Resetting...' : 'Reset password →'}

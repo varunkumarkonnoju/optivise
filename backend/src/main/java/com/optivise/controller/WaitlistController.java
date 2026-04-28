@@ -22,13 +22,16 @@ public class WaitlistController {
             return ResponseEntity.badRequest().body(Map.of("error", "Email required"));
         }
 
+        System.out.println("=== WAITLIST SIGNUP: " + email + " for " + feature + " ===");
         try {
             // Notify you (Varun) about new waitlist signup
             emailService.sendWaitlistNotification(email, feature);
+            System.out.println("=== NOTIFICATION EMAIL SENT ===");
             // Send confirmation to user
             emailService.sendWaitlistConfirmation(email, feature);
+            System.out.println("=== CONFIRMATION EMAIL SENT ===");
         } catch (Exception e) {
-            System.err.println("Waitlist email failed: " + e.getMessage());
+            System.err.println("=== WAITLIST EMAIL FAILED: " + e.getMessage() + " ===");
         }
 
         return ResponseEntity.ok(Map.of("message", "Added to waitlist"));

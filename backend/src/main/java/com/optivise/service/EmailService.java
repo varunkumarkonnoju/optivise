@@ -105,4 +105,39 @@ public class EmailService {
             return false;
         }
     }
+    public void sendWaitlistNotification(String userEmail, String feature) {
+        try {
+            String html = "<h2>New Waitlist Signup!</h2>" +
+                    "<p><strong>Feature:</strong> " + feature + "</p>" +
+                    "<p><strong>Email:</strong> " + userEmail + "</p>" +
+                    "<p>Someone just joined the waitlist on Optivise!</p>";
+            webClient.post().uri("/emails")
+                    .header("Authorization", "Bearer " + resendApiKey)
+                    .header("Content-Type", "application/json")
+                    .bodyValue(Map.of("from", fromEmail, "to", new String[]{"varunkumarkonnoju@gmail.com"},
+                            "subject", "New Waitlist Signup: " + feature, "html", html))
+                    .retrieve().bodyToMono(String.class).block();
+        } catch (Exception e) {
+            System.err.println("Waitlist notification email failed: " + e.getMessage());
+        }
+    }
+
+    public void sendWaitlistConfirmation(String userEmail, String feature) {
+        try {
+            String html = "<div style='font-family:sans-serif;max-width:600px;margin:0 auto'>" +
+                    "<h2 style='color:#6366F1'>You're on the waitlist! 🎉</h2>" +
+                    "<p>Thanks for your interest in <strong>" + feature + "</strong>.</p>" +
+                    "<p>We'll email you as soon as it launches. Early access users get it <strong>free for 30 days!</strong></p>" +
+                    "<p style='color:#666'>— The Optivise Team</p></div>";
+            webClient.post().uri("/emails")
+                    .header("Authorization", "Bearer " + resendApiKey)
+                    .header("Content-Type", "application/json")
+                    .bodyValue(Map.of("from", fromEmail, "to", new String[]{userEmail},
+                            "subject", "You're on the waitlist for " + feature + " — Optivise", "html", html))
+                    .retrieve().bodyToMono(String.class).block();
+        } catch (Exception e) {
+            System.err.println("Waitlist confirmation email failed: " + e.getMessage());
+        }
+    }
+
 }

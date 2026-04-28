@@ -276,7 +276,7 @@ export default function Topbar({ onMenuClick }) {
                 { icon: <Settings size={14}/>, label: 'Settings', action: () => navigate('/profile') },
                 { icon: <HelpCircle size={14}/>, label: 'Help & Support', action: () => {} },
               ].map((item, i) => (
-                <button key={i} onClick={() => { item.action(); setShowUser(false) }} style={{
+                <button key={i} onClick={() => { setShowUser(false); setTimeout(() => item.action(), 50) }} style={{
                   width: '100%', padding: '10px 14px', background: 'none', border: 'none',
                   cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center',
                   gap: 10, fontSize: 13, fontFamily: 'inherit', borderBottom: '1px solid var(--border)'
@@ -288,7 +288,7 @@ export default function Topbar({ onMenuClick }) {
                   {item.label}
                 </button>
               ))}
-              <button onClick={() => { logout(); navigate('/home') }} style={{
+              <button onClick={() => { setShowUser(false); setTimeout(() => { logout(); navigate('/home') }, 50) }} style={{
                 width: '100%', padding: '10px 14px', background: 'none', border: 'none',
                 cursor: 'pointer', color: '#F87171', display: 'flex', alignItems: 'center',
                 gap: 10, fontSize: 13, fontFamily: 'inherit'

@@ -187,7 +187,7 @@ export default function DashboardPage() {
             <LineChart data={data.revenueChart || []} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
               <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#4A5568' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#4A5568' }} axisLine={false} tickLine={false} width={40} tickFormatter={v => '$' + (v/1000).toFixed(0) + 'k'} />
+              <YAxis tick={{ fontSize: 11, fill: '#4A5568' }} axisLine={false} tickLine={false} width={40} tickFormatter={v => formatCurrency(v/1000).replace(/\.\d+/, '') + 'k'} />
               <Tooltip content={<CustomTooltip />} />
               <Line type="monotone" name="Revenue" dataKey="revenue" stroke="#6366F1" strokeWidth={2} dot={false} />
               <Line type="monotone" name="Conversion" dataKey="conversion" stroke="#06B6D4" strokeWidth={2} dot={false} />

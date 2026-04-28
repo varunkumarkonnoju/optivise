@@ -55,10 +55,10 @@ export default function SettingsPage() {
         body: JSON.stringify(settings)
       })
       if (res.ok) {
-        // Apply currency globally
-        localStorage.setItem('optivise_currency', settings.currency)
-        localStorage.setItem('optivise_timezone', settings.timezone)
+        // Save to localStorage and notify all components
         localStorage.setItem('optivise_settings', JSON.stringify(settings))
+        // Fire event so all pages update immediately
+        window.dispatchEvent(new Event('settings-updated'))
         setSaved(true)
         setTimeout(() => setSaved(false), 3000)
       }

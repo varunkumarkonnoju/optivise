@@ -5,6 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.transport.ProxyProvider;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import io.netty.resolver.DefaultAddressResolverGroup;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
@@ -15,6 +19,12 @@ import java.util.Map;
 public class ShopifyService {
 
     private static final Logger log = LoggerFactory.getLogger(ShopifyService.class);
+
+    private final WebClient shopifyWebClient = WebClient.builder()
+            .clientConnector(new ReactorClientHttpConnector(
+                    HttpClient.create().resolver(DefaultAddressResolverGroup.INSTANCE)
+            ))
+            .build();
 
     @Value("${shopify.store.domain}")
     private String defaultDomain;
@@ -47,7 +57,7 @@ public class ShopifyService {
     public List<Map<String, Object>> fetchProducts(String domain, String token) {
         try {
             String url = "https://" + domain + "/admin/api/2023-10/products.json?limit=250";
-            String response = WebClient.create()
+            String response = shopifyWebClient
                     .get().uri(url)
                     .header("X-Shopify-Access-Token", token)
                     .retrieve()
@@ -66,7 +76,7 @@ public class ShopifyService {
         try {
             String url = "https://" + domain + "/admin/api/2024-01/customers.json?limit=250";
             @SuppressWarnings("unchecked")
-            Map<String, Object> response = WebClient.create().get().uri(url)
+            Map<String, Object> response = shopifyWebClient.get().uri(url)
                     .header("X-Shopify-Access-Token", token)
                     .retrieve().bodyToMono(Map.class).block();
             if (response != null && response.containsKey("customers")) {
@@ -83,7 +93,7 @@ public class ShopifyService {
     public List<Map<String, Object>> fetchOrders(String domain, String token) {
         try {
             String url = "https://" + domain + "/admin/api/2023-10/orders.json?limit=250&status=any";
-            String response = WebClient.create()
+            String response = shopifyWebClient
                     .get().uri(url)
                     .header("X-Shopify-Access-Token", token)
                     .retrieve()

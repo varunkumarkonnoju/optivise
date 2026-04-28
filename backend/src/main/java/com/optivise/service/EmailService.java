@@ -45,7 +45,7 @@ public class EmailService {
                     .header("Authorization", "Bearer " + resendApiKey)
                     .header("Content-Type", "application/json")
                     .bodyValue(Map.of(
-                            "from", fromEmail,
+                            "from", "Optivise <" + fromEmail + ">",
                             "to", new String[]{toEmail},
                             "subject", "Reset your Optivise password",
                             "html", html
@@ -91,7 +91,7 @@ public class EmailService {
                     .header("Authorization", "Bearer " + resendApiKey)
                     .header("Content-Type", "application/json")
                     .bodyValue(Map.of(
-                            "from", fromEmail,
+                            "from", "Optivise <" + fromEmail + ">",
                             "to", new String[]{toEmail},
                             "subject", "Welcome to Optivise! 🎉",
                             "html", html
@@ -114,7 +114,7 @@ public class EmailService {
             webClient.post().uri("/emails")
                     .header("Authorization", "Bearer " + resendApiKey)
                     .header("Content-Type", "application/json")
-                    .bodyValue(Map.of("from", fromEmail, "to", new String[]{"varunkumarkonnoju@gmail.com"},
+                    .bodyValue(Map.of("from", "Optivise <" + fromEmail + ">", "to", new String[]{"varunkumarkonnoju@gmail.com"},
                             "subject", "New Waitlist Signup: " + feature, "html", html))
                     .retrieve().bodyToMono(String.class).block();
         } catch (Exception e) {
@@ -132,7 +132,7 @@ public class EmailService {
             webClient.post().uri("/emails")
                     .header("Authorization", "Bearer " + resendApiKey)
                     .header("Content-Type", "application/json")
-                    .bodyValue(Map.of("from", fromEmail, "to", new String[]{userEmail},
+                    .bodyValue(Map.of("from", "Optivise <" + fromEmail + ">", "to", new String[]{userEmail},
                             "subject", "You're on the waitlist for " + feature + " — Optivise", "html", html))
                     .retrieve().bodyToMono(String.class).block();
         } catch (Exception e) {

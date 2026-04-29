@@ -64,10 +64,15 @@ public class ShopifyService {
                     .bodyToMono(String.class)
                     .block();
             Map<String, Object> parsed = mapper.readValue(response, Map.class);
-            return (List<Map<String, Object>>) parsed.get("products");
+            Object products = parsed.get("products");
+            if (products == null) {
+                log.warn("No products key in Shopify response: {}", response.substring(0, Math.min(200, response.length())));
+                return new ArrayList<>();
+            }
+            return (List<Map<String, Object>>) products;
         } catch (Exception e) {
             log.error("Failed to fetch Shopify products: {}", e.getMessage());
-            return List.of();
+            return new ArrayList<>();
         }
     }
 
@@ -100,10 +105,15 @@ public class ShopifyService {
                     .bodyToMono(String.class)
                     .block();
             Map<String, Object> parsed = mapper.readValue(response, Map.class);
-            return (List<Map<String, Object>>) parsed.get("orders");
+            Object orders = parsed.get("orders");
+            if (orders == null) {
+                log.warn("No orders key in Shopify response: {}", response.substring(0, Math.min(200, response.length())));
+                return new ArrayList<>();
+            }
+            return (List<Map<String, Object>>) orders;
         } catch (Exception e) {
             log.error("Failed to fetch Shopify orders: {}", e.getMessage());
-            return List.of();
+            return new ArrayList<>();
         }
     }
 

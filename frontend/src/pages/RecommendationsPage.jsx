@@ -17,17 +17,16 @@ export default function RecommendationsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [applied, setApplied] = useState(new Set())
-  const [dismissed, setDismissed] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('dismissed_recs') || '[]')) }
-    catch { return new Set() }
-  })
+  const [dismissed, setDismissed] = useState(new Set())
 
-  const dismissRec = (id) => {
-    setDismissed(prev => {
-      const next = new Set([...prev, id])
-      localStorage.setItem('dismissed_recs', JSON.stringify([...next]))
-      return next
-    })
+  const dismissRec = async (id) => {
+    setDismissed(prev => new Set([...prev, id]))
+    try {
+      await fetch('/api/suggestions/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+      })
+    } catch {}
   }
 
   useEffect(() => {

@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage'
 import LandingPage from './pages/LandingPage'
 import RegisterPage from './pages/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import HelpPage from './pages/HelpPage'
 import PrivacyPage from './pages/PrivacyPage'
 import ProfilePage from './pages/ProfilePage'
 import TermsPage from './pages/TermsPage'
@@ -58,6 +59,7 @@ function AppRoutes() {
       <Route path="/oauth/success" element={<OAuthSuccessPage />} />
       <Route path="/assistant" element={<ProtectedRoute><AssistantPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+      <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )
@@ -67,9 +69,9 @@ export default function App() {
   return (
     <AuthProvider>
       <SettingsProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
       </SettingsProvider>
     </AuthProvider>
   )

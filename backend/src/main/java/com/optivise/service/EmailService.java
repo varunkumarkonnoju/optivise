@@ -140,4 +140,19 @@ public class EmailService {
         }
     }
 
+    public void sendSupportNotification(String html, String subject, String fromName, String fromEmail) {
+        try {
+            webClient.post().uri("/emails")
+                    .header("Authorization", "Bearer " + resendApiKey)
+                    .header("Content-Type", "application/json")
+                    .bodyValue(Map.of("from", "Optivise <" + fromEmail + ">",
+                            "to", new String[]{"hello@optiviseai.io"},
+                            "subject", "Support: " + subject + " from " + fromName,
+                            "html", html))
+                    .retrieve().bodyToMono(String.class).block();
+        } catch (Exception e) {
+            System.err.println("Support email failed: " + e.getMessage());
+        }
+    }
+
 }

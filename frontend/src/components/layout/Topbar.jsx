@@ -41,6 +41,18 @@ export default function Topbar({ onMenuClick }) {
   const notifRef = useRef(null)
   const userRef = useRef(null)
 
+  // ⌘K / Ctrl+K keyboard shortcut
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        document.querySelector('input[placeholder="Search anything..."]')?.focus()
+      }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
+
   const fetchNotifications = async () => {
     setLoadingNotif(true)
     try {

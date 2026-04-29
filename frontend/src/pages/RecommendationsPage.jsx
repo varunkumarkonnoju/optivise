@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSettings } from '../hooks/useSettings'
+import { formatLocalTime } from '../utils/formatTime'
 
 const PRIORITY_COLORS = { high: '#EF4444', medium: '#F59E0B', low: '#34D399' }
 const PRIORITY_BG = { high: 'rgba(239,68,68,0.1)', medium: 'rgba(245,158,11,0.1)', low: 'rgba(52,211,153,0.1)' }
@@ -203,7 +204,7 @@ export default function RecommendationsPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
                   {s.timestamp && (
                     <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1 }}>
-                      🕐 {s.timestamp}
+                      🕐 {formatLocalTime(s.timestamp)}
                     </span>
                   )}
                   <button

@@ -199,7 +199,7 @@ public class SuggestionController {
 
             // Sort by priority
             // Add real timestamp to all suggestions
-            String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM d, h:mm a"));
+            String now = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
             suggestions.forEach(s -> s.put("timestamp", now));
 
             suggestions.sort((a, b) -> {

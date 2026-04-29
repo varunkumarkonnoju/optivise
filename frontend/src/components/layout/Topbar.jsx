@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import { formatLocalTime } from '../../utils/formatTime'
 import { Bell, Plus, Search, ChevronDown, User, Settings, LogOut, HelpCircle } from 'lucide-react'
 
 export default function Topbar({ onMenuClick }) {
@@ -222,7 +223,7 @@ export default function Topbar({ onMenuClick }) {
                       <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.4 }}>{n.message}</div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
                         <div style={{ fontSize: 11, color: 'var(--text-muted)', opacity: 0.7 }}>
-                          {n.time ? new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' · ' + new Date().toLocaleDateString([], {month: 'short', day: 'numeric'}) : 'Just now'}
+                          {formatLocalTime(n.time)}
                         </div>
                         <button
                           onClick={e => { e.stopPropagation(); dismiss(n.id) }}

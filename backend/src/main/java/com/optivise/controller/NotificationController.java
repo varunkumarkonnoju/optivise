@@ -205,7 +205,7 @@ public class NotificationController {
         Map<String, Object> n = new LinkedHashMap<>();
         n.put("id", id); n.put("type", type); n.put("icon", icon);
         n.put("title", title); n.put("message", message);
-        n.put("time", LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM d, h:mm a")));
+        n.put("time", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         n.put("isNew", isNew); n.put("color", color); n.put("actionUrl", actionUrl);
         return n;
     }

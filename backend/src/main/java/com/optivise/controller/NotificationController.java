@@ -188,18 +188,29 @@ public class NotificationController {
     private void saveOrUpdate(String shop, String notifId, String type, String icon,
                               String title, String message, boolean isNew, String color, String actionUrl) {
         Optional<Notification> existing = notifRepo.findByShopAndNotifId(shop, notifId);
-        Notification n = existing.orElseGet(Notification::new);
-        n.setShop(shop);
-        n.setNotifId(notifId);
-        n.setType(type);
-        n.setIcon(icon);
-        n.setTitle(title);
-        n.setMessage(message);
-        n.setNew(isNew);
-        n.setColor(color);
-        n.setActionUrl(actionUrl);
-        n.setCreatedAt(LocalDateTime.now());
-        n.setDismissed(false);
-        notifRepo.save(n);
+        if (existing.isPresent()) {
+            // Update content but KEEP original timestamp
+            Notification n = existing.get();
+            n.setTitle(title);
+            n.setMessage(message);
+            n.setColor(color);
+            // Only un-dismiss if content changed significantly
+            notifRepo.save(n);
+        } else {
+            // New notification - set timestamp now
+            Notification n = new Notification();
+            n.setShop(shop);
+            n.setNotifId(notifId);
+            n.setType(type);
+            n.setIcon(icon);
+            n.setTitle(title);
+            n.setMessage(message);
+            n.setNew(isNew);
+            n.setColor(color);
+            n.setActionUrl(actionUrl);
+            n.setCreatedAt(LocalDateTime.now());
+            n.setDismissed(false);
+            notifRepo.save(n);
+        }
     }
 }

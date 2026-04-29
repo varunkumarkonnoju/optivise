@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -203,7 +204,8 @@ public class NotificationController {
     private Map<String, Object> notif(String id, String type, String icon, String title, String message, String time, boolean isNew, String color, String actionUrl) {
         Map<String, Object> n = new LinkedHashMap<>();
         n.put("id", id); n.put("type", type); n.put("icon", icon);
-        n.put("title", title); n.put("message", message); n.put("time", time);
+        n.put("title", title); n.put("message", message);
+        n.put("time", LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM d, h:mm a")));
         n.put("isNew", isNew); n.put("color", color); n.put("actionUrl", actionUrl);
         return n;
     }

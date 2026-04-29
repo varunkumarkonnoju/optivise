@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
@@ -196,6 +198,10 @@ public class SuggestionController {
             suggestions.add(analyticsRec);
 
             // Sort by priority
+            // Add real timestamp to all suggestions
+            String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM d, h:mm a"));
+            suggestions.forEach(s -> s.put("timestamp", now));
+
             suggestions.sort((a, b) -> {
                 Map<String, Integer> pri = Map.of("high", 0, "medium", 1, "low", 2);
                 return pri.getOrDefault(a.get("priority"), 2) - pri.getOrDefault(b.get("priority"), 2);

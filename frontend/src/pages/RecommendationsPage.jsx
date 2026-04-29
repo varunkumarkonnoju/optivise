@@ -9,11 +9,24 @@ const TYPE_ICONS = {
 }
 
 export default function RecommendationsPage() {
+  const { formatCurrency } = useSettings()
   const navigate = useNavigate()
   const [suggestions, setSuggestions] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [applied, setApplied] = useState(new Set())
+  const [dismissed, setDismissed] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('dismissed_recs') || '[]')) }
+    catch { return new Set() }
+  })
+
+  const dismissRec = (id) => {
+    setDismissed(prev => {
+      const next = new Set([...prev, id])
+      localStorage.setItem('dismissed_recs', JSON.stringify([...next]))
+      return next
+    })
+  }
 
   useEffect(() => {
     fetchSuggestions()
@@ -54,7 +67,7 @@ export default function RecommendationsPage() {
     setApplied(prev => new Set([...prev, suggestion.id]))
   }
 
-  const filtered = suggestions.filter(s => {
+  const filtered = suggestions.filter(s => !dismissed.has(String(s.id))).filter(s => {
     if (filter === 'all') return !applied.has(s.id)
     if (filter === 'applied') return applied.has(s.id)
     return s.priority === filter && !applied.has(s.id)
@@ -185,6 +198,20 @@ export default function RecommendationsPage() {
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                     ⏱️ {s.effort}
                   </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                  {s.timestamp && (
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1 }}>
+                      🕐 {s.timestamp}
+                    </span>
+                  )}
+                  <button
+                    onClick={e => { e.stopPropagation(); dismissRec(String(s.id)) }}
+                    title="Dismiss"
+                    style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 11, fontFamily: 'inherit' }}
+                    onMouseEnter={e => e.currentTarget.style.color = '#F87171'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+                  >✕ Dismiss</button>
                 </div>
                 <button onClick={() => handleAction(s)} style={{
                   background: 'linear-gradient(135deg, #6366F1, #06B6D4)',

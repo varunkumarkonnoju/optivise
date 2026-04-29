@@ -115,9 +115,9 @@ export default function Topbar({ onMenuClick }) {
           </button>
           {showNew && (
             <div style={{
-              position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 220,
+              position: 'fixed', right: 12, top: 68, width: 220,
               background: 'var(--bg-card)', border: '1px solid var(--border)',
-              borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 200, overflow: 'hidden'
+              borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 9999, overflow: 'hidden'
             }}>
               <div style={{ padding: '8px 12px 6px', fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>Quick Actions</div>
               {[
@@ -161,9 +161,9 @@ export default function Topbar({ onMenuClick }) {
 
           {showNotif && (
             <div style={{
-              position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 360,
+              position: 'fixed', right: 12, top: 68, width: 'min(360px, calc(100vw - 24px))',
               background: 'var(--bg-card)', border: '1px solid var(--border)',
-              borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 200, overflow: 'hidden'
+              borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 9999, overflow: 'hidden'
             }}>
               {/* Header */}
               <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -268,9 +268,9 @@ export default function Topbar({ onMenuClick }) {
 
           {showUser && (
             <div style={{
-              position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 200,
+              position: 'fixed', right: 12, top: 68, width: 200,
               background: 'var(--bg-card)', border: '1px solid var(--border)',
-              borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 200, overflow: 'hidden'
+              borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 9999, overflow: 'hidden'
             }}>
               {[
                 { icon: <User size={14}/>, label: 'Profile', action: () => navigate('/profile') },

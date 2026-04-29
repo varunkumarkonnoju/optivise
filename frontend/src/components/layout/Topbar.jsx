@@ -74,7 +74,10 @@ export default function Topbar({ onMenuClick }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const visibleNotifs = notifications.filter(n => !dismissed.has(n.id))
+  // Only dismiss notifications that are in current fetch - reset old dismissed IDs
+  const currentIds = new Set(notifications.map(n => n.id))
+  const activeDismissed = new Set([...dismissed].filter(id => currentIds.has(id)))
+  const visibleNotifs = notifications.filter(n => !activeDismissed.has(n.id))
   const newCount = visibleNotifs.filter(n => n.isNew).length
 
   return (

@@ -220,7 +220,7 @@ export default function RecommendationsPage() {
                   padding: '8px 16px', fontSize: 12, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit'
                 }}>
-                  {s.actionLabel || 'Take Action'} →
+                  {(s.actionLabel || 'Take Action →').replace(' →→', ' →')}
                 </button>
               </div>
             </div>

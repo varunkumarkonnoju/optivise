@@ -165,19 +165,7 @@ public class SuggestionController {
 
             // Add more smart recommendations
 
-            // Recommendation: Run A/B test if no tests running
-            Map<String, Object> abTest = new LinkedHashMap<>();
-            abTest.put("id", suggestionId++);
-            abTest.put("type", "abtesting");
-            abTest.put("priority", "medium");
-            abTest.put("title", "Run an A/B test on your best seller");
-            abTest.put("description", "A/B testing product descriptions can increase conversions by 10-25%. Start with your highest revenue product.");
-            abTest.put("impact", "+10-25% conversions");
-            abTest.put("effort", "5 min");
-            abTest.put("action", "create_ab_test");
-            abTest.put("actionLabel", "Create A/B Test");
-            abTest.put("applied", false);
-            suggestions.add(abTest);
+
 
             // Recommendation: Ask AI for store analysis
             Map<String, Object> aiRec = new LinkedHashMap<>();

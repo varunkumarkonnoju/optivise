@@ -93,7 +93,7 @@ public class NotificationController {
                 notifications.add(notif("no-orders-today", "info", "📊",
                         "No orders yet today",
                         "This week: " + weekOrders + " orders · $" + String.format("%.2f", weekRevenue),
-                        "Updated now", false, "#6366F1", "/analytics"));
+                        "Just now", false, "#6366F1", "/analytics"));
             }
 
             // ── 2. Revenue change vs yesterday ────────────────
@@ -103,7 +103,7 @@ public class NotificationController {
                 notifications.add(notif("revenue-change", "revenue", change >= 0 ? "📈" : "📉",
                         change == 0 ? "Revenue tracking active" : "Revenue " + (change >= 0 ? "up" : "down") + " " + sign + String.format("%.1f", change) + "% vs yesterday",
                         "Yesterday: $" + String.format("%.2f", yesterdayRevenue) + " → Today: $" + String.format("%.2f", todayRevenue),
-                        "1h ago", change < -10, change >= 0 ? "#34D399" : "#F87171", "/analytics"));
+                        "Just now", change < -10, change >= 0 ? "#34D399" : "#F87171", "/analytics"));
             }
 
             // ── 3. Revenue milestones ─────────────────────────
@@ -136,7 +136,7 @@ public class NotificationController {
                 notifications.add(notif("low-stock", "warning", "⚠️",
                         lowStockCount + " product" + (lowStockCount > 1 ? "s" : "") + " low on stock",
                         String.join(", ", lowStockProducts) + (lowStockCount > 2 ? " +" + (lowStockCount - 2) + " more" : ""),
-                        "2h ago", true, "#F59E0B", "/products"));
+                        "Just now", true, "#F59E0B", "/products"));
             }
 
             // ── 5. Missing descriptions ───────────────────────
@@ -148,7 +148,7 @@ public class NotificationController {
                 notifications.add(notif("missing-descriptions", "ai", "✨",
                         noDescCount + " product" + (noDescCount > 1 ? "s" : "") + " missing AI descriptions",
                         "Add descriptions to boost conversions by up to 30%",
-                        "3h ago", noDescCount > 2, "#818CF8", "/products"));
+                        "Just now", noDescCount > 2, "#818CF8", "/products"));
             }
 
             // ── 6. New customers this week ────────────────────
@@ -156,7 +156,7 @@ public class NotificationController {
                 notifications.add(notif("new-customers", "customers", "👤",
                         newCustomerEmails.size() + " new customer" + (newCustomerEmails.size() > 1 ? "s" : "") + " this week",
                         "Growing your customer base! Keep it up.",
-                        "4h ago", newCustomerEmails.size() > 3, "#06B6D4", "/analytics"));
+                        "Just now", newCustomerEmails.size() > 3, "#06B6D4", "/analytics"));
             }
 
             // ── 7. Abandoned carts ────────────────────────────
@@ -165,7 +165,7 @@ public class NotificationController {
                 notifications.add(notif("abandoned-carts", "warning", "🔄",
                         abandonedCarts + " pending order" + (abandonedCarts > 1 ? "s" : "") + " need attention",
                         "Potential recovery: $" + String.format("%.0f", recoveryPotential),
-                        "5h ago", true, "#F59E0B", "/analytics"));
+                        "Just now", true, "#F59E0B", "/analytics"));
             }
 
             // ── 8. A/B test winner ────────────────────────────
@@ -179,7 +179,7 @@ public class NotificationController {
                         notifications.add(notif("abtest-winner-" + test.getId(), "abtesting", "🎯",
                                 "A/B test winner detected: " + test.getName(),
                                 winner + " is winning with " + String.format("%.1f", diff) + "% higher conversion",
-                                "6h ago", true, "#6366F1", "/abtesting"));
+                                "Just now", true, "#6366F1", "/abtesting"));
                     }
                 });
             } catch (Exception ignored) {}
@@ -188,7 +188,7 @@ public class NotificationController {
             notifications.add(notif("store-health", "info", "✅",
                     "Store health check complete",
                     products.size() + " products · " + orders.size() + " total orders · $" + String.format("%.0f", weekRevenue) + " this week",
-                    "5h ago", false, "#06B6D4", "/analytics"));
+                    "Just now", false, "#06B6D4", "/analytics"));
 
         } catch (Exception e) {
             notifications.add(notif("connect-store", "info", "🔗",

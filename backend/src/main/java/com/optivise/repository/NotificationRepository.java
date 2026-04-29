@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
-    List<Notification> findByShopAndDismissedFalseOrderByCreatedAtDesc(String shop);
+    List<Notification> findByShopAndDismissedFalseOrderByPriorityDescCreatedAtDesc(String shop);
     Optional<Notification> findByShopAndNotifId(String shop, String notifId);
 
     @Modifying @Transactional

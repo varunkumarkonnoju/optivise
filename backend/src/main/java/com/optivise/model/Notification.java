@@ -21,6 +21,7 @@ public class Notification {
     private String actionUrl;
     private boolean isNew = true;
     private boolean dismissed = false;
+    private int priority = 0; // Higher = shown first
     private LocalDateTime createdAt;
 
     @PrePersist
@@ -47,6 +48,8 @@ public class Notification {
     public boolean isNew() { return isNew; }
     public void setNew(boolean v) { this.isNew = v; }
     public boolean isDismissed() { return dismissed; }
+    public int getPriority() { return priority; }
+    public void setPriority(int v) { this.priority = v; }
     public void setDismissed(boolean v) { this.dismissed = v; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime v) { this.createdAt = v; }

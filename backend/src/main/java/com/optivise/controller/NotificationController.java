@@ -46,7 +46,7 @@ public class NotificationController {
             System.err.println("Failed to check notifications: " + e.getMessage());
         }
 
-        List<Notification> stored = notifRepo.findByShopAndDismissedFalseOrderByCreatedAtDesc(domain);
+        List<Notification> stored = notifRepo.findByShopAndDismissedFalseOrderByPriorityDescCreatedAtDesc(domain);
         List<Map<String, Object>> result = new ArrayList<>();
         for (Notification n : stored) {
             Map<String, Object> map = new LinkedHashMap<>();
@@ -210,6 +210,17 @@ public class NotificationController {
             n.setActionUrl(actionUrl);
             n.setCreatedAt(LocalDateTime.now());
             n.setDismissed(false);
+            // Set priority based on type
+            int priority = switch(type) {
+                case "orders" -> 100;
+                case "warning" -> 90;
+                case "revenue" -> 80;
+                case "ai" -> 70;
+                case "customers" -> 60;
+                case "milestone" -> 95;
+                default -> 50;
+            };
+            n.setPriority(priority);
             notifRepo.save(n);
         }
     }

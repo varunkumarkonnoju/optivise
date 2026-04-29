@@ -24,6 +24,7 @@ public class ShopifyService {
             .clientConnector(new ReactorClientHttpConnector(
                     HttpClient.create().resolver(DefaultAddressResolverGroup.INSTANCE)
             ))
+            .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024)) // 10MB buffer
             .build();
 
     @Value("${shopify.store.domain}")
@@ -96,19 +97,27 @@ public class ShopifyService {
     public List<Map<String, Object>> fetchOrders(String domain, String token) {
         try {
             String url = "https://" + domain + "/admin/api/2023-10/orders.json?limit=50&status=any";
-            reactor.core.publisher.Mono<String> responseMono = shopifyWebClient
+            log.info("Fetching orders from: {}", url);
+            String response = shopifyWebClient
                     .get().uri(url)
                     .header("X-Shopify-Access-Token", token)
                     .header("Accept", "application/json")
-                    .exchangeToMono(r -> r.bodyToMono(String.class));
-            String response = responseMono.block();
+                    .exchangeToMono(r -> {
+                        log.info("Orders response status: {}", r.statusCode());
+                        return r.bodyToMono(String.class);
+                    })
+                    .block();
+            log.info("Orders response body (first 200): {}", response != null ? response.substring(0, Math.min(200, response.length())) : "null");
             if (response == null || response.isBlank()) return new ArrayList<>();
             Map<String, Object> parsed = mapper.readValue(response, Map.class);
             Object orders = parsed.get("orders");
-            if (orders == null) return new ArrayList<>();
+            if (orders == null) {
+                log.warn("No orders key found. Keys: {}", parsed.keySet());
+                return new ArrayList<>();
+            }
             return (List<Map<String, Object>>) orders;
         } catch (Exception e) {
-            log.error("Failed to fetch Shopify orders: {}", e.getMessage());
+            log.error("Failed to fetch Shopify orders: {}", e.getMessage(), e);
             return new ArrayList<>();
         }
     }

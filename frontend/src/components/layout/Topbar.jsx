@@ -221,7 +221,9 @@ export default function Topbar({ onMenuClick }) {
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.4 }}>{n.message}</div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)', opacity: 0.7 }}>{n.time}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', opacity: 0.7 }}>
+                          {n.time ? new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' · ' + new Date().toLocaleDateString([], {month: 'short', day: 'numeric'}) : 'Just now'}
+                        </div>
                         <button
                           onClick={e => { e.stopPropagation(); dismiss(n.id) }}
                           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 11, padding: '2px 6px', borderRadius: 4 }}

@@ -211,3 +211,8 @@ a { text-decoration: none; color: inherit; }
   h1 { font-size: 18px !important; }
   .metric-card { padding: 14px !important; }
 }
+
+/* ── Hide hamburger on desktop ─────────────────────── */
+@media (min-width: 769px) {
+  .topbar-menu-btn { display: none !important; }
+}

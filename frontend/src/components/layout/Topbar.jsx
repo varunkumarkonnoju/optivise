@@ -80,17 +80,18 @@ export default function Topbar({ onMenuClick }) {
   return (
     <header style={{
       height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '0 24px', background: 'var(--bg-primary)',
+      padding: '0 12px', background: 'var(--bg-primary)',
       borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 100
     }}>
       {/* Left */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <button onClick={onMenuClick} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', padding: 4 }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        {/* Hide search on mobile */}
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }} className="topbar-search">
           <Search size={14} style={{ position: 'absolute', left: 10, color: 'var(--text-muted)' }}/>
           <input placeholder="Search anything..." style={{
             background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 8,

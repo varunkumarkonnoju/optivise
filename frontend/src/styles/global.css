@@ -197,3 +197,17 @@ a { text-decoration: none; color: inherit; }
   .land-h2 { font-size: 26px !important; }
   .analytics-stats { grid-template-columns: 1fr !important; }
 }
+
+/* ── Mobile Topbar ─────────────────────────────────── */
+@media (max-width: 768px) {
+  .topbar-search { display: none !important; }
+  .topbar-username { display: none !important; }
+  .topbar-chevron { display: none !important; }
+}
+
+/* ── Mobile Layout ─────────────────────────────────── */
+@media (max-width: 768px) {
+  .card { padding: 16px !important; }
+  h1 { font-size: 18px !important; }
+  .metric-card { padding: 14px !important; }
+}

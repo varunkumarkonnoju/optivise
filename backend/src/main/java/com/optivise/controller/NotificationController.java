@@ -1,7 +1,9 @@
 package com.optivise.controller;
 
+import com.optivise.model.Notification;
 import com.optivise.model.User;
 import com.optivise.model.UserSettings;
+import com.optivise.repository.NotificationRepository;
 import com.optivise.repository.UserRepository;
 import com.optivise.repository.UserSettingsRepository;
 import com.optivise.repository.AbTestRepository;
@@ -15,6 +17,7 @@ import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @RestController
@@ -23,6 +26,7 @@ public class NotificationController {
 
     @Autowired private UserRepository userRepo;
     @Autowired private UserSettingsRepository settingsRepo;
+    @Autowired private NotificationRepository notifRepo;
     @Autowired private ShopifyService shopifyService;
     @Autowired private AbTestRepository abTestRepo;
 
@@ -37,176 +41,169 @@ public class NotificationController {
         String token = user.getShopifyAccessToken() != null && !user.getShopifyAccessToken().isBlank()
                 ? user.getShopifyAccessToken() : defaultToken;
 
-        List<Map<String, Object>> notifications = new ArrayList<>();
-
+        // Check for new events and save new notifications
         try {
-            List<Map<String, Object>> orders = shopifyService.fetchOrders(domain, token);
-            // Limit to last 50 orders to save memory
-            if (orders.size() > 50) orders = orders.subList(0, 50);
-            List<Map<String, Object>> products = shopifyService.fetchProducts(domain, token);
-            if (products.size() > 50) products = products.subList(0, 50);
+            checkAndSaveNotifications(domain, token, settings);
+        } catch (Exception e) {
+            System.err.println("Failed to check notifications: " + e.getMessage());
+        }
 
-            String today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
-            String yesterday = LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE);
-            String thisWeekStart = LocalDate.now().minusDays(7).format(DateTimeFormatter.ISO_LOCAL_DATE);
+        // Return stored notifications with relative time
+        List<Notification> stored = notifRepo.findByShopAndDismissedFalseOrderByCreatedAtDesc(domain);
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Notification n : stored) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("id", n.getNotifId());
+            map.put("type", n.getType());
+            map.put("icon", n.getIcon());
+            map.put("title", n.getTitle());
+            map.put("message", n.getMessage());
+            map.put("time", n.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+            map.put("isNew", n.isNew());
+            map.put("color", n.getColor());
+            map.put("actionUrl", n.getActionUrl());
+            result.add(map);
+        }
+        return ResponseEntity.ok(result);
+    }
 
-            double todayRevenue = 0, yesterdayRevenue = 0, weekRevenue = 0, totalRevenue = 0;
-            int todayOrders = 0, weekOrders = 0;
-            int abandonedCarts = 0;
-            Set<String> newCustomerEmails = new HashSet<>();
+    @DeleteMapping("/{notifId}")
+    public ResponseEntity<?> dismiss(@PathVariable String notifId, Principal principal) {
+        User user = userRepo.findByEmail(principal.getName()).orElseThrow();
+        notifRepo.dismissByShopAndNotifId(user.getShopDomain(), notifId);
+        return ResponseEntity.ok(Map.of("message", "dismissed"));
+    }
 
-            for (Map<String, Object> order : orders) {
-                String createdAt = (String) order.getOrDefault("created_at", "");
-                String financial = (String) order.getOrDefault("financial_status", "");
-                if ("refunded".equals(financial) || "voided".equals(financial)) continue;
-                double total = Double.parseDouble(order.getOrDefault("total_price", "0").toString());
-                totalRevenue += total;
+    @PostMapping("/mark-all-read")
+    public ResponseEntity<?> markAllRead(Principal principal) {
+        User user = userRepo.findByEmail(principal.getName()).orElseThrow();
+        notifRepo.markAllReadByShop(user.getShopDomain());
+        return ResponseEntity.ok(Map.of("message", "marked all read"));
+    }
 
-                if (createdAt.startsWith(today)) { todayRevenue += total; todayOrders++; }
-                if (createdAt.startsWith(yesterday)) yesterdayRevenue += total;
-                if (createdAt.compareTo(thisWeekStart) >= 0) { weekRevenue += total; weekOrders++; }
+    private void checkAndSaveNotifications(String domain, String token, UserSettings settings) {
+        List<Map<String, Object>> orders = shopifyService.fetchOrders(domain, token);
+        List<Map<String, Object>> products = shopifyService.fetchProducts(domain, token);
 
-                // Track new customers this week via orders
-                Object customerObj = order.get("customer");
-                if (customerObj instanceof Map) {
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> customer = (Map<String, Object>) customerObj;
-                    String custEmail = (String) customer.getOrDefault("email", "");
-                    if (!custEmail.isEmpty() && createdAt.compareTo(thisWeekStart) >= 0) {
-                        newCustomerEmails.add(custEmail);
-                    }
+        String today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+        String yesterday = LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE);
+        String thisWeekStart = LocalDate.now().minusDays(7).format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+        double todayRevenue = 0, yesterdayRevenue = 0, weekRevenue = 0;
+        int todayOrders = 0, weekOrders = 0;
+        Set<String> newCustomerEmails = new HashSet<>();
+
+        for (Map<String, Object> order : orders) {
+            String createdAt = (String) order.getOrDefault("created_at", "");
+            String financial = (String) order.getOrDefault("financial_status", "");
+            if ("refunded".equals(financial) || "voided".equals(financial)) continue;
+            double total = Double.parseDouble(order.getOrDefault("total_price", "0").toString());
+
+            if (createdAt.startsWith(today)) { todayRevenue += total; todayOrders++; }
+            if (createdAt.startsWith(yesterday)) yesterdayRevenue += total;
+            if (createdAt.compareTo(thisWeekStart) >= 0) { weekRevenue += total; weekOrders++; }
+
+            Object customerObj = order.get("customer");
+            if (customerObj instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> customer = (Map<String, Object>) customerObj;
+                String email = (String) customer.getOrDefault("email", "");
+                if (!email.isEmpty() && createdAt.compareTo(thisWeekStart) >= 0)
+                    newCustomerEmails.add(email);
+            }
+        }
+
+        // ── New orders today ─────────────────────────────
+        if (settings.isNewOrderAlerts()) {
+            String key = "orders-" + today + "-" + todayOrders;
+            if (notifRepo.findByShopAndNotifId(domain, key).isEmpty()) {
+                if (todayOrders > 0) {
+                    save(domain, key, "orders", "🛍️",
+                            todayOrders + " new order" + (todayOrders > 1 ? "s" : "") + " today",
+                            "Revenue today: $" + String.format("%.2f", todayRevenue),
+                            true, "#6366F1", "/analytics");
                 }
             }
+        }
 
-            // Count abandoned checkouts
-            for (Map<String, Object> order : orders) {
-                String status = (String) order.getOrDefault("financial_status", "");
-                if ("pending".equals(status)) abandonedCarts++;
-            }
-
-            // ── 1. New orders today ───────────────────────────
-            if (todayOrders > 0 && settings.isNewOrderAlerts()) {
-                notifications.add(notif("orders-today", "orders", "🛍️",
-                        todayOrders + " new order" + (todayOrders > 1 ? "s" : "") + " today",
-                        "Revenue today: $" + String.format("%.2f", todayRevenue),
-                        "Just now", true, "#6366F1", "/analytics"));
-            } else {
-                notifications.add(notif("no-orders-today", "info", "📊",
-                        "No orders yet today",
-                        "This week: " + weekOrders + " orders · $" + String.format("%.2f", weekRevenue),
-                        "Just now", false, "#6366F1", "/analytics"));
-            }
-
-            // ── 2. Revenue change vs yesterday ────────────────
-            if (yesterdayRevenue > 0 || todayRevenue > 0) {
-                double change = yesterdayRevenue > 0 ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100 : 0;
-                String sign = change >= 0 ? "+" : "";
-                notifications.add(notif("revenue-change", "revenue", change >= 0 ? "📈" : "📉",
-                        change == 0 ? "Revenue tracking active" : "Revenue " + (change >= 0 ? "up" : "down") + " " + sign + String.format("%.1f", change) + "% vs yesterday",
-                        "Yesterday: $" + String.format("%.2f", yesterdayRevenue) + " → Today: $" + String.format("%.2f", todayRevenue),
-                        "Just now", change < -10, change >= 0 ? "#34D399" : "#F87171", "/analytics"));
-            }
-
-            // ── 3. Revenue milestones ─────────────────────────
-            long[] milestones = {1000, 5000, 10000, 25000, 50000, 100000};
-            for (long milestone : milestones) {
-                if (totalRevenue >= milestone && totalRevenue < milestone * 1.1) {
-                    notifications.add(notif("milestone-" + milestone, "milestone", "🌟",
-                            "🎉 Revenue milestone: $" + String.format("%,d", milestone) + " reached!",
-                            "Total all-time revenue: $" + String.format("%.2f", totalRevenue),
-                            "Achievement unlocked", true, "#F59E0B", "/analytics"));
-                    break;
-                }
-            }
-
-            // ── 4. Low stock alert ────────────────────────────
-            int lowStockCount = 0;
-            List<String> lowStockProducts = new ArrayList<>();
+        // ── Low stock ─────────────────────────────────────
+        if (settings.isLowStockAlerts()) {
             for (Map<String, Object> product : products) {
                 @SuppressWarnings("unchecked")
                 List<Map<String, Object>> variants = (List<Map<String, Object>>) product.getOrDefault("variants", List.of());
                 for (Map<String, Object> variant : variants) {
                     Object inv = variant.get("inventory_quantity");
                     if (inv != null && Integer.parseInt(inv.toString()) <= 5 && Integer.parseInt(inv.toString()) >= 0) {
-                        lowStockCount++;
-                        if (lowStockProducts.size() < 2) lowStockProducts.add((String) product.getOrDefault("title", "Product"));
+                        String title = (String) product.getOrDefault("title", "Product");
+                        String key = "low-stock-" + product.get("id");
+                        if (notifRepo.findByShopAndNotifId(domain, key).isEmpty()) {
+                            save(domain, key, "warning", "⚠️",
+                                    "Low stock: \"" + title + "\"",
+                                    "Only " + inv + " units left. Restock soon.",
+                                    true, "#F59E0B", "/products");
+                        }
                     }
                 }
             }
-            if (lowStockCount > 0 && settings.isLowStockAlerts()) {
-                notifications.add(notif("low-stock", "warning", "⚠️",
-                        lowStockCount + " product" + (lowStockCount > 1 ? "s" : "") + " low on stock",
-                        String.join(", ", lowStockProducts) + (lowStockCount > 2 ? " +" + (lowStockCount - 2) + " more" : ""),
-                        "Just now", true, "#F59E0B", "/products"));
-            }
+        }
 
-            // ── 5. Missing descriptions ───────────────────────
+        // ── Revenue change ────────────────────────────────
+        if (yesterdayRevenue > 0) {
+            double change = ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100;
+            String key = "revenue-" + today;
+            if (notifRepo.findByShopAndNotifId(domain, key).isEmpty()) {
+                String sign = change >= 0 ? "+" : "";
+                save(domain, key, "revenue", change >= 0 ? "📈" : "📉",
+                        "Revenue " + (change >= 0 ? "up" : "down") + " " + sign + String.format("%.1f", change) + "% vs yesterday",
+                        "Yesterday: $" + String.format("%.2f", yesterdayRevenue) + " → Today: $" + String.format("%.2f", todayRevenue),
+                        change < -10, change >= 0 ? "#34D399" : "#F87171", "/analytics");
+            }
+        }
+
+        // ── Missing descriptions ──────────────────────────
+        if (settings.isAiSuggestions()) {
             long noDescCount = products.stream().filter(p -> {
                 String body = (String) p.getOrDefault("body_html", "");
                 return body == null || body.trim().isEmpty();
             }).count();
-            if (noDescCount > 0 && settings.isAiSuggestions()) {
-                notifications.add(notif("missing-descriptions", "ai", "✨",
-                        noDescCount + " product" + (noDescCount > 1 ? "s" : "") + " missing AI descriptions",
-                        "Add descriptions to boost conversions by up to 30%",
-                        "Just now", noDescCount > 2, "#818CF8", "/products"));
+            if (noDescCount > 0) {
+                String key = "missing-desc-" + noDescCount;
+                if (notifRepo.findByShopAndNotifId(domain, key).isEmpty()) {
+                    save(domain, key, "ai", "✨",
+                            noDescCount + " product" + (noDescCount > 1 ? "s" : "") + " missing AI descriptions",
+                            "Add descriptions to boost conversions by up to 30%",
+                            noDescCount > 2, "#818CF8", "/products");
+                }
             }
-
-            // ── 6. New customers this week ────────────────────
-            if (!newCustomerEmails.isEmpty()) {
-                notifications.add(notif("new-customers", "customers", "👤",
-                        newCustomerEmails.size() + " new customer" + (newCustomerEmails.size() > 1 ? "s" : "") + " this week",
-                        "Growing your customer base! Keep it up.",
-                        "Just now", newCustomerEmails.size() > 3, "#06B6D4", "/analytics"));
-            }
-
-            // ── 7. Abandoned carts ────────────────────────────
-            if (abandonedCarts > 0) {
-                double recoveryPotential = abandonedCarts * (weekRevenue / Math.max(weekOrders, 1));
-                notifications.add(notif("abandoned-carts", "warning", "🔄",
-                        abandonedCarts + " pending order" + (abandonedCarts > 1 ? "s" : "") + " need attention",
-                        "Potential recovery: $" + String.format("%.0f", recoveryPotential),
-                        "Just now", true, "#F59E0B", "/analytics"));
-            }
-
-            // ── 8. A/B test winner ────────────────────────────
-            try {
-                abTestRepo.findByShopAndStatus(domain, "running").forEach(test -> {
-                    double aConv = test.getVariantAConversion();
-                    double bConv = test.getVariantBConversion();
-                    double diff = Math.abs(aConv - bConv);
-                    if (diff > 1.0 && test.getVariantATraffic() + test.getVariantBTraffic() > 100) {
-                        String winner = bConv > aConv ? test.getVariantBLabel() : test.getVariantALabel();
-                        notifications.add(notif("abtest-winner-" + test.getId(), "abtesting", "🎯",
-                                "A/B test winner detected: " + test.getName(),
-                                winner + " is winning with " + String.format("%.1f", diff) + "% higher conversion",
-                                "Just now", true, "#6366F1", "/abtesting"));
-                    }
-                });
-            } catch (Exception ignored) {}
-
-            // ── 9. Store health ───────────────────────────────
-            notifications.add(notif("store-health", "info", "✅",
-                    "Store health check complete",
-                    products.size() + " products · " + orders.size() + " total orders · $" + String.format("%.0f", weekRevenue) + " this week",
-                    "Just now", false, "#06B6D4", "/analytics"));
-
-        } catch (Exception e) {
-            notifications.add(notif("connect-store", "info", "🔗",
-                    "Connect your Shopify store",
-                    "Click here to connect your store and see real notifications",
-                    "Just now", true, "#6366F1", "/profile"));
         }
 
-        return ResponseEntity.ok(notifications);
+        // ── New customers ─────────────────────────────────
+        if (!newCustomerEmails.isEmpty()) {
+            String key = "customers-" + thisWeekStart + "-" + newCustomerEmails.size();
+            if (notifRepo.findByShopAndNotifId(domain, key).isEmpty()) {
+                save(domain, key, "customers", "👤",
+                        newCustomerEmails.size() + " new customer" + (newCustomerEmails.size() > 1 ? "s" : "") + " this week",
+                        "Growing your customer base! Keep it up.",
+                        newCustomerEmails.size() > 3, "#06B6D4", "/analytics");
+            }
+        }
+
+        // ── Store health (daily) ──────────────────────────
+        String healthKey = "health-" + today;
+        if (notifRepo.findByShopAndNotifId(domain, healthKey).isEmpty()) {
+            save(domain, healthKey, "info", "✅",
+                    "Store health check complete",
+                    products.size() + " products · " + orders.size() + " total orders · $" + String.format("%.0f", weekRevenue) + " this week",
+                    false, "#06B6D4", "/analytics");
+        }
     }
 
-    private Map<String, Object> notif(String id, String type, String icon, String title, String message, String time, boolean isNew, String color, String actionUrl) {
-        Map<String, Object> n = new LinkedHashMap<>();
-        n.put("id", id); n.put("type", type); n.put("icon", icon);
-        n.put("title", title); n.put("message", message);
-        n.put("time", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        n.put("isNew", isNew); n.put("color", color); n.put("actionUrl", actionUrl);
-        return n;
+    private void save(String shop, String notifId, String type, String icon,
+                      String title, String message, boolean isNew, String color, String actionUrl) {
+        Notification n = new Notification();
+        n.setShop(shop); n.setNotifId(notifId); n.setType(type);
+        n.setIcon(icon); n.setTitle(title); n.setMessage(message);
+        n.setNew(isNew); n.setColor(color); n.setActionUrl(actionUrl);
+        notifRepo.save(n);
     }
 }

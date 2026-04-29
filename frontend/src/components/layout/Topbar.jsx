@@ -11,10 +11,7 @@ export default function Topbar({ onMenuClick }) {
   const [showNotif, setShowNotif] = useState(false)
   const [showUser, setShowUser] = useState(false)
   const [notifications, setNotifications] = useState([])
-  const [dismissed, setDismissed] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('dismissed_notifs') || '[]')) }
-    catch { return new Set() }
-  })
+  const [dismissed, setDismissed] = useState(new Set())
   const [allRead, setAllRead] = useState(false)
   const [loadingNotif, setLoadingNotif] = useState(false)
   const newRef = useRef(null)
@@ -45,23 +42,25 @@ export default function Topbar({ onMenuClick }) {
     return () => clearInterval(interval)
   }, [])
 
-  // Persist dismissed notifications
-  const dismiss = (id) => {
-    setDismissed(prev => {
-      const next = new Set([...prev, id])
-      localStorage.setItem('dismissed_notifs', JSON.stringify([...next]))
-      return next
-    })
+  const dismiss = async (id) => {
+    setDismissed(prev => new Set([...prev, id]))
+    try {
+      await fetch('/api/notifications/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+      })
+    } catch {}
   }
 
-  const markAllRead = () => {
-    const allIds = notifications.map(n => n.id)
-    setDismissed(prev => {
-      const next = new Set([...prev, ...allIds])
-      localStorage.setItem('dismissed_notifs', JSON.stringify([...next]))
-      return next
-    })
+  const markAllRead = async () => {
+    setDismissed(new Set(notifications.map(n => n.id)))
     setAllRead(true)
+    try {
+      await fetch('/api/notifications/mark-all-read', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+      })
+    } catch {}
   }
 
   // Close dropdowns on outside click

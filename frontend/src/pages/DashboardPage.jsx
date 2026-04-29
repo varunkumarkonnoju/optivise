@@ -48,7 +48,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       <div style={{ color: '#94A3B8', marginBottom: 6 }}>{label}</div>
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color, fontWeight: 600 }}>
-          {p.name}: {p.name === 'Revenue' ? formatCurrency(p.value) : p.value?.toFixed(2) + (p.name === 'Conversion' ? '%' : '')}
+          {p.name}: {p.name === 'Revenue' ? '$' + Number(p.value || 0).toFixed(0) : p.value?.toFixed(2) + (p.name === 'Conversion' ? '%' : '')}
         </div>
       ))}
     </div>

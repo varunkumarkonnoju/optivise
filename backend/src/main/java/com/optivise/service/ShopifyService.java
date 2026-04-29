@@ -56,19 +56,17 @@ public class ShopifyService {
     @SuppressWarnings("unchecked")
     public List<Map<String, Object>> fetchProducts(String domain, String token) {
         try {
-            String url = "https://" + domain + "/admin/api/2023-10/products.json?limit=250";
+            String url = "https://" + domain + "/admin/api/2023-10/products.json?limit=50";
             String response = shopifyWebClient
                     .get().uri(url)
                     .header("X-Shopify-Access-Token", token)
-                    .retrieve()
-                    .bodyToMono(String.class)
+                    .header("Accept", "application/json")
+                    .exchangeToMono(r -> r.bodyToMono(String.class))
                     .block();
+            if (response == null || response.isBlank()) return new ArrayList<>();
             Map<String, Object> parsed = mapper.readValue(response, Map.class);
             Object products = parsed.get("products");
-            if (products == null) {
-                log.warn("No products key in Shopify response: {}", response.substring(0, Math.min(200, response.length())));
-                return new ArrayList<>();
-            }
+            if (products == null) return new ArrayList<>();
             return (List<Map<String, Object>>) products;
         } catch (Exception e) {
             log.error("Failed to fetch Shopify products: {}", e.getMessage());
@@ -97,19 +95,17 @@ public class ShopifyService {
 
     public List<Map<String, Object>> fetchOrders(String domain, String token) {
         try {
-            String url = "https://" + domain + "/admin/api/2023-10/orders.json?limit=250&status=any";
-            String response = shopifyWebClient
+            String url = "https://" + domain + "/admin/api/2023-10/orders.json?limit=50&status=any";
+            reactor.core.publisher.Mono<String> responseMono = shopifyWebClient
                     .get().uri(url)
                     .header("X-Shopify-Access-Token", token)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+                    .header("Accept", "application/json")
+                    .exchangeToMono(r -> r.bodyToMono(String.class));
+            String response = responseMono.block();
+            if (response == null || response.isBlank()) return new ArrayList<>();
             Map<String, Object> parsed = mapper.readValue(response, Map.class);
             Object orders = parsed.get("orders");
-            if (orders == null) {
-                log.warn("No orders key in Shopify response: {}", response.substring(0, Math.min(200, response.length())));
-                return new ArrayList<>();
-            }
+            if (orders == null) return new ArrayList<>();
             return (List<Map<String, Object>>) orders;
         } catch (Exception e) {
             log.error("Failed to fetch Shopify orders: {}", e.getMessage());

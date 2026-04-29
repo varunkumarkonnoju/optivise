@@ -14,7 +14,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       <div style={{ color: '#94A3B8', marginBottom: 6 }}>{label}</div>
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color, fontWeight: 600 }}>
-          {p.name}: {p.name === 'Revenue' ? '$' + (p.value?.toFixed(2) || '0') : p.value}
+          {p.name}: {p.name === 'Revenue' ? formatCurrency(p.value || 0) : p.value}
         </div>
       ))}
     </div>
@@ -34,7 +34,7 @@ export default function AnalyticsPage() {
   if (loading) return <div className="spinner" />
   if (!data) return null
 
-  const fmt = n => n >= 1000 ? '$' + (n / 1000).toFixed(1) + 'k' : '$' + (n || 0).toFixed(2)
+  const fmt = n => formatCurrency(n || 0)
   const hasOrders = (data.totalOrders || 0) > 0
 
   // Filter daily data by period
@@ -111,7 +111,7 @@ export default function AnalyticsPage() {
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
             <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#4A5568' }} axisLine={false} tickLine={false} interval={Math.floor(displayData.length / 6)} />
             <YAxis tick={{ fontSize: 10, fill: '#4A5568' }} axisLine={false} tickLine={false}
-              tickFormatter={v => v > 0 ? '$' + (v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(0)) : '$0'} width={48} />
+              tickFormatter={v => v > 0 ? formatCurrency((v >= 1000 ? (v/1000).toFixed(1)+'k' : v)) : '$0'} width={48} />
             <Tooltip content={<CustomTooltip />} />
             <Area type="monotone" name="Revenue" dataKey="revenue" stroke="#6366F1" strokeWidth={2} fill="url(#revGrad)" dot={false} />
           </AreaChart>
@@ -151,6 +151,102 @@ export default function AnalyticsPage() {
               ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Revenue by Product */}
+      {data.topProductsByRevenue?.length > 0 && (
+        <div className="card" style={{ padding: 24, marginBottom: 16 }}>
+          <div className="chart-title" style={{ marginBottom: 16 }}>💰 Revenue by Product</div>
+          {data.topProductsByRevenue.map((p, i) => {
+            const maxRev = data.topProductsByRevenue[0].revenue
+            const pct = Math.round((p.revenue / maxRev) * 100)
+            return (
+              <div key={i} style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}>{p.title}</span>
+                  <span style={{ fontSize: 13, color: 'var(--purple-light)', fontWeight: 700 }}>{formatCurrency(p.revenue)}</span>
+                </div>
+                <div style={{ height: 8, background: 'var(--bg-secondary)', borderRadius: 4, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: pct + '%', background: 'linear-gradient(90deg, #6366F1, #06B6D4)', borderRadius: 4, transition: 'width 0.5s ease' }}/>
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{p.orders} orders</div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Customer Retention + Conversion Funnel */}
+      <div className="charts-two-col" style={{ marginBottom: 16 }}>
+        {/* Customer Retention */}
+        <div className="card" style={{ padding: 24 }}>
+          <div className="chart-title" style={{ marginBottom: 16 }}>👤 Customer Retention</div>
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <div style={{ fontSize: 48, fontWeight: 800, color: 'var(--purple-light)' }}>{data.retentionRate || 0}%</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Repeat Customer Rate</div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--green)' }}>{data.repeatCustomers || 0}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Repeat Customers</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--teal)' }}>{data.totalCustomers || 0}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Total Customers</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--amber)' }}>{data.bestDayOfWeek || 'N/A'}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Best Day</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Conversion Funnel */}
+        <div className="card" style={{ padding: 24 }}>
+          <div className="chart-title" style={{ marginBottom: 16 }}>🎯 Conversion Funnel</div>
+          {data.conversionFunnel && [
+            { label: 'Visitors', key: 'visitors', color: '#6366F1', icon: '👥' },
+            { label: 'Add to Cart', key: 'addToCart', color: '#06B6D4', icon: '🛒' },
+            { label: 'Checkout', key: 'checkout', color: '#F59E0B', icon: '💳' },
+            { label: 'Purchased', key: 'purchased', color: '#34D399', icon: '✅' },
+          ].map((step, i) => {
+            const val = data.conversionFunnel[step.key] || 0
+            const total = data.conversionFunnel.visitors || 1
+            const pct = Math.round((val / total) * 100)
+            return (
+              <div key={i} style={{ marginBottom: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{step.icon} {step.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: step.color }}>{val.toLocaleString()} ({pct}%)</span>
+                </div>
+                <div style={{ height: 6, background: 'var(--bg-secondary)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: pct + '%', background: step.color, borderRadius: 3 }}/>
+                </div>
+              </div>
+            )
+          })}
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 8 }}>* Funnel estimated from order data</div>
+        </div>
+      </div>
+
+      {/* Coming Soon Features */}
+      <div className="card" style={{ padding: 24, marginBottom: 16, background: 'rgba(99,102,241,0.03)', border: '1px dashed var(--border)' }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>🔜 Advanced Analytics — Coming Soon</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+          {[
+            '🌐 Traffic Sources (Google, Social, Direct)',
+            '📱 Device Analytics (Mobile vs Desktop)',
+            '🎯 Multi-touch Attribution',
+            '📊 Audience Segments',
+            '🔄 Customer Lifetime Value',
+            '📧 Email Campaign Performance',
+            '🏷️ Discount Code Analytics',
+          ].map((f, i) => (
+            <div key={i} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 12px', fontSize: 12, color: 'var(--text-muted)' }}>
+              {f}
+            </div>
+          ))}
         </div>
       </div>
 

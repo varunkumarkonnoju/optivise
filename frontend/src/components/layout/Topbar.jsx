@@ -14,6 +14,29 @@ export default function Topbar({ onMenuClick }) {
   const [dismissed, setDismissed] = useState(new Set())
   const [allRead, setAllRead] = useState(false)
   const [loadingNotif, setLoadingNotif] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showSearch, setShowSearch] = useState(false)
+
+  const allPages = [
+    { label: 'Dashboard', desc: 'Store overview and metrics', path: '/dashboard', icon: '📊' },
+    { label: 'AI Insights', desc: 'AI-powered store insights', path: '/insights', icon: '🤖' },
+    { label: 'Product Optimizer', desc: 'Optimize product descriptions', path: '/products', icon: '🛍️' },
+    { label: 'A/B Testing', desc: 'Run split tests', path: '/abtesting', icon: '🧪' },
+    { label: 'Recommendations', desc: 'AI growth recommendations', path: '/recommendations', icon: '🎯' },
+    { label: 'Analytics', desc: 'Revenue and order analytics', path: '/analytics', icon: '📈' },
+    { label: 'Automations', desc: 'Automate your store', path: '/automations', icon: '⚡' },
+    { label: 'AI Assistant', desc: 'Chat with your AI assistant', path: '/assistant', icon: '💬' },
+    { label: 'Pricing & Billing', desc: 'Manage your subscription', path: '/pricing', icon: '💳' },
+    { label: 'Profile', desc: 'Account settings', path: '/profile', icon: '👤' },
+    { label: 'Settings', desc: 'App preferences', path: '/settings', icon: '⚙️' },
+  ]
+
+  const searchResults = searchQuery.length > 0
+    ? allPages.filter(p =>
+        p.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.desc.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 5)
+    : []
   const newRef = useRef(null)
   const notifRef = useRef(null)
   const userRef = useRef(null)
@@ -95,13 +118,46 @@ export default function Topbar({ onMenuClick }) {
         </button>
         {/* Hide search on mobile */}
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }} className="topbar-search">
-          <Search size={14} style={{ position: 'absolute', left: 10, color: 'var(--text-muted)' }}/>
-          <input placeholder="Search anything..." style={{
-            background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 8,
-            padding: '7px 12px 7px 30px', fontSize: 13, color: 'var(--text-primary)',
-            width: 220, outline: 'none', fontFamily: 'inherit'
-          }}/>
-          <kbd style={{ position: 'absolute', right: 8, fontSize: 10, color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '2px 5px', borderRadius: 4, border: '1px solid var(--border)' }}>⌘K</kbd>
+          <Search size={14} style={{ position: 'absolute', left: 10, color: 'var(--text-muted)', zIndex: 1 }}/>
+          <input
+            placeholder="Search anything..."
+            value={searchQuery}
+            onChange={e => { setSearchQuery(e.target.value); setShowSearch(e.target.value.length > 0) }}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && searchResults.length > 0) {
+                navigate(searchResults[0].path)
+                setSearchQuery(''); setShowSearch(false)
+              }
+              if (e.key === 'Escape') { setSearchQuery(''); setShowSearch(false) }
+            }}
+            style={{
+              background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 8,
+              padding: '7px 12px 7px 30px', fontSize: 13, color: 'var(--text-primary)',
+              width: 220, outline: 'none', fontFamily: 'inherit'
+            }}
+          />
+          {!searchQuery && <kbd style={{ position: 'absolute', right: 8, fontSize: 10, color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '2px 5px', borderRadius: 4, border: '1px solid var(--border)' }}>⌘K</kbd>}
+          {showSearch && searchResults.length > 0 && (
+            <div style={{
+              position: 'fixed', top: 68, left: 'auto', width: 280,
+              background: 'var(--bg-card)', border: '1px solid var(--border)',
+              borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 9999, overflow: 'hidden'
+            }}>
+              {searchResults.map((r, i) => (
+                <button key={i} onClick={() => { navigate(r.path); setSearchQuery(''); setShowSearch(false) }}
+                  style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontFamily: 'inherit', borderBottom: '1px solid var(--border)', textAlign: 'left' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                >
+                  <span>{r.icon}</span>
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{r.label}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

@@ -37,7 +37,7 @@ export default function ABTestingPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">A/B Testing</h1>
-          <p className="page-sub">Run experiments to optimize your store's performance</p>
+          <p className="page-sub">Run experiments to find what converts better your store's performance</p>
         </div>
         <button className="btn-primary" onClick={() => setShowCreate(true)}>
           <Plus size={14} /> New Test

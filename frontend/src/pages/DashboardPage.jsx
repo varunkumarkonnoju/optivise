@@ -7,6 +7,8 @@ import {
 import { TrendingUp, TrendingDown, Sparkles, TestTube2, DollarSign, Percent, ChevronRight, ExternalLink } from 'lucide-react'
 import { useSettings } from '../hooks/useSettings'
 import './Dashboard.css'
+import OnboardingChecklist from '../components/OnboardingChecklist'
+import ConnectStorePrompt from '../components/ConnectStorePrompt'
 
 
 function MetricCard({ label, value, delta, deltaLabel, icon: Icon, color, suffix = '' }) {

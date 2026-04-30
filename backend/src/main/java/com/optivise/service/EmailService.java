@@ -3,6 +3,9 @@ package com.optivise.service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import reactor.netty.http.client.HttpClient;
+import io.netty.resolver.DefaultAddressResolverGroup;
 import java.util.Map;
 
 @Service
@@ -15,6 +18,9 @@ public class EmailService {
     private String fromEmail;
 
     private final WebClient webClient = WebClient.builder()
+            .clientConnector(new ReactorClientHttpConnector(
+                    HttpClient.create().resolver(DefaultAddressResolverGroup.INSTANCE)
+            ))
             .baseUrl("https://api.resend.com")
             .build();
 

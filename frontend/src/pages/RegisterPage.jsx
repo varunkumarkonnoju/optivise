@@ -138,15 +138,34 @@ export default function RegisterPage() {
         {step === 1 && (
           <div className="auth-step">
             <h2 className="auth-title">Connect your Shopify store</h2>
-            <p className="auth-sub">One click to connect. We'll pull your real products, orders, and analytics automatically.</p>
+            <p className="auth-sub">See your real store data — revenue, orders, products and AI recommendations tailored to YOUR store.</p>
             {error && <div className="auth-error">{error}</div>}
 
-            <div style={{ marginBottom: 16 }}>
+            {/* Benefits */}
+            <div style={{ background: 'var(--bg-secondary)', borderRadius: 10, padding: 14, marginBottom: 16 }}>
+              {[
+                { icon: '📊', text: 'Real analytics from your actual orders' },
+                { icon: '✨', text: 'AI descriptions for your real products' },
+                { icon: '🎯', text: 'Personalized growth recommendations' },
+                { icon: '🔒', text: 'Secure OAuth — we never store your password' },
+              ].map((b, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: i < 3 ? '1px solid var(--border)' : 'none' }}>
+                  <span style={{ fontSize: 16 }}>{b.icon}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{b.text}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
               <ShopifyConnectButton />
             </div>
 
+            <div style={{ textAlign: 'center', marginBottom: 8, fontSize: 11, color: 'var(--text-muted)' }}>
+              ⚡ Takes 30 seconds
+            </div>
+
             <button className="auth-btn-ghost" onClick={() => { setStep(2) }} style={{ width: '100%', textAlign: 'center' }}>
-              Skip for now — explore the app first →
+              Skip for now — explore with demo data →
             </button>
           </div>
         )}

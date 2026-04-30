@@ -73,7 +73,7 @@ export default function PricingPage() {
     {
       id: 'free', name: 'Free', price: 0,
       desc: 'Perfect for getting started',
-      features: ['Up to 10 products','50 AI credits/mo','Basic analytics','AI recommendations','Community support'],
+      features: ['Up to 10 products','15 AI descriptions/mo','Basic analytics','AI recommendations','Email support'],
       cta: 'Current plan', disabled: true
     },
     {

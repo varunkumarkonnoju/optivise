@@ -117,6 +117,7 @@ export default function DashboardPage() {
       </div>
 
       <OnboardingChecklist />
+      {!shopConnected && <ConnectStorePrompt />}
 
       {/* Metric Cards */}
       <div className="metrics-grid">

@@ -13,6 +13,20 @@ export default function OnboardingChecklist() {
     recommendation: false,
   })
 
+  const checkSteps = () => {
+    const usedAI = localStorage.getItem('used_ai_description')
+    if (usedAI) setSteps(s => ({ ...s, description: true }))
+    const viewedRecs = localStorage.getItem('viewed_recommendations')
+    if (viewedRecs) setSteps(s => ({ ...s, recommendation: true }))
+    if (user?.shopDomain) setSteps(s => ({ ...s, shopify: true }))
+  }
+
+  useEffect(() => {
+    // Listen for onboarding updates from other pages
+    window.addEventListener('onboarding-updated', checkSteps)
+    return () => window.removeEventListener('onboarding-updated', checkSteps)
+  }, [])
+
   useEffect(() => {
     // Check if already dismissed
     const isDismissed = localStorage.getItem('onboarding_dismissed')
@@ -23,13 +37,7 @@ export default function OnboardingChecklist() {
       setSteps(s => ({ ...s, shopify: true }))
     }
 
-    // Check if used AI description
-    const usedAI = localStorage.getItem('used_ai_description')
-    if (usedAI) setSteps(s => ({ ...s, description: true }))
-
-    // Check if viewed recommendations
-    const viewedRecs = localStorage.getItem('viewed_recommendations')
-    if (viewedRecs) setSteps(s => ({ ...s, recommendation: true }))
+    checkSteps()
   }, [user])
 
   const completedCount = Object.values(steps).filter(Boolean).length

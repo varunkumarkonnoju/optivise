@@ -90,6 +90,9 @@ export default function ProductsPage() {
     try {
       const desc = await generateOne(selectedProduct, tone, keywords, token)
       setGenerated(desc)
+      // Mark onboarding step as complete
+      localStorage.setItem('used_ai_description', '1')
+      window.dispatchEvent(new Event('onboarding-updated'))
     } catch { setGenerated('Error. Check your OpenAI key.') }
     finally { setGenerating(false) }
   }

@@ -33,4 +33,32 @@ public class SupportController {
 
         return ResponseEntity.ok(Map.of("message", "Support request received"));
     }
+
+    @PostMapping("/feedback")
+    public ResponseEntity<?> feedback(@RequestBody Map<String, String> body) {
+        String email = body.getOrDefault("email", "unknown");
+        String name = body.getOrDefault("name", "User");
+        String type = body.getOrDefault("type", "suggestion");
+        String message = body.getOrDefault("message", "");
+
+        String emoji = switch(type) {
+            case "bug" -> "🐛";
+            case "feature" -> "✨";
+            case "love" -> "❤️";
+            default -> "💡";
+        };
+
+        try {
+            String html = "<h2>" + emoji + " New " + type + " from " + name + "</h2>" +
+                    "<p><strong>Email:</strong> " + email + "</p>" +
+                    "<p><strong>Type:</strong> " + type + "</p>" +
+                    "<p><strong>Message:</strong></p>" +
+                    "<p style='background:#f5f5f5;padding:12px;border-radius:8px'>" + message.replace("\n", "<br>") + "</p>";
+            emailService.sendSupportNotification(html, emoji + " " + type + " feedback from " + name, name, email);
+        } catch (Exception e) {
+            System.err.println("Feedback email failed: " + e.getMessage());
+        }
+
+        return ResponseEntity.ok(Map.of("message", "Feedback received"));
+    }
 }

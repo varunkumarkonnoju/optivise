@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import './Layout.css'
+import FeedbackButton from '../FeedbackButton'
 
 export default function AppLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -17,6 +18,7 @@ export default function AppLayout({ children }) {
         <Topbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
         <div className="page-body">{children}</div>
       </div>
+      <FeedbackButton />
     </div>
   )
 }

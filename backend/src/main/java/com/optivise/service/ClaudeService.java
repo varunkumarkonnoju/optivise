@@ -1,17 +1,22 @@
 package com.optivise.service;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import reactor.netty.http.client.HttpClient;
+import io.netty.resolver.DefaultAddressResolverGroup;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Service
-@Slf4j
 public class ClaudeService {
+
+    private static final Logger log = LoggerFactory.getLogger(ClaudeService.class);
 
     @Value("${openai.api.key}")
     private String apiKey;
@@ -23,6 +28,10 @@ public class ClaudeService {
     private WebClient getClient() {
         return WebClient.builder()
                 .baseUrl("https://api.openai.com")
+                .clientConnector(new ReactorClientHttpConnector(
+                        HttpClient.create().resolver(DefaultAddressResolverGroup.INSTANCE)
+                ))
+                .codecs(c -> c.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
                 .build();
     }
 

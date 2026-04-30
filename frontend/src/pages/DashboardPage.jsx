@@ -96,6 +96,8 @@ export default function DashboardPage() {
     dashboardApi.get().then(r => setData(r.data)).finally(() => setLoading(false))
   }, [])
 
+  const shopConnected = !!(user?.shopDomain) || (data && data.totalRevenue > 0)
+
   if (loading) return <div className="spinner" />
   if (!data) return null
 
@@ -113,6 +115,8 @@ export default function DashboardPage() {
         </div>
         <div className="date-badge">{today}</div>
       </div>
+
+      <OnboardingChecklist />
 
       {/* Metric Cards */}
       <div className="metrics-grid">

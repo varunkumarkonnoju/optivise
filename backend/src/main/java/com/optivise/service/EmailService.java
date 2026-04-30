@@ -153,7 +153,7 @@ public class EmailService {
                     .header("Content-Type", "application/json")
                     .bodyValue(Map.of("from", "Optivise <" + this.fromEmail + ">",
                             "to", new String[]{"hello@optiviseai.io"},
-                            "subject", "Support: " + subject + " from " + fromName,
+                            "subject", subject,
                             "html", html))
                     .retrieve().bodyToMono(String.class).block();
         } catch (Exception e) {

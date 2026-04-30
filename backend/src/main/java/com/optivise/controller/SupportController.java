@@ -26,7 +26,7 @@ public class SupportController {
                     "<p><strong>Message:</strong></p>" +
                     "<p>" + message.replace("\n", "<br>") + "</p>";
 
-            emailService.sendSupportNotification(html, subject, name, email);
+            emailService.sendSupportNotification(html, "📧 Support: " + subject, name, email);
         } catch (Exception e) {
             System.err.println("Support email failed: " + e.getMessage());
         }
@@ -54,7 +54,7 @@ public class SupportController {
                     "<p><strong>Type:</strong> " + type + "</p>" +
                     "<p><strong>Message:</strong></p>" +
                     "<p style='background:#f5f5f5;padding:12px;border-radius:8px'>" + message.replace("\n", "<br>") + "</p>";
-            emailService.sendSupportNotification(html, emoji + " " + type + " feedback from " + name, name, email);
+            emailService.sendSupportNotification(html, emoji + " " + type.substring(0,1).toUpperCase() + type.substring(1) + " from " + name, name, email);
         } catch (Exception e) {
             System.err.println("Feedback email failed: " + e.getMessage());
         }

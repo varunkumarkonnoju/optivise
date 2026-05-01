@@ -434,8 +434,12 @@ export default function LandingPage() {
       {/* ── NAV ── */}
       <nav className="land-nav">
         <div className="land-nav-inner">
-          <div className="land-logo logo-hover-wrap" style={{ position: 'relative', cursor: 'pointer', overflow: 'visible' }}>
-            <OptiviseLogo size={42} showText={true} textSize={16} />
+          <div className="land-logo logo-hover-wrap" style={{ position: 'relative', cursor: 'pointer', overflow: 'visible', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <OptiviseLogo size={42} showText={false} />
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+              <span style={{ fontSize: 18, fontWeight: 900, color: 'white', letterSpacing: '-0.4px', whiteSpace: 'nowrap', fontFamily: 'Syne, sans-serif' }}>Optivise</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#96BF48', letterSpacing: '1.5px', marginTop: 3, whiteSpace: 'nowrap' }}>FOR SHOPIFY</span>
+            </div>
             <div className="logo-hover-card">
               <div style={{ fontSize: 13, fontWeight: 800, color: 'white', marginBottom: 8 }}>🚀 Optivise</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>

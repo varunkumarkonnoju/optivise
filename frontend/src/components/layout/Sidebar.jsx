@@ -23,8 +23,12 @@ export default function Sidebar({ className = '' }) {
 
   return (
     <aside className={`sidebar ${className}`}>
-      <div className="sidebar-logo" style={{ padding: '16px 18px' }}>
-        <OptiviseLogo size={42} showText={true} textSize={16} />
+      <div className="sidebar-logo" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <OptiviseLogo size={42} showText={false} />
+        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+          <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.4px', whiteSpace: 'nowrap' }}>Optivise</span>
+          <span style={{ fontSize: 8, fontWeight: 700, color: '#96BF48', letterSpacing: '1.5px', marginTop: 3, whiteSpace: 'nowrap' }}>FOR SHOPIFY</span>
+        </div>
       </div>
 
       <nav className="sidebar-nav">

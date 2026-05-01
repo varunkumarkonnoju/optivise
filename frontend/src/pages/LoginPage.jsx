@@ -32,8 +32,12 @@ export default function LoginPage() {
       <div className="auth-orb auth-orb-1"/>
       <div className="auth-orb auth-orb-2"/>
       <div className="auth-card">
-        <div className="auth-logo">
-          <OptiviseLogo size={44} showText={true} textSize={20} />
+        <div className="auth-logo" style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center' }}>
+          <OptiviseLogo size={44} showText={false} />
+          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+            <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.4px', whiteSpace: 'nowrap' }}>Optivise</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#96BF48', letterSpacing: '1.5px', marginTop: 4, whiteSpace: 'nowrap' }}>FOR SHOPIFY</span>
+          </div>
         </div>
 
         <h2 className="auth-title">Welcome back</h2>

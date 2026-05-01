@@ -159,7 +159,7 @@ export default function OptiviseLogo({ size = 40, showText = true, textSize = 18
         <canvas ref={canvasRef} style={{ display: 'block', borderRadius: '50%' }}/>
       </div>
       {showText && (
-        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, width: textSize * 5 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, minWidth: textSize * 5.5, overflow: 'visible' }}>
           <span style={{ fontSize: textSize, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.4px', display: 'block', whiteSpace: 'nowrap' }}>
             Optivise
           </span>

@@ -160,13 +160,13 @@ export default function OptiviseLogo({ size = 40, showText = true, textSize = 18
       </div>
       {showText && (
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-          <span style={{ fontSize: textSize, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.4px' }}>
+          <span style={{ fontSize: textSize, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.4px', display: 'block' }}>
             Optivise
           </span>
-          <div style={{ height: textSize * 0.65, overflow: 'hidden', marginTop: 3 }}>
+          <div style={{ height: textSize * 0.65, overflow: 'hidden', marginTop: 4 }}>
             <span key={textIndex} style={{
-              fontSize: textSize * 0.52, fontWeight: 700, color: '#96BF48',
-              letterSpacing: '1.2px', display: 'block',
+              fontSize: textSize * 0.5, fontWeight: 700, color: '#96BF48',
+              letterSpacing: '2px', display: 'block',
               animation: 'tagSlideIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards'
             }}>
               {taglines[textIndex]}

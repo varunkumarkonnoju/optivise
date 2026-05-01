@@ -14,10 +14,14 @@ export default function OnboardingChecklist() {
   })
 
   const checkSteps = () => {
-    const userKey = localStorage.getItem('user_email') || 'user'
-    const usedAI = localStorage.getItem('used_ai_description_' + userKey)
+    const userKey = localStorage.getItem('user_email') || ''
+    const usedAI = userKey 
+      ? localStorage.getItem('used_ai_description_' + userKey)
+      : false
     if (usedAI) setSteps(s => ({ ...s, description: true }))
-    const viewedRecs = localStorage.getItem('viewed_recommendations_' + userKey)
+    const viewedRecs = userKey
+      ? localStorage.getItem('viewed_recommendations_' + userKey)
+      : false
     if (viewedRecs) setSteps(s => ({ ...s, recommendation: true }))
   }
 

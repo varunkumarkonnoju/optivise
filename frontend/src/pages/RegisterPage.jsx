@@ -37,6 +37,7 @@ export default function RegisterPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Registration failed')
       localStorage.setItem('token', data.token)
+      localStorage.setItem('user_email', form.email)
       setCreatedToken(data.token)
       setStep(1)
     } catch (e) {

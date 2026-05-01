@@ -28,6 +28,10 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('token')
     setUser(null)
     localStorage.removeItem('user_email')
+    localStorage.removeItem('used_ai_description')
+    localStorage.removeItem('viewed_recommendations')
+    localStorage.removeItem('onboarding_dismissed')
+    localStorage.removeItem('dismissed_recs')
   }
 
   return <AuthContext.Provider value={{ user, login, logout, loading }}>{children}</AuthContext.Provider>

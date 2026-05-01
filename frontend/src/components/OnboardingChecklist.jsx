@@ -14,11 +14,11 @@ export default function OnboardingChecklist() {
   })
 
   const checkSteps = () => {
-    const usedAI = localStorage.getItem('used_ai_description')
+    const userKey = localStorage.getItem('user_email') || 'user'
+    const usedAI = localStorage.getItem('used_ai_description_' + userKey)
     if (usedAI) setSteps(s => ({ ...s, description: true }))
-    const viewedRecs = localStorage.getItem('viewed_recommendations')
+    const viewedRecs = localStorage.getItem('viewed_recommendations_' + userKey)
     if (viewedRecs) setSteps(s => ({ ...s, recommendation: true }))
-    if (user?.shopDomain) setSteps(s => ({ ...s, shopify: true }))
   }
 
   useEffect(() => {
@@ -32,9 +32,17 @@ export default function OnboardingChecklist() {
     const isDismissed = localStorage.getItem('onboarding_dismissed')
     if (isDismissed) { setDismissed(true); return }
 
-    // Check Shopify connected
-    if (user?.shopDomain) {
-      setSteps(s => ({ ...s, shopify: true }))
+    // Check Shopify connected via profile API
+    const token = localStorage.getItem('token')
+    if (token) {
+      fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(r => r.json())
+        .then(data => {
+          if (data.shopDomain && data.shopDomain.includes('.myshopify.com')) {
+            setSteps(s => ({ ...s, shopify: true }))
+          }
+        })
+        .catch(() => {})
     }
 
     checkSteps()

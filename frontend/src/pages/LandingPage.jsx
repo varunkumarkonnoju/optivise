@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Landing.css'
+import OptiviseLogo from '../components/OptiviseLogo'
 
 // ── Mouse tracker hook ────────────────────────────────────────────────────────
 function useMouse() {
@@ -434,14 +435,7 @@ export default function LandingPage() {
       <nav className="land-nav">
         <div className="land-nav-inner">
           <div className="land-logo">
-            <div className="land-logo-icon">
-              <svg viewBox="0 0 32 32" fill="none" width="20" height="20">
-                <circle cx="16" cy="16" r="14" stroke="white" strokeWidth="2"/>
-                <path d="M10 22L16 10l6 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 18h8" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <span>Optivise</span>
+            <OptiviseLogo size={38} showText={true} textSize={18} />
           </div>
           <div className="land-nav-links">
             <a href="#features">Features</a>
@@ -610,14 +604,7 @@ export default function LandingPage() {
       {/* ── FOOTER ── */}
       <footer className="land-footer">
         <div className="land-logo" style={{marginBottom:8}}>
-          <div className="land-logo-icon" style={{width:28,height:28}}>
-            <svg viewBox="0 0 32 32" fill="none" width="16" height="16">
-              <circle cx="16" cy="16" r="14" stroke="white" strokeWidth="2"/>
-              <path d="M10 22L16 10l6 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M12 18h8" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </div>
-          <span style={{fontSize:14}}>Optivise</span>
+          <OptiviseLogo size={32} showText={true} textSize={14} />
         </div>
         <div style={{fontSize:12,color:'#2D3748',display:'flex',gap:16,alignItems:'center',flexWrap:'wrap',justifyContent:'center'}}>
           <span>© 2026 Optivise</span>
@@ -626,7 +613,7 @@ export default function LandingPage() {
           <span>·</span>
           <a href="/terms" style={{color:'#334155',textDecoration:'none'}} onMouseEnter={e=>e.target.style.color='#818CF8'} onMouseLeave={e=>e.target.style.color='#334155'}>Terms of Service</a>
           <span>·</span>
-          <span>Made with ❤️ by Varun Kumar Konnoju</span>
+          <span>Made with ❤️ by Varun Kumar</span>
         </div>
       </footer>
     </div>

@@ -73,7 +73,7 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="auth-logo" style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center' }}>
           <OptiviseLogo size={44} showText={false} />
-<LogoText nameSize={22} tagSize={10} />
+<LogoText nameSize={26} tagSize={9} />
         </div>
 
         {/* Progress bar */}

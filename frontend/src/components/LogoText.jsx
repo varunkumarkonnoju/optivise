@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-export default function LogoText({ nameSize = 18, tagSize = 9 }) {
+export default function LogoText({ nameSize = 22, tagSize = 9 }) {
   const taglines = ['FOR SHOPIFY', 'GROW WITH AI', 'SELL SMARTER', 'AI POWERED']
   const [index, setIndex] = useState(0)
 

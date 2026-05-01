@@ -437,7 +437,7 @@ export default function LandingPage() {
         <div className="land-nav-inner">
           <div className="land-logo" style={{ position: 'relative', cursor: 'pointer', overflow: 'visible', display: 'flex', alignItems: 'center', gap: 10 }}>
             <OptiviseLogo size={42} showText={false} />
-<LogoText nameSize={18} tagSize={9} />
+<LogoText nameSize={22} tagSize={9} />
 
           </div>
           <div className="land-nav-links">
@@ -608,7 +608,7 @@ export default function LandingPage() {
       <footer className="land-footer">
         <div className="land-logo" style={{marginBottom:8}}>
           <OptiviseLogo size={32} showText={false} />
-          <LogoText nameSize={14} tagSize={7} />
+          <LogoText nameSize={18} tagSize={9} />
         </div>
         <div style={{fontSize:12,color:'#2D3748',display:'flex',gap:16,alignItems:'center',flexWrap:'wrap',justifyContent:'center'}}>
           <span>© 2026 Optivise</span>

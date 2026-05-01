@@ -35,7 +35,7 @@ export default function LoginPage() {
       <div className="auth-card">
         <div className="auth-logo" style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center' }}>
           <OptiviseLogo size={44} showText={false} />
-<LogoText nameSize={22} tagSize={10} />
+<LogoText nameSize={26} tagSize={9} />
         </div>
 
         <h2 className="auth-title">Welcome back</h2>

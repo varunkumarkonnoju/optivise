@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import './Auth.css'
 import OptiviseLogo from '../components/OptiviseLogo'
+import LogoText from '../components/LogoText'
 
 export default function ResetPasswordPage() {
   const [params] = useSearchParams()
@@ -43,8 +44,9 @@ export default function ResetPasswordPage() {
       <div className="auth-orb auth-orb-1"/>
       <div className="auth-orb auth-orb-2"/>
       <div className="auth-card">
-        <div className="auth-logo">
-          <OptiviseLogo size={44} showText={true} textSize={20} />
+        <div className="auth-logo" style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center' }}>
+          <OptiviseLogo size={44} showText={false} />
+<LogoText nameSize={26} tagSize={9} />
         </div>
 
         {!done ? (

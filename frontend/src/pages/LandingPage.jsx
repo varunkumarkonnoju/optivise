@@ -434,32 +434,13 @@ export default function LandingPage() {
       {/* ── NAV ── */}
       <nav className="land-nav">
         <div className="land-nav-inner">
-          <div className="land-logo logo-hover-wrap" style={{ position: 'relative', cursor: 'pointer', overflow: 'visible', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="land-logo" style={{ position: 'relative', cursor: 'pointer', overflow: 'visible', display: 'flex', alignItems: 'center', gap: 10 }}>
             <OptiviseLogo size={42} showText={false} />
             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
               <span style={{ fontSize: 18, fontWeight: 900, color: 'white', letterSpacing: '-0.4px', whiteSpace: 'nowrap', fontFamily: 'Syne, sans-serif' }}>Optivise</span>
               <span style={{ fontSize: 9, fontWeight: 700, color: '#96BF48', letterSpacing: '1.5px', marginTop: 3, whiteSpace: 'nowrap' }}>FOR SHOPIFY</span>
             </div>
-            <div className="logo-hover-card">
-              <div style={{ fontSize: 13, fontWeight: 800, color: 'white', marginBottom: 8 }}>🚀 Optivise</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                {[
-                  { icon: '✨', text: 'AI product descriptions' },
-                  { icon: '📊', text: 'Real store analytics' },
-                  { icon: '🎯', text: 'Growth recommendations' },
-                  { icon: '🧪', text: 'A/B testing' },
-                  { icon: '💬', text: 'AI assistant' },
-                ].map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'rgba(255,255,255,0.85)' }}>
-                    <span>{item.icon}</span>
-                    <span>{item.text}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: 11, color: '#96BF48', fontWeight: 700 }}>
-                🆓 Free to try → optiviseai.io
-              </div>
-            </div>
+
           </div>
           <div className="land-nav-links">
             <a href="#features">Features</a>
@@ -637,7 +618,7 @@ export default function LandingPage() {
           <span>·</span>
           <a href="/terms" style={{color:'#334155',textDecoration:'none'}} onMouseEnter={e=>e.target.style.color='#818CF8'} onMouseLeave={e=>e.target.style.color='#334155'}>Terms of Service</a>
           <span>·</span>
-          <span>Made with ❤️ by Varun Kumar Konnoju</span>
+          <span>Made with ❤️ by Varun Kumar konnoju</span>
         </div>
       </footer>
     </div>

@@ -607,7 +607,7 @@ export default function LandingPage() {
       {/* ── FOOTER ── */}
       <footer className="land-footer">
         <div className="land-logo" style={{marginBottom:8}}>
-          <OptiviseLogo size={32} showText={false} />
+          <OptiviseLogo size={42} showText={false} />
           <LogoText nameSize={22} tagSize={9} />
         </div>
         <div style={{fontSize:12,color:'#2D3748',display:'flex',gap:16,alignItems:'center',flexWrap:'wrap',justifyContent:'center'}}>

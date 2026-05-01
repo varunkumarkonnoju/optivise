@@ -102,7 +102,7 @@ export default function ProductsPage() {
     if (!generated || !selectedProduct) return
     setSaving(true)
     const ok = await saveOne(selectedProduct.id, generated, token)
-    setSavedMsg(ok ? '✓ Saved to Shopify!' : 'Failed to save.')
+    setSavedMsg(ok ? '✓ Saved to Shopify! Live on your store now.' : 'Failed to save. Try again.')
     setSaving(false)
   }
 
@@ -405,7 +405,10 @@ export default function ProductsPage() {
                     {!generated && !generating && (
                       <div className="gen-empty">
                         <Sparkles size={28} style={{ color: 'var(--purple)', marginBottom: 10 }} />
-                        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Pick a tone and click Generate</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>Pick a tone and click Generate</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', background: 'var(--bg-secondary)', borderRadius: 8, padding: '8px 12px', textAlign: 'left', lineHeight: 1.6 }}>
+                          💡 <strong>How it works:</strong> AI writes a description → you preview it → click <strong>"Save to Shopify"</strong> to publish it live on your store.
+                        </div>
                       </div>
                     )}
                     {generating && (

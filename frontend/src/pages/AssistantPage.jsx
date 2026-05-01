@@ -23,7 +23,7 @@ export default function AssistantPage() {
     chatApi.getHistory()
       .then(r => {
         if (r.data.length === 0) {
-          setMessages([{ role: 'assistant', content: "Hi! I'm your Optivise AI assistant. I have access to your store data and can help you understand performance, identify growth opportunities, and take action. What would you like to know?" }])
+          setMessages([{ role: 'assistant', content: "Hey! I'm Alex, your AI growth assistant 👋 I have access to your real store data and I'm here to help you grow. Ask me anything — your best sellers, revenue trends, what to improve, or anything else about your store!" }])
         } else {
           setMessages(r.data)
         }
@@ -39,7 +39,7 @@ export default function AssistantPage() {
       method: 'DELETE',
       headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
     })
-    setMessages([{ role: 'assistant', content: "Hi! I'm your Optivise AI assistant. Chat history cleared. How can I help you?" }])
+    setMessages([{ role: 'assistant', content: "Hey! I'm Alex, your AI growth assistant 👋 Chat cleared! What would you like to know about your store?" }])
   }
 
   const send = async (text) => {
@@ -67,7 +67,7 @@ export default function AssistantPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div className="chat-avatar-ai"><Sparkles size={16} /></div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>AI Assistant</div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>Alex — AI Growth Assistant</div>
                 <div style={{ fontSize: 11, color: 'var(--green)', display: 'flex', alignItems: 'center', gap: 5 }}>
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', display: 'inline-block' }} />
                   Online — connected to your store

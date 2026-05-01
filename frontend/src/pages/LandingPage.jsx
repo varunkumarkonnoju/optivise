@@ -434,8 +434,29 @@ export default function LandingPage() {
       {/* ── NAV ── */}
       <nav className="land-nav">
         <div className="land-nav-inner">
-          <div className="land-logo">
-            <OptiviseLogo size={38} showText={true} textSize={18} />
+          <div className="land-logo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 42, height: 42, borderRadius: 12,
+              background: 'linear-gradient(135deg, #6366F1, #4F46E5)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 14px rgba(99,102,241,0.5)'
+            }}>
+              <svg viewBox="0 0 100 100" width="26" height="26">
+                <circle cx="50" cy="42" r="22" fill="none" stroke="white" strokeWidth="6"/>
+                <circle cx="50" cy="42" r="13" fill="#4F46E5"/>
+                <rect x="30" y="46" width="6" height="10" rx="1" fill="rgba(255,255,255,0.4)"/>
+                <rect x="38" y="41" width="6" height="15" rx="1" fill="rgba(255,255,255,0.6)"/>
+                <rect x="46" y="35" width="6" height="21" rx="1" fill="white"/>
+                <rect x="54" y="38" width="6" height="18" rx="1" fill="rgba(255,255,255,0.6)"/>
+                <rect x="62" y="31" width="6" height="25" rx="1" fill="white"/>
+                <polyline points="33,43 41,37 49,31 57,34 65,28" fill="none" stroke="#96BF48" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="65" cy="28" r="3" fill="#96BF48"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: 'white', letterSpacing: '-0.3px', lineHeight: 1 }}>Optivise</div>
+              <div style={{ fontSize: 9, color: '#96BF48', fontWeight: 700, letterSpacing: '1.5px', lineHeight: 1.2 }}>FOR SHOPIFY</div>
+            </div>
           </div>
           <div className="land-nav-links">
             <a href="#features">Features</a>

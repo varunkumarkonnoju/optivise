@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Landing.css'
 import OptiviseLogo from '../components/OptiviseLogo'
+import LogoText from '../components/LogoText'
 
 // ── Mouse tracker hook ────────────────────────────────────────────────────────
 function useMouse() {
@@ -436,10 +437,7 @@ export default function LandingPage() {
         <div className="land-nav-inner">
           <div className="land-logo" style={{ position: 'relative', cursor: 'pointer', overflow: 'visible', display: 'flex', alignItems: 'center', gap: 10 }}>
             <OptiviseLogo size={42} showText={false} />
-            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-              <span style={{ fontSize: 18, fontWeight: 900, color: 'white', letterSpacing: '-0.4px', whiteSpace: 'nowrap', fontFamily: 'Syne, sans-serif' }}>Optivise</span>
-              <span style={{ fontSize: 9, fontWeight: 700, color: '#96BF48', letterSpacing: '1.5px', marginTop: 3, whiteSpace: 'nowrap' }}>FOR SHOPIFY</span>
-            </div>
+<LogoText nameSize={18} tagSize={9} />
 
           </div>
           <div className="land-nav-links">
@@ -609,7 +607,8 @@ export default function LandingPage() {
       {/* ── FOOTER ── */}
       <footer className="land-footer">
         <div className="land-logo" style={{marginBottom:8}}>
-          <OptiviseLogo size={32} showText={true} textSize={14} />
+          <OptiviseLogo size={32} showText={false} />
+          <LogoText nameSize={14} tagSize={7} />
         </div>
         <div style={{fontSize:12,color:'#2D3748',display:'flex',gap:16,alignItems:'center',flexWrap:'wrap',justifyContent:'center'}}>
           <span>© 2026 Optivise</span>
@@ -618,7 +617,7 @@ export default function LandingPage() {
           <span>·</span>
           <a href="/terms" style={{color:'#334155',textDecoration:'none'}} onMouseEnter={e=>e.target.style.color='#818CF8'} onMouseLeave={e=>e.target.style.color='#334155'}>Terms of Service</a>
           <span>·</span>
-          <span>Made with ❤️ by Varun Kumar konnoju</span>
+          <span>Made with ❤️ by Varun Kumar Konnoju</span>
         </div>
       </footer>
     </div>

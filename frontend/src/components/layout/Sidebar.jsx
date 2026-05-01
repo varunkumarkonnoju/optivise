@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import OptiviseLogo from '../OptiviseLogo'
+import LogoText from '../LogoText'
 import {
   LayoutDashboard, Sparkles, Package, TestTube2,
   Star, BarChart3, Zap, LogOut, ChevronRight, CreditCard
@@ -25,10 +26,7 @@ export default function Sidebar({ className = '' }) {
     <aside className={`sidebar ${className}`}>
       <div className="sidebar-logo" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
         <OptiviseLogo size={42} showText={false} />
-        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-          <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.4px', whiteSpace: 'nowrap' }}>Optivise</span>
-          <span style={{ fontSize: 8, fontWeight: 700, color: '#96BF48', letterSpacing: '1.5px', marginTop: 3, whiteSpace: 'nowrap' }}>FOR SHOPIFY</span>
-        </div>
+<LogoText nameSize={16} tagSize={8} />
       </div>
 
       <nav className="sidebar-nav">

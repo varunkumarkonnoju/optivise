@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { Eye, EyeOff } from 'lucide-react'
 import './Auth.css'
 import OptiviseLogo from '../components/OptiviseLogo'
+import LogoText from '../components/LogoText'
 
 export default function LoginPage() {
   const [email, setEmail]             = useState('')
@@ -34,10 +35,7 @@ export default function LoginPage() {
       <div className="auth-card">
         <div className="auth-logo" style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center' }}>
           <OptiviseLogo size={44} showText={false} />
-          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-            <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.4px', whiteSpace: 'nowrap' }}>Optivise</span>
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#96BF48', letterSpacing: '1.5px', marginTop: 4, whiteSpace: 'nowrap' }}>FOR SHOPIFY</span>
-          </div>
+<LogoText nameSize={22} tagSize={10} />
         </div>
 
         <h2 className="auth-title">Welcome back</h2>

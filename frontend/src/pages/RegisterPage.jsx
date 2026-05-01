@@ -4,6 +4,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import ShopifyConnectButton from '../components/ShopifyConnectButton'
 import './Auth.css'
 import OptiviseLogo from '../components/OptiviseLogo'
+import LogoText from '../components/LogoText'
 
 const STEPS = ['Account', 'Connect Store', 'All set!']
 
@@ -72,10 +73,7 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="auth-logo" style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center' }}>
           <OptiviseLogo size={44} showText={false} />
-          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-            <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.4px', whiteSpace: 'nowrap' }}>Optivise</span>
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#96BF48', letterSpacing: '1.5px', marginTop: 4, whiteSpace: 'nowrap' }}>FOR SHOPIFY</span>
-          </div>
+<LogoText nameSize={22} tagSize={10} />
         </div>
 
         {/* Progress bar */}

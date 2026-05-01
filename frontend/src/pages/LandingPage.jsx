@@ -440,7 +440,7 @@ export default function LandingPage() {
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
       }}>
         <span style={{ animation: 'bdot 1.5s infinite', display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#34D399', boxShadow: '0 0 8px #34D399' }}/>
-        🔥 Limited time: Free plan includes <strong>15 AI descriptions</strong> — no credit card needed
+        🔥 Limited time: Free plan includes <strong> 15 AI descriptions </strong> — no credit card needed
         <span onClick={() => navigate('/register')} style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: 700, marginLeft: 8 }}>
           Claim free access →
         </span>
@@ -484,7 +484,7 @@ export default function LandingPage() {
           </p>
           <div className="land-hero-cta hero-anim" style={{animationDelay:'0.3s'}}>
             <MagneticBtn className="land-btn-hero" onClick={() => navigate('/register')}>
-              <span className="land-btn-hero-text">See my store's hidden opportunities →</span>
+              <span className="land-btn-hero-text">See my store's hidden opportunities</span>
               <span className="land-btn-hero-arrow">→</span>
             </MagneticBtn>
             <div className="land-hero-proof">
@@ -669,12 +669,12 @@ export default function LandingPage() {
       <section className="land-final-cta">
         <div className="land-final-glow"/>
         <div className="land-section-tag" style={{marginBottom:20}}>Get Started</div>
-        <h2 className="land-h2" style={{marginBottom:16}}>Ready to grow your store?</h2>
+        <h2 className="land-h2" style={{marginBottom:16}}>Your competitors are already<br/><span className="land-h1-accent">using AI to grow faster.</span></h2>
         <p style={{color:'#64748B',marginBottom:36,fontSize:16,maxWidth:480,margin:'0 auto 36px'}}>
-          Join 500+ Shopify store owners. Free forever, no card needed.
+          Every day without Optivise is revenue you're not seeing. Start free in 60 seconds — no credit card, no risk.
         </p>
         <MagneticBtn className="land-btn-hero land-btn-hero-lg" onClick={() => navigate('/register')}>
-          Start for free — takes 2 minutes →
+          See my store's hidden opportunities →
         </MagneticBtn>
       </section>
 
@@ -691,7 +691,7 @@ export default function LandingPage() {
           <span>·</span>
           <a href="/terms" style={{color:'#334155',textDecoration:'none'}} onMouseEnter={e=>e.target.style.color='#818CF8'} onMouseLeave={e=>e.target.style.color='#334155'}>Terms of Service</a>
           <span>·</span>
-          <span>Made with ❤️ by Varun Kumar Konnoju</span>
+          <span>Made with ❤️  by Varun Kumar Konnoju</span>
         </div>
       </footer>
     </div>

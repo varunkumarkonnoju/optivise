@@ -432,6 +432,20 @@ export default function LandingPage() {
       <CursorTrail />
       <FloatingOrbs />
 
+      {/* ── URGENCY BANNER ── */}
+      <div style={{
+        background: 'linear-gradient(135deg, #6366F1, #06B6D4)',
+        padding: '8px 20px', textAlign: 'center',
+        fontSize: 13, fontWeight: 600, color: 'white',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
+      }}>
+        <span style={{ animation: 'bdot 1.5s infinite', display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#34D399', boxShadow: '0 0 8px #34D399' }}/>
+        🔥 Limited time: Free plan includes <strong>15 AI descriptions</strong> — no credit card needed
+        <span onClick={() => navigate('/register')} style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: 700, marginLeft: 8 }}>
+          Claim free access →
+        </span>
+      </div>
+
       {/* ── NAV ── */}
       <nav className="land-nav">
         <div className="land-nav-inner">
@@ -459,17 +473,18 @@ export default function LandingPage() {
             <span className="land-badge-dot"/> 🚀 Free forever · No credit card
           </div>
           <h1 className="land-h1 hero-anim" style={{animationDelay:'0.1s'}}>
-            The AI growth platform<br/>
-            <span className="land-h1-accent">small Shopify stores</span><br/>
-            actually can afford
+            Your Shopify store is<br/>
+            <span className="land-h1-accent">leaving money</span><br/>
+            on the table
           </h1>
           <p className="land-hero-sub hero-anim" style={{animationDelay:'0.2s'}}>
-            Enterprise-level analytics, AI product descriptions, and A/B testing —
-            at a price that won't eat your margins. Built for stores doing $1k–$50k/month.
+            Most small Shopify stores never see the hidden revenue gaps that cost them thousands every month.
+            Optivise finds them — with AI analytics, smart recommendations, and automated insights. 
+            <strong style={{color:'#818CF8'}}> See your opportunities in 60 seconds. Free.</strong>
           </p>
           <div className="land-hero-cta hero-anim" style={{animationDelay:'0.3s'}}>
             <MagneticBtn className="land-btn-hero" onClick={() => navigate('/register')}>
-              <span className="land-btn-hero-text">Start for free — no card needed</span>
+              <span className="land-btn-hero-text">See my store's hidden opportunities →</span>
               <span className="land-btn-hero-arrow">→</span>
             </MagneticBtn>
             <div className="land-hero-proof">
@@ -478,7 +493,7 @@ export default function LandingPage() {
                   <div key={i} className="land-avatar">{i}</div>
                 ))}
               </div>
-              <span>500+ store owners already inside</span>
+              <span>Join <strong>500+ Shopify store owners</strong> growing with AI</span>
             </div>
           </div>
         </div>
@@ -516,6 +531,51 @@ export default function LandingPage() {
               <div className="land-feature-shine"/>
             </TiltCard>
           ))}
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ── */}
+      <section className="land-section" style={{ paddingTop: 60, paddingBottom: 60 }}>
+        <div className="land-section-header">
+          <div className="land-section-tag">How it works</div>
+          <h2 className="land-h2">From zero to growing in 3 steps</h2>
+          <p className="land-section-sub">No technical skills needed. Takes less than 2 minutes.</p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24, position: 'relative' }}>
+          {/* Connector line */}
+          <div style={{ position: 'absolute', top: 36, left: '16.67%', right: '16.67%', height: 2, background: 'linear-gradient(90deg, #6366F1, #06B6D4)', zIndex: 0, opacity: 0.3 }}/>
+          {[
+            { step: '1', icon: '🔗', title: 'Connect your store', desc: 'Enter your store name and click Connect. Shopify OAuth handles the rest — secure and takes 30 seconds.', color: '#6366F1' },
+            { step: '2', icon: '🤖', title: 'AI analyzes everything', desc: 'Optivise instantly reads your products, orders, and revenue to find hidden growth opportunities.', color: '#06B6D4' },
+            { step: '3', icon: '🚀', title: 'Grow on autopilot', desc: 'Get personalized recommendations, AI descriptions, and real-time alerts — all in one dashboard.', color: '#34D399' },
+          ].map((s, i) => (
+            <div key={i} style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
+              <div style={{
+                width: 72, height: 72, borderRadius: '50%', margin: '0 auto 20px',
+                background: `rgba(${s.color === '#6366F1' ? '99,102,241' : s.color === '#06B6D4' ? '6,182,212' : '52,211,153'},0.12)`,
+                border: `2px solid ${s.color}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 28, boxShadow: `0 0 30px ${s.color}40`
+              }}>
+                {s.icon}
+              </div>
+              <div style={{
+                position: 'absolute', top: -8, left: '50%', transform: 'translateX(-50%)',
+                width: 22, height: 22, borderRadius: '50%',
+                background: s.color, color: 'white',
+                fontSize: 11, fontWeight: 900,
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>{s.step}</div>
+              <h3 style={{ fontSize: 16, fontWeight: 800, color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>{s.title}</h3>
+              <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.7 }}>{s.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div style={{ textAlign: 'center', marginTop: 40 }}>
+          <button onClick={() => navigate('/register')} className="land-btn-hero" style={{ display: 'inline-flex' }}>
+            <span>Start free — see results in 60 seconds</span>
+            <span className="land-btn-hero-arrow">→</span>
+          </button>
         </div>
       </section>
 
@@ -591,6 +651,20 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── SOCIAL PROOF LOGOS ── */}
+      <div style={{
+        padding: '40px 32px', textAlign: 'center',
+        borderTop: '1px solid rgba(255,255,255,0.05)',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+      }}>
+        <p style={{ fontSize: 12, color: '#334155', marginBottom: 20, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Trusted by store owners selling</p>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
+          {['👗 Fashion', '💎 Jewelry', '🏠 Home Decor', '🎮 Electronics', '🌿 Beauty', '👟 Footwear'].map((cat, i) => (
+            <span key={i} style={{ fontSize: 13, color: '#475569', fontWeight: 600 }}>{cat}</span>
+          ))}
+        </div>
+      </div>
+
       {/* ── FINAL CTA ── */}
       <section className="land-final-cta">
         <div className="land-final-glow"/>
@@ -617,7 +691,7 @@ export default function LandingPage() {
           <span>·</span>
           <a href="/terms" style={{color:'#334155',textDecoration:'none'}} onMouseEnter={e=>e.target.style.color='#818CF8'} onMouseLeave={e=>e.target.style.color='#334155'}>Terms of Service</a>
           <span>·</span>
-          <span>Made with ❤️  by Varun Kumar Konnoju</span>
+          <span>Made with ❤️ by Varun Kumar Konnoju</span>
         </div>
       </footer>
     </div>

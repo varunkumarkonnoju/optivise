@@ -25,7 +25,6 @@ export default function OptiviseLogo({ size = 40, showText = true, textSize = 18
     const cx = size / 2
     const cy = size / 2
     const r = size / 2 - 1
-
     let t = 0
     let frame
 
@@ -33,10 +32,7 @@ export default function OptiviseLogo({ size = 40, showText = true, textSize = 18
       ctx.clearRect(0, 0, size, size)
       t += 0.018
 
-      const tiltX = Math.cos(t * 0.6) * 0.25
-      const tiltY = Math.sin(t) * 0.35
-
-      // Base circle
+      // Base circle background
       ctx.save()
       ctx.beginPath()
       ctx.arc(cx, cy, r, 0, Math.PI * 2)
@@ -48,17 +44,17 @@ export default function OptiviseLogo({ size = 40, showText = true, textSize = 18
       ctx.fill()
 
       // Globe latitude lines
-      ctx.strokeStyle = 'rgba(255,255,255,0.12)'
-      ctx.lineWidth = 0.8
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)'
+      ctx.lineWidth = 0.7
       for (let lat = -3; lat <= 3; lat++) {
-        const y = cy + lat * (r / 3.5) + tiltX * r * 0.4
+        const y = cy + lat * (r / 3.8)
         const halfW = Math.sqrt(Math.max(0, r * r - (y - cy) * (y - cy)))
         ctx.beginPath()
-        ctx.ellipse(cx, y, halfW, halfW * 0.28, 0, 0, Math.PI * 2)
+        ctx.ellipse(cx, y, halfW, halfW * 0.25, 0, 0, Math.PI * 2)
         ctx.stroke()
       }
 
-      // Globe longitude lines
+      // Globe longitude lines (rotating)
       for (let i = 0; i < 6; i++) {
         const angle = (i / 6) * Math.PI + t * 0.4
         ctx.beginPath()
@@ -66,83 +62,89 @@ export default function OptiviseLogo({ size = 40, showText = true, textSize = 18
         ctx.stroke()
       }
 
-      // Clip to circle for inner content
+      // Clip to circle
       ctx.beginPath()
       ctx.arc(cx, cy, r - 1, 0, Math.PI * 2)
       ctx.clip()
 
-      // Bar chart
-      const barData = [0.45, 0.65, 0.9, 0.72, 1.0]
-      const barW = size * 0.1
-      const barGap = size * 0.04
+      // ── BAR CHART (main focus, no O ring blocking) ──
+      const barData = [0.42, 0.62, 0.85, 0.68, 1.0]
+      const barW = size * 0.11
+      const barGap = size * 0.035
       const totalW = barData.length * barW + (barData.length - 1) * barGap
       const startX = cx - totalW / 2
-      const baseY = cy + size * 0.2
-      const maxH = size * 0.42
+      const baseY = cy + size * 0.22
+      const maxH = size * 0.48
 
+      // Draw bars
       barData.forEach((h, i) => {
         const x = startX + i * (barW + barGap)
         const bh = h * maxH
-        const alpha = 0.4 + h * 0.55
-        ctx.fillStyle = `rgba(255,255,255,${alpha})`
+        // Gradient on each bar
+        const barGrad = ctx.createLinearGradient(x, baseY - bh, x, baseY)
+        barGrad.addColorStop(0, `rgba(255,255,255,${0.5 + h * 0.4})`)
+        barGrad.addColorStop(1, `rgba(255,255,255,${0.15 + h * 0.15})`)
+        ctx.fillStyle = barGrad
         ctx.beginPath()
-        ctx.roundRect(x, baseY - bh, barW, bh, 2)
+        ctx.roundRect(x, baseY - bh, barW, bh, 3)
         ctx.fill()
       })
 
-      // Trend line - Shopify green
+      // Baseline
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(startX - 2, baseY)
+      ctx.lineTo(startX + totalW + 2, baseY)
+      ctx.stroke()
+
+      // ── SHOPIFY GREEN TREND LINE ──
       ctx.strokeStyle = '#96BF48'
-      ctx.lineWidth = 2.5
+      ctx.lineWidth = size * 0.055
       ctx.lineJoin = 'round'
       ctx.lineCap = 'round'
+      ctx.shadowColor = '#96BF48'
+      ctx.shadowBlur = size * 0.08
       ctx.beginPath()
       barData.forEach((h, i) => {
         const x = startX + i * (barW + barGap) + barW / 2
-        const y = baseY - h * maxH - 3
+        const y = baseY - h * maxH - size * 0.04
         if (i === 0) ctx.moveTo(x, y)
         else ctx.lineTo(x, y)
       })
       ctx.stroke()
+      ctx.shadowBlur = 0
 
       // Trend dots
       barData.forEach((h, i) => {
         const x = startX + i * (barW + barGap) + barW / 2
-        const y = baseY - h * maxH - 3
+        const y = baseY - h * maxH - size * 0.04
+        const isLast = i === barData.length - 1
         ctx.beginPath()
-        ctx.arc(x, y, i === barData.length - 1 ? 3.5 : 2.5, 0, Math.PI * 2)
-        ctx.fillStyle = i === barData.length - 1 ? 'white' : '#96BF48'
+        ctx.arc(x, y, isLast ? size * 0.06 : size * 0.04, 0, Math.PI * 2)
+        ctx.fillStyle = isLast ? 'white' : '#96BF48'
         ctx.fill()
+        if (isLast) {
+          // Pulse ring on last dot
+          ctx.beginPath()
+          ctx.arc(x, y, size * 0.08, 0, Math.PI * 2)
+          ctx.strokeStyle = 'rgba(150,191,72,0.5)'
+          ctx.lineWidth = 1.5
+          ctx.stroke()
+        }
       })
-
-      // O ring
-      const oR = size * 0.2
-      const oX = cx + tiltY * size * 0.08
-      const oY = cy - size * 0.08 + tiltX * size * 0.06
-      ctx.strokeStyle = 'rgba(255,255,255,0.9)'
-      ctx.lineWidth = size * 0.06
-      ctx.beginPath()
-      ctx.arc(oX, oY, oR, 0, Math.PI * 2)
-      ctx.stroke()
-      ctx.fillStyle = '#4F46E5'
-      ctx.beginPath()
-      ctx.arc(oX, oY, oR - size * 0.055, 0, Math.PI * 2)
-      ctx.fill()
 
       ctx.restore()
 
       // Shine overlay
-      const shine = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, 0, cx, cy, r)
-      shine.addColorStop(0, 'rgba(255,255,255,0.18)')
-      shine.addColorStop(0.45, 'rgba(255,255,255,0.04)')
-      shine.addColorStop(1, 'rgba(0,0,0,0.15)')
+      const shine = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.42, 0, cx, cy, r)
+      shine.addColorStop(0, 'rgba(255,255,255,0.22)')
+      shine.addColorStop(0.4, 'rgba(255,255,255,0.05)')
+      shine.addColorStop(1, 'rgba(0,0,0,0.2)')
       ctx.beginPath()
       ctx.arc(cx, cy, r, 0, Math.PI * 2)
       ctx.fillStyle = shine
       ctx.fill()
-
-      // Glow shadow
-      ctx.shadowColor = 'rgba(99,102,241,0)'
-      ctx.shadowBlur = 0
 
       frame = requestAnimationFrame(draw)
     }
@@ -153,30 +155,24 @@ export default function OptiviseLogo({ size = 40, showText = true, textSize = 18
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{
-        filter: 'drop-shadow(0 4px 16px rgba(99,102,241,0.7))',
-        flexShrink: 0
-      }}>
+      <div style={{ filter: 'drop-shadow(0 4px 16px rgba(99,102,241,0.7))', flexShrink: 0 }}>
         <canvas ref={canvasRef} style={{ display: 'block', borderRadius: '50%' }}/>
       </div>
-
       {showText && (
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-          <span style={{
-            fontSize: textSize, fontWeight: 900,
-            color: 'var(--text-primary)', letterSpacing: '-0.4px'
-          }}>Optivise</span>
+          <span style={{ fontSize: textSize, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.4px' }}>
+            Optivise
+          </span>
           <div style={{ height: textSize * 0.65, overflow: 'hidden', marginTop: 3 }}>
             <span key={textIndex} style={{
-              fontSize: textSize * 0.52, fontWeight: 700,
-              color: '#96BF48', letterSpacing: '1.2px',
-              display: 'block',
+              fontSize: textSize * 0.52, fontWeight: 700, color: '#96BF48',
+              letterSpacing: '1.2px', display: 'block',
               animation: 'tagSlideIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards'
             }}>
               {taglines[textIndex]}
             </span>
           </div>
-          <style>{`@keyframes tagSlideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }`}</style>
+          <style>{`@keyframes tagSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
         </div>
       )}
     </div>

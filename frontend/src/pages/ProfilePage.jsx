@@ -70,10 +70,37 @@ export default function ProfilePage() {
 
           {/* Shopify Store Connection */}
           <div style={{ background: 'rgba(150,191,72,0.05)', border: '1px solid rgba(150,191,72,0.3)', borderRadius: 10, padding: '16px', marginBottom: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>🛍 Shopify Store Connection</div>
-            {user?.hasShopifyToken && (
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>🛍 Shopify Store Connection</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 12 }}>Connect your store to see real analytics and AI recommendations</div>
+
+            {user?.hasShopifyToken ? (
               <div style={{ fontSize: 12, color: '#34D399', fontWeight: 600, marginBottom: 12 }}>✓ Store connected: {form.shopDomain}</div>
+            ) : (
+              /* Step by step guide */
+              <div style={{ background: 'var(--bg-secondary)', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8, letterSpacing: '0.5px' }}>HOW IT WORKS</div>
+                {[
+                  { step: '1', text: 'Enter your store name below (e.g. "my-store")' },
+                  { step: '2', text: 'Click "Connect with Shopify" button' },
+                  { step: '3', text: 'Log into your Shopify account (if not already)' },
+                  { step: '4', text: 'Click "Install" to allow Optivise access' },
+                  { step: "5", text: "You're done! Your data loads automatically 🎉" },
+                ].map((s, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 6, alignItems: 'flex-start' }}>
+                    <div style={{
+                      width: 20, height: 20, borderRadius: '50%', background: 'var(--purple-dim)',
+                      border: '1px solid rgba(99,102,241,0.3)', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'var(--purple-light)', flexShrink: 0
+                    }}>{s.step}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', paddingTop: 2 }}>{s.text}</div>
+                  </div>
+                ))}
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, padding: '6px 8px', background: 'rgba(99,102,241,0.05)', borderRadius: 6 }}>
+                  🔒 <strong>Secure:</strong> We use Shopify's official OAuth. We never see your password.
+                </div>
+              </div>
             )}
+
             <ShopifyConnectButton shopDomain={form.shopDomain} />
           </div>
 

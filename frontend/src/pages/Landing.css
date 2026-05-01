@@ -53,8 +53,9 @@
 }
 .land-logo {
   display: flex; align-items: center; gap: 10px;
-  font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800;
-  color: white; letter-spacing: -0.3px;
+  font-family: inherit; font-size: inherit; font-weight: inherit;
+  color: inherit; letter-spacing: normal;
+  overflow: visible;
 }
 .land-logo-icon {
   width: 36px; height: 36px; border-radius: 10px;
@@ -336,6 +337,7 @@
   cursor: none; transform-style: preserve-3d;
 }
 
+/* Depth shadow layers */
 .d3-shadow-card {
   position: absolute; inset: 0;
   background: var(--bg3); border-radius: 18px;
@@ -393,6 +395,7 @@
 
 .d3-body { display: grid; grid-template-columns: 120px 1fr; }
 
+/* Sidebar */
 .d3-sidebar {
   background: rgba(0,0,0,0.25);
   border-right: 1px solid rgba(255,255,255,0.04);
@@ -428,6 +431,7 @@
   font-size: 8px; font-weight: 800; color: white;
 }
 
+/* Main area */
 .d3-main { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .d3-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
 .d3-greeting { font-size: 11px; font-weight: 700; color: #E2E8F0; font-family: 'Syne', sans-serif; }
@@ -476,6 +480,7 @@
   box-shadow: 0 0 8px #6366F1; animation: livePulse 2s infinite;
 }
 
+/* Floating badges */
 .d3-badge {
   position: absolute; border-radius: 22px; padding: 8px 14px;
   display: flex; align-items: center; gap: 7px;
@@ -509,6 +514,7 @@
 @keyframes float2 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
 @keyframes float3 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
 
+/* Grid bg in hero */
 .land-hero::before {
   content: '';
   position: absolute; inset: -20%; z-index: 0;
@@ -518,57 +524,4 @@
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 80%);
   pointer-events: none;
-}
-
-/* ════════════════════════════════════════
-   LOGO HOVER EFFECT
-════════════════════════════════════════ */
-.logo-hover-wrap {
-  position: relative;
-  cursor: pointer;
-}
-
-.logo-hover-card {
-  position: absolute;
-  top: calc(100% + 14px);
-  left: 0;
-  width: 230px;
-  background: linear-gradient(135deg, #1E1B4B 0%, #312E81 100%);
-  border: 1px solid rgba(99,102,241,0.5);
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(99,102,241,0.2), 0 0 40px rgba(99,102,241,0.15);
-  opacity: 0;
-  transform: translateY(-10px) scale(0.95);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  pointer-events: none;
-  z-index: 1000;
-}
-
-.logo-hover-wrap:hover .logo-hover-card {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: all;
-}
-
-.logo-hover-wrap .land-logo-icon {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
-}
-
-.logo-hover-wrap:hover .land-logo-icon {
-  transform: rotate(12deg) scale(1.15);
-  box-shadow: 0 0 30px rgba(99,102,241,0.7);
-}
-
-.logo-hover-card::before {
-  content: '';
-  position: absolute;
-  top: -6px;
-  left: 20px;
-  width: 12px;
-  height: 12px;
-  background: #312E81;
-  border-left: 1px solid rgba(99,102,241,0.5);
-  border-top: 1px solid rgba(99,102,241,0.5);
-  transform: rotate(45deg);
 }

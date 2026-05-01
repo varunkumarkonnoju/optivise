@@ -435,7 +435,7 @@ export default function LandingPage() {
       <nav className="land-nav">
         <div className="land-nav-inner">
           <div className="land-logo logo-hover-wrap" style={{ position: 'relative', cursor: 'pointer' }}>
-            <OptiviseLogo size={38} showText={true} textSize={18} />
+            <OptiviseLogo size={42} showText={true} textSize={16} />
             <div className="logo-hover-card">
               <div style={{ fontSize: 13, fontWeight: 800, color: 'white', marginBottom: 8 }}>🚀 Optivise</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>

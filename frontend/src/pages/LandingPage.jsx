@@ -608,7 +608,7 @@ export default function LandingPage() {
       <footer className="land-footer">
         <div className="land-logo" style={{marginBottom:8}}>
           <OptiviseLogo size={32} showText={false} />
-          <LogoText nameSize={18} tagSize={9} />
+          <LogoText nameSize={22} tagSize={9} />
         </div>
         <div style={{fontSize:12,color:'#2D3748',display:'flex',gap:16,alignItems:'center',flexWrap:'wrap',justifyContent:'center'}}>
           <span>© 2026 Optivise</span>
@@ -617,7 +617,7 @@ export default function LandingPage() {
           <span>·</span>
           <a href="/terms" style={{color:'#334155',textDecoration:'none'}} onMouseEnter={e=>e.target.style.color='#818CF8'} onMouseLeave={e=>e.target.style.color='#334155'}>Terms of Service</a>
           <span>·</span>
-          <span>Made with ❤️ by Varun Kumar Konnoju</span>
+          <span>Made with ❤️  by Varun Kumar Konnoju</span>
         </div>
       </footer>
     </div>

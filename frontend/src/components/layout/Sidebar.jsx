@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import OptiviseLogo from '../OptiviseLogo'
 import {
   LayoutDashboard, Sparkles, Package, TestTube2,
   Star, BarChart3, Zap, LogOut, ChevronRight, CreditCard
@@ -23,10 +24,7 @@ export default function Sidebar({ className = '' }) {
   return (
     <aside className={`sidebar ${className}`}>
       <div className="sidebar-logo">
-        <div className="logo-icon">
-          <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="white" strokeWidth="2"/><path d="M10 22 L16 10 L22 22" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 18h8" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
-        </div>
-        <span className="logo-text">Optivise</span>
+        <OptiviseLogo size={36} showText={true} textSize={16} />
       </div>
 
       <nav className="sidebar-nav">

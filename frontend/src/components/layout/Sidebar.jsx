@@ -26,7 +26,7 @@ export default function Sidebar({ className = '' }) {
     <aside className={`sidebar ${className}`}>
       <div className="sidebar-logo" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
         <OptiviseLogo size={42} showText={false} />
-<LogoText nameSize={20} tagSize={9} />
+<LogoText nameSize={22} tagSize={9} />
       </div>
 
       <nav className="sidebar-nav">

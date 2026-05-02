@@ -53,38 +53,49 @@ public class ClaudeService {
                     "messages", messages
             );
 
-            var response = getClient().post()
-                    .uri("/v1/chat/completions")
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Content-Type", "application/json")
-                    .bodyValue(body)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
+            // Retry up to 3 times
+            int maxRetries = 3;
+            for (int attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    var response = getClient().post()
+                            .uri("/v1/chat/completions")
+                            .header("Authorization", "Bearer " + apiKey)
+                            .header("Content-Type", "application/json")
+                            .bodyValue(body)
+                            .retrieve()
+                            .bodyToMono(Map.class)
+                            .block();
 
-            // OpenAI response: choices[0].message.content
-            if (response != null && response.containsKey("choices")) {
-                @SuppressWarnings("unchecked")
-                var choices = (List<Map<String, Object>>) response.get("choices");
-                if (!choices.isEmpty()) {
-                    @SuppressWarnings("unchecked")
-                    var message = (Map<String, Object>) choices.get(0).get("message");
-                    if (message != null) {
-                        String content = (String) message.get("content");
-                        // Strip markdown code fences like ```html ... ``` or ``` ... ```
-                        if (content != null) {
-                            content = content.replaceAll("(?s)^```[a-zA-Z]*\\n?", "");
-                            content = content.replaceAll("(?s)\\n?```$", "");
-                            content = content.trim();
+                    // OpenAI response: choices[0].message.content
+                    if (response != null && response.containsKey("choices")) {
+                        @SuppressWarnings("unchecked")
+                        var choices = (List<Map<String, Object>>) response.get("choices");
+                        if (!choices.isEmpty()) {
+                            @SuppressWarnings("unchecked")
+                            var message = (Map<String, Object>) choices.get(0).get("message");
+                            if (message != null) {
+                                String content = (String) message.get("content");
+                                // Strip markdown code fences like ```html ... ``` or ``` ... ```
+                                if (content != null) {
+                                    content = content.replaceAll("(?s)^```[a-zA-Z]*\\n?", "");
+                                    content = content.replaceAll("(?s)\\n?```$", "");
+                                    content = content.trim();
+                                }
+                                return content;
+                            }
                         }
-                        return content;
+                    }
+                } catch (Exception retryEx) {
+                    log.warn("OpenAI API attempt {}/{} failed: {}", attempt, maxRetries, retryEx.getMessage());
+                    if (attempt < maxRetries) {
+                        try { Thread.sleep(1000L * attempt); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
                     }
                 }
             }
         } catch (Exception e) {
             log.error("OpenAI API error: {}", e.getMessage());
         }
-        return "I'm having trouble connecting to the AI service. Please check your OPENAI_API_KEY in Run Configurations.";
+        return "I'm temporarily busy — please try again in a moment! 🔄";
     }
 
     public String buildStoreSystemPrompt(String shopName, String storeStats) {

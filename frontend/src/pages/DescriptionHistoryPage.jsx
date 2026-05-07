@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { RotateCcw, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 
 export default function DescriptionHistoryPage() {
-  const { token } = useAuth()
+  const token = localStorage.getItem('token')
   const [backups, setBackups] = useState([])
   const [loading, setLoading] = useState(true)
   const [restoring, setRestoring] = useState(null)

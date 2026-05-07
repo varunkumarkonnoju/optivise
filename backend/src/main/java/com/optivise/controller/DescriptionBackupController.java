@@ -11,9 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/descriptions")
@@ -25,37 +27,60 @@ public class DescriptionBackupController {
     @Autowired private UserRepository userRepo;
     @Autowired private ShopifyService shopifyService;
 
-    // ── GET all backups for current store ───────────────────
+    // ── GET all backups for current user ────────────────────
     @GetMapping("/backups")
     public ResponseEntity<?> getBackups(Authentication auth) {
         try {
-            Optional<User> userOpt = userRepo.findByEmail(auth.getName());
-            if (userOpt.isEmpty()) return ResponseEntity.status(401).build();
+            String email = auth.getName();
+            log.info("Fetching backups for user: {}", email);
 
-            User user = userOpt.get();
-            if (user.getShopDomain() == null) {
-                return ResponseEntity.ok(List.of());
+            Optional<User> userOpt = userRepo.findByEmail(email);
+            if (userOpt.isEmpty()) {
+                log.warn("User not found: {}", email);
+                return ResponseEntity.status(401).build();
             }
 
-            List<DescriptionBackup> backups =
-                    backupRepo.findByShopDomainAndRestoredFalseOrderBySavedAtDesc(
-                            user.getShopDomain());
+            User user = userOpt.get();
+            log.info("User shopDomain: {}", user.getShopDomain());
 
-            return ResponseEntity.ok(backups);
+            // Fetch ALL backups, filter in memory — avoids JPA null issues
+            List<DescriptionBackup> all = backupRepo.findAll();
+            log.info("Total backups in DB: {}", all.size());
+
+            List<DescriptionBackup> filtered = all.stream()
+                    .filter(b -> {
+                        // Match by shopDomain if both present
+                        if (user.getShopDomain() != null && b.getShopDomain() != null) {
+                            return user.getShopDomain().equals(b.getShopDomain());
+                        }
+                        // Fallback: match by email stored in shopDomain field
+                        return email.equals(b.getShopDomain());
+                    })
+                    .sorted((a, b2) -> {
+                        if (a.getSavedAt() == null) return 1;
+                        if (b2.getSavedAt() == null) return -1;
+                        return b2.getSavedAt().compareTo(a.getSavedAt());
+                    })
+                    .collect(Collectors.toList());
+
+            log.info("Filtered backups for user: {}", filtered.size());
+            return ResponseEntity.ok(filtered);
+
         } catch (Exception e) {
-            log.error("Failed to get backups: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            log.error("Failed to get backups: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     // ── SAVE backup before AI description ───────────────────
-    // Called automatically when AI description is saved to Shopify
     @PostMapping("/backup")
     public ResponseEntity<?> saveBackup(
             @RequestBody Map<String, String> request,
             Authentication auth) {
         try {
-            Optional<User> userOpt = userRepo.findByEmail(auth.getName());
+            String email = auth.getName();
+            Optional<User> userOpt = userRepo.findByEmail(email);
             if (userOpt.isEmpty()) return ResponseEntity.status(401).build();
 
             User user = userOpt.get();
@@ -64,33 +89,43 @@ public class DescriptionBackupController {
             String originalDescription = request.get("originalDescription");
             String aiDescription = request.get("aiDescription");
 
-            // Check if backup already exists for this product
+            // Use shopDomain if available, fallback to email
+            String shopKey = user.getShopDomain() != null
+                    ? user.getShopDomain()
+                    : email;
+
+            log.info("Saving backup for shop: {}, product: {}", shopKey, productId);
+
+            // Check if backup already exists
             Optional<DescriptionBackup> existing =
-                    backupRepo.findByShopDomainAndProductId(
-                            user.getShopDomain(), productId);
+                    backupRepo.findByShopDomainAndProductId(shopKey, productId);
 
             if (existing.isPresent()) {
-                // Update AI description but KEEP original (first backup = true original)
+                // Update AI description but KEEP the original (never overwrite original)
                 DescriptionBackup backup = existing.get();
                 backup.setAiDescription(aiDescription);
                 backup.setRestored(false);
                 backupRepo.save(backup);
+                log.info("Updated existing backup for product: {}", productId);
             } else {
                 // First time — save original description
                 DescriptionBackup backup = new DescriptionBackup(
-                        user.getShopDomain(),
+                        shopKey,
                         productId,
                         productTitle,
                         originalDescription,
                         aiDescription
                 );
                 backupRepo.save(backup);
+                log.info("Created new backup for product: {}", productId);
             }
 
             return ResponseEntity.ok(Map.of("success", true));
+
         } catch (Exception e) {
-            log.error("Failed to save backup: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            log.error("Failed to save backup: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -100,15 +135,17 @@ public class DescriptionBackupController {
             @PathVariable String productId,
             Authentication auth) {
         try {
-            Optional<User> userOpt = userRepo.findByEmail(auth.getName());
+            String email = auth.getName();
+            Optional<User> userOpt = userRepo.findByEmail(email);
             if (userOpt.isEmpty()) return ResponseEntity.status(401).build();
 
             User user = userOpt.get();
+            String shopKey = user.getShopDomain() != null
+                    ? user.getShopDomain()
+                    : email;
 
-            // Find the backup
             Optional<DescriptionBackup> backupOpt =
-                    backupRepo.findByShopDomainAndProductId(
-                            user.getShopDomain(), productId);
+                    backupRepo.findByShopDomainAndProductId(shopKey, productId);
 
             if (backupOpt.isEmpty()) {
                 return ResponseEntity.badRequest()
@@ -118,7 +155,6 @@ public class DescriptionBackupController {
             DescriptionBackup backup = backupOpt.get();
             String originalDesc = backup.getOriginalDescription();
 
-            // Restore to Shopify
             boolean success = shopifyService.updateProductDescription(
                     user.getShopDomain(),
                     user.getShopifyAccessToken(),
@@ -140,8 +176,9 @@ public class DescriptionBackupController {
             }
 
         } catch (Exception e) {
-            log.error("Failed to restore description: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            log.error("Failed to restore: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -151,13 +188,17 @@ public class DescriptionBackupController {
             @PathVariable String productId,
             Authentication auth) {
         try {
-            Optional<User> userOpt = userRepo.findByEmail(auth.getName());
+            String email = auth.getName();
+            Optional<User> userOpt = userRepo.findByEmail(email);
             if (userOpt.isEmpty()) return ResponseEntity.status(401).build();
 
             User user = userOpt.get();
+            String shopKey = user.getShopDomain() != null
+                    ? user.getShopDomain()
+                    : email;
+
             Optional<DescriptionBackup> backup =
-                    backupRepo.findByShopDomainAndProductId(
-                            user.getShopDomain(), productId);
+                    backupRepo.findByShopDomainAndProductId(shopKey, productId);
 
             return backup.map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());

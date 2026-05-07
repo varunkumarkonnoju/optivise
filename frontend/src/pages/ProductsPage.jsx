@@ -4,6 +4,7 @@ import {
   Package, AlertTriangle, CheckCircle, XCircle,
   Sparkles, Copy, Save, ChevronDown, ChevronUp, Zap, X, Eye
 } from 'lucide-react'
+import DescriptionHistory from '../components/DescriptionHistory'
 import './Products.css'
 
 const statusConfig = {
@@ -39,6 +40,25 @@ async function saveOne(productId, description, token) {
   return res.ok
 }
 
+// CHANGE 2: saveBackup — saves original BEFORE overwriting with AI description
+async function saveBackup(product, aiDescription, token) {
+  try {
+    await fetch('/api/descriptions/backup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        productId:           String(product.id),
+        productTitle:        product.title,
+        originalDescription: product.description || product.body_html || '',
+        aiDescription:       aiDescription
+      })
+    })
+  } catch (e) {
+    console.warn('Backup save failed (non-critical):', e)
+    // Non-critical — don't block the save if backup fails
+  }
+}
+
 export default function ProductsPage() {
   const [products, setProducts]       = useState([])
   const [loading, setLoading]         = useState(true)
@@ -65,7 +85,7 @@ export default function ProductsPage() {
   const [bulkDone, setBulkDone]       = useState(false)
   const [bulkSaving, setBulkSaving]   = useState(false)
   const [bulkSaveMsg, setBulkSaveMsg] = useState('')
-  const [previewId, setPreviewId]     = useState(null) // which product preview is open
+  const [previewId, setPreviewId]     = useState(null)
   const [savedIds, setSavedIds]       = useState(new Set())
   const stopRef = useRef(false)
 
@@ -90,7 +110,6 @@ export default function ProductsPage() {
     try {
       const desc = await generateOne(selectedProduct, tone, keywords, token)
       setGenerated(desc)
-      // Mark onboarding step as complete
       const userKey = localStorage.getItem('user_email') || 'user'
       localStorage.setItem('used_ai_description_' + userKey, '1')
       window.dispatchEvent(new Event('onboarding-updated'))
@@ -98,17 +117,32 @@ export default function ProductsPage() {
     finally { setGenerating(false) }
   }
 
+  // CHANGE 3: saveToShopify — backup original first, then save AI description
   const saveToShopify = async () => {
     if (!generated || !selectedProduct) return
     setSaving(true)
+    await saveBackup(selectedProduct, generated, token)        // ← backup first
     const ok = await saveOne(selectedProduct.id, generated, token)
-    setSavedMsg(ok ? '✓ Saved to Shopify! Live on your store now.' : 'Failed to save. Try again.')
+    setSavedMsg(ok
+      ? '✓ Saved! Original backed up — restore anytime from Description History.'
+      : 'Failed to save. Try again.')
     setSaving(false)
   }
 
   const copyHtml = () => {
     navigator.clipboard.writeText(generated)
     setSavedMsg('✓ Copied!'); setTimeout(() => setSavedMsg(''), 2000)
+  }
+
+  // CHANGE 4: handleDescriptionRestored — updates local state after user restores
+  const handleDescriptionRestored = (productId, originalDescription) => {
+    setProducts(prev => prev.map(p =>
+      String(p.id) === String(productId)
+        ? { ...p, description: originalDescription, optimizationStatus: 'needs-attention' }
+        : p
+    ))
+    setGenerated('')
+    setSavedMsg('')
   }
 
   // ── Bulk generate ─────────────────────────────────────
@@ -139,25 +173,31 @@ export default function ProductsPage() {
 
   const stopBulk = () => { stopRef.current = true }
 
+  // CHANGE 5: saveAllToShopify — backup each product before saving
   const saveAllToShopify = async () => {
     setBulkSaving(true); setBulkSaveMsg('')
     let saved = 0
     const newSaved = new Set(savedIds)
     for (const [id, desc] of Object.entries(bulkResults)) {
       if (desc) {
+        const product = products.find(p => String(p.id) === String(id))
+        if (product) await saveBackup(product, desc, token)    // ← backup first
         const ok = await saveOne(id, desc, token)
         if (ok) { saved++; newSaved.add(id) }
         await new Promise(r => setTimeout(r, 300))
       }
     }
     setSavedIds(newSaved)
-    setBulkSaveMsg(`✓ Saved ${saved} descriptions to Shopify!`)
+    setBulkSaveMsg(`✓ Saved ${saved} to Shopify! Originals backed up — restore from Description History.`)
     setBulkSaving(false)
   }
 
+  // CHANGE 6: saveSingleBulk — backup before saving individual product
   const saveSingleBulk = async (productId) => {
     const desc = bulkResults[productId]
     if (!desc) return
+    const product = products.find(p => String(p.id) === String(productId))
+    if (product) await saveBackup(product, desc, token)        // ← backup first
     const ok = await saveOne(productId, desc, token)
     if (ok) setSavedIds(prev => new Set([...prev, productId]))
   }
@@ -186,7 +226,12 @@ export default function ProductsPage() {
           <div className="bulk-header">
             <div>
               <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Bulk AI Description Generator</div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Generate descriptions for all {products.length} products at once, then preview and save each one</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                Generate descriptions for all {products.length} products at once, then preview and save each one.{' '}
+                <span style={{ color: 'var(--amber)', fontWeight: 600 }}>
+                  ↩ Originals auto-saved — restore anytime from Description History.
+                </span>
+              </div>
             </div>
             <button className="icon-btn" onClick={() => setBulkOpen(false)}><X size={14}/></button>
           </div>
@@ -400,6 +445,13 @@ export default function ProductsPage() {
                     <button className="gen-go-btn" onClick={generate} disabled={generating}>
                       <Sparkles size={14} />{generating ? 'Generating...' : 'Generate with AI'}
                     </button>
+
+                    {/* CHANGE 7: Restore original button — shown only after first save */}
+                    <DescriptionHistory
+                      productId={String(p.id)}
+                      productTitle={p.title}
+                      onRestored={handleDescriptionRestored}
+                    />
                   </div>
                   <div className="gen-right">
                     {!generated && !generating && (
@@ -408,6 +460,8 @@ export default function ProductsPage() {
                         <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>Pick a tone and click Generate</div>
                         <div style={{ fontSize: 11, color: 'var(--text-muted)', background: 'var(--bg-secondary)', borderRadius: 8, padding: '8px 12px', textAlign: 'left', lineHeight: 1.6 }}>
                           💡 <strong>How it works:</strong> AI writes a description → you preview it → click <strong>"Save to Shopify"</strong> to publish it live on your store.
+                          <br/><br/>
+                          ↩ <strong>Changed your mind?</strong> Your original is auto-saved when you click Save. Restore it anytime using the button on the left.
                         </div>
                       </div>
                     )}
@@ -427,7 +481,7 @@ export default function ProductsPage() {
                           ? <div className="gen-preview" dangerouslySetInnerHTML={{ __html: generated }} />
                           : <pre className="gen-code">{generated}</pre>}
                         <div className="gen-actions">
-                          {savedMsg && <span style={{ fontSize: 12, color: 'var(--green)', fontWeight: 600 }}>{savedMsg}</span>}
+                          {savedMsg && <span style={{ fontSize: 12, color: savedMsg.includes('Failed') ? 'var(--red)' : 'var(--green)', fontWeight: 600 }}>{savedMsg}</span>}
                           <button className="gen-action-btn" onClick={copyHtml}><Copy size={12}/> Copy</button>
                           <button className="gen-action-btn primary" onClick={saveToShopify} disabled={saving}>
                             <Save size={12}/> {saving ? 'Saving...' : 'Save to Shopify'}

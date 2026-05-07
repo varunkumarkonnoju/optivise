@@ -22,6 +22,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import OAuthSuccessPage from './pages/OAuthSuccessPage'
 import { InsightsPage, AutomationsPage } from './pages/StubPages'
 import SettingsPage from './pages/SettingsPage'
+import DescriptionHistoryPage from './pages/DescriptionHistoryPage'
 import './styles/global.css'
 
 function ProtectedRoute({ children }) {
@@ -60,6 +61,7 @@ function AppRoutes() {
       <Route path="/assistant" element={<ProtectedRoute><AssistantPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
+      <Route path="/history" element={<ProtectedRoute><DescriptionHistoryPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )

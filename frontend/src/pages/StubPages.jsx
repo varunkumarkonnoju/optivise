@@ -437,23 +437,62 @@ export function AutomationsPage() {
         marginBottom: 24,
         display: 'flex', alignItems: 'center', gap: 24,
       }}>
-        {/* Score circle */}
-        <div style={{ textAlign: 'center', flexShrink: 0 }}>
-          <svg width="100" height="100" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8"/>
-            <circle cx="50" cy="50" r="40" fill="none" stroke={scoreColor} strokeWidth="8"
-              strokeLinecap="round"
-              strokeDasharray={2 * Math.PI * 40}
-              strokeDashoffset={2 * Math.PI * 40 * (1 - overallScore/100)}
-              style={{ transform: 'rotate(-90deg)', transformOrigin: '50px 50px', transition: 'stroke-dashoffset 1s ease' }}
-            />
-          </svg>
-          <div style={{ marginTop: -64, marginBottom: 48 }}>
-            <div style={{ fontSize: 26, fontWeight: 900, color: scoreColor }}>{overallScore}</div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>/100</div>
-          </div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: scoreColor }}>{scoreLabel}</div>
-        </div>
+      
+        {/* Score circle — premium */}
+<div style={{ textAlign: 'center', flexShrink: 0, width: 140 }}>
+  <div style={{ position: 'relative', width: 140, height: 140 }}>
+    <svg width="140" height="140" viewBox="0 0 140 140">
+      {/* Glow effect */}
+      <circle cx="70" cy="70" r="54" fill="none"
+        stroke={scoreColor} strokeWidth="1" opacity="0.15"/>
+      {/* Track */}
+      <circle cx="70" cy="70" r="54" fill="none"
+        stroke="rgba(255,255,255,0.06)" strokeWidth="10"/>
+      {/* Progress */}
+      <circle cx="70" cy="70" r="54" fill="none"
+        stroke={scoreColor} strokeWidth="10"
+        strokeLinecap="round"
+        strokeDasharray={2 * Math.PI * 54}
+        strokeDashoffset={2 * Math.PI * 54 * (1 - overallScore / 100)}
+        style={{
+          transform: 'rotate(-90deg)',
+          transformOrigin: '70px 70px',
+          transition: 'stroke-dashoffset 1.2s ease',
+          filter: `drop-shadow(0 0 6px ${scoreColor}88)`,
+        }}
+      />
+    </svg>
+    {/* Centered text overlay */}
+    <div style={{
+      position: 'absolute', inset: 0,
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+    }}>
+      <div style={{
+        fontSize: 38, fontWeight: 900,
+        color: scoreColor, lineHeight: 1,
+        letterSpacing: '-2px',
+      }}>
+        {overallScore}
+      </div>
+      <div style={{
+        fontSize: 11, color: 'var(--text-muted)',
+        fontWeight: 600, letterSpacing: '0.05em',
+        marginTop: 2,
+      }}>
+        out of 100
+      </div>
+    </div>
+  </div>
+  {/* Label below circle */}
+  <div style={{
+    marginTop: 10, fontSize: 13, fontWeight: 800,
+    color: scoreColor, letterSpacing: '0.04em',
+    textTransform: 'uppercase',
+  }}>
+    {scoreLabel}
+  </div>
+</div>
 
         {/* Summary */}
         <div style={{ flex: 1 }}>

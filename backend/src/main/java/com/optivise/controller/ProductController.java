@@ -132,7 +132,7 @@ public class ProductController {
         User user = userRepo.findByEmail(principal.getName()).orElseThrow();
         String[] creds = getShopifyCredentials(user);
         String description = req.get("description");
-        boolean success = shopifyService.updateProductDescription(id, description, creds[0], creds[1]);
+        boolean success = shopifyService.updateProductDescription(creds[0], creds[1], id, description);
         return ResponseEntity.ok(Map.of("success", success));
     }
 }

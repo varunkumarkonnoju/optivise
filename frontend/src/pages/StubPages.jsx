@@ -410,6 +410,24 @@ export function AutomationsPage() {
   ]
 
   const overallScore = Math.round(healthChecks.reduce((sum, c) => sum + c.score, 0) / healthChecks.length)
+const [displayScore, setDisplayScore] = useState(0)
+
+useEffect(() => {
+  if (overallScore === 0) return
+  let start = 0
+  const duration = 1200
+  const increment = overallScore / (duration / 16)
+  const timer = setInterval(() => {
+    start += increment
+    if (start >= overallScore) {
+      setDisplayScore(overallScore)
+      clearInterval(timer)
+    } else {
+      setDisplayScore(Math.round(start))
+    }
+  }, 16)
+  return () => clearInterval(timer)
+}, [overallScore])
   const scoreColor   = overallScore >= 80 ? '#10B981' : overallScore >= 60 ? '#F59E0B' : '#EF4444'
   const scoreLabel   = overallScore >= 80 ? 'Excellent' : overallScore >= 60 ? 'Good' : overallScore >= 40 ? 'Needs Work' : 'Critical'
 
@@ -453,7 +471,7 @@ export function AutomationsPage() {
         stroke={scoreColor} strokeWidth="10"
         strokeLinecap="round"
         strokeDasharray={2 * Math.PI * 54}
-        strokeDashoffset={2 * Math.PI * 54 * (1 - overallScore / 100)}
+        strokeDashoffset={2 * Math.PI * 54 * (1 - displayScore / 100)}
         style={{
           transform: 'rotate(-90deg)',
           transformOrigin: '70px 70px',
@@ -470,10 +488,11 @@ export function AutomationsPage() {
     }}>
       <div style={{
         fontSize: 38, fontWeight: 900,
-        color: scoreColor, lineHeight: 1,
-        letterSpacing: '-2px',
-      }}>
-        {overallScore}
+color: scoreColor, lineHeight: 1,
+letterSpacing: '-2px',
+}}
+>
+  {displayScore}
       </div>
       <div style={{
         fontSize: 11, color: 'var(--text-muted)',
@@ -567,9 +586,9 @@ export function AutomationsPage() {
             {/* Progress bar */}
             <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
               <div style={{
-                height: '100%', width: `${check.score}%`,
+                height: '100%', width: loading ? '0%' : `${check.score}%`,
                 background: statusColor[check.status],
-                borderRadius: 3, transition: 'width 0.8s ease',
+                borderRadius: 3, transition: 'width 1s ease',
               }} />
             </div>
 

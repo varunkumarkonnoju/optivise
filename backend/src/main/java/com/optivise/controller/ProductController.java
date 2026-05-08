@@ -24,14 +24,10 @@ public class ProductController {
     @Value("${shopify.store.access.token}")
     private String defaultToken;
 
-    // ── Helper: get effective Shopify credentials for user ─
     private String[] getShopifyCredentials(User user) {
         String domain = user.getShopDomain();
-        String token = user.getShopifyAccessToken();
-        // Fall back to global credentials if user hasn't set their own
-        if (token == null || token.isBlank()) {
-            token = defaultToken;
-        }
+        String token  = user.getShopifyAccessToken();
+        if (token == null || token.isBlank()) token = defaultToken;
         return new String[]{domain, token};
     }
 
@@ -43,7 +39,6 @@ public class ProductController {
         List<Map<String, Object>> shopifyProducts = shopifyService.fetchProducts(creds[0], creds[1]);
         List<Map<String, Object>> orders = shopifyService.fetchOrders(creds[0], creds[1]);
 
-        // Calculate revenue per product from orders
         Map<String, Double> revenueByProduct = new HashMap<>();
         for (Map<String, Object> order : orders) {
             String status = (String) order.getOrDefault("financial_status", "");
@@ -63,25 +58,22 @@ public class ProductController {
             ProductDTO dto = new ProductDTO();
             dto.setId(Long.parseLong(p.get("id").toString()));
             dto.setTitle((String) p.getOrDefault("title", "Unknown"));
-            // Get price from first variant
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> variants = (List<Map<String, Object>>) p.getOrDefault("variants", List.of());
             if (!variants.isEmpty()) {
                 dto.setPrice(Double.parseDouble(variants.get(0).getOrDefault("price", "0").toString()));
             }
-            // Real revenue from orders
             double revenue = revenueByProduct.getOrDefault(p.get("id").toString(), 0.0);
             dto.setRevenue(Math.round(revenue * 100.0) / 100.0);
             dto.setSessions((int)(Math.random() * 500 + 100));
             dto.setConversionRate(Math.round((Math.random() * 8 + 1) * 10.0) / 10.0);
-            // Status based on revenue
-            if (revenue > 1000) dto.setOptimizationStatus("optimized");
-            else if (revenue > 100) dto.setOptimizationStatus("needs-attention");
-            else dto.setOptimizationStatus("critical");
-            // Image
+            if (revenue > 1000)      dto.setOptimizationStatus("optimized");
+            else if (revenue > 100)  dto.setOptimizationStatus("needs-attention");
+            else                     dto.setOptimizationStatus("critical");
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> images = (List<Map<String, Object>>) p.getOrDefault("images", List.of());
             if (!images.isEmpty()) dto.setImageUrl((String) images.get(0).get("src"));
+            // description for backup feature
             dto.setDescription((String) p.getOrDefault("body_html", ""));
             result.add(dto);
         }
@@ -90,15 +82,32 @@ public class ProductController {
 
     // ── POST /api/products/generate-description ───────────
     @PostMapping("/generate-description")
-    public ResponseEntity<Map<String, String>> generateDescription(
+    public ResponseEntity<Map<String, Object>> generateDescription(
             @RequestBody Map<String, Object> req,
             Principal principal) {
-        userRepo.findByEmail(principal.getName()).orElseThrow();
-        String title = (String) req.getOrDefault("productTitle", "Product");
-        String tone = (String) req.getOrDefault("tone", "professional");
+
+        User user = userRepo.findByEmail(principal.getName()).orElseThrow();
+
+        // ── CHECK USAGE LIMIT ────────────────────────────
+        if (user.hasReachedLimit()) {
+            String plan  = user.getPlan() != null ? user.getPlan() : "free";
+            int limit    = user.getMonthlyLimit();
+            int used     = user.getUsageCount();
+            return ResponseEntity.status(429).body(Map.of(
+                    "error",       "limit_reached",
+                    "message",     "You've used all " + limit + " AI descriptions for this month.",
+                    "used",        used,
+                    "limit",       limit,
+                    "plan",        plan,
+                    "upgradeUrl",  "/pricing"
+            ));
+        }
+
+        String title    = (String) req.getOrDefault("productTitle", "Product");
+        String tone     = (String) req.getOrDefault("tone", "professional");
         String keywords = (String) req.getOrDefault("keywords", "");
         Object priceObj = req.get("price");
-        String price = priceObj != null ? priceObj.toString() : "0";
+        String price    = priceObj != null ? priceObj.toString() : "0";
 
         String prompt = """
             Write a compelling, conversion-focused product description for an e-commerce store.
@@ -106,7 +115,7 @@ public class ProductController {
             Price: $%s
             Tone: %s
             Keywords to include: %s
-            
+
             Requirements:
             - Write in HTML format with proper tags (h2, p, ul, li)
             - 150-200 words
@@ -121,7 +130,20 @@ public class ProductController {
                 List.of(),
                 prompt
         );
-        return ResponseEntity.ok(Map.of("description", description));
+
+        // ── INCREMENT USAGE AFTER SUCCESSFUL GENERATION ──
+        user.incrementUsage();
+        userRepo.save(user);
+
+        // Return description + updated usage info
+        return ResponseEntity.ok(Map.of(
+                "description", description,
+                "usage", Map.of(
+                        "used",      user.getUsageCount(),
+                        "limit",     user.getMonthlyLimit(),
+                        "remaining", Math.max(0, user.getMonthlyLimit() - user.getUsageCount())
+                )
+        ));
     }
 
     // ── PUT /api/products/{id}/description ────────────────

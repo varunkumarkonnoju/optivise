@@ -5,6 +5,8 @@ import {
   Sparkles, Copy, Save, ChevronDown, ChevronUp, Zap, X, Eye
 } from 'lucide-react'
 import DescriptionHistory from '../components/DescriptionHistory'
+import UsageBanner from '../components/UsageBanner'
+import { useNavigate } from 'react-router-dom'
 import './Products.css'
 
 const statusConfig = {
@@ -87,9 +89,12 @@ export default function ProductsPage() {
   const [bulkSaveMsg, setBulkSaveMsg] = useState('')
   const [previewId, setPreviewId]     = useState(null)
   const [savedIds, setSavedIds]       = useState(new Set())
+  const [limitReached, setLimitReached] = useState(false)
+const [limitMessage, setLimitMessage] = useState('')
   const stopRef = useRef(false)
 
   const token = localStorage.getItem('token')
+  const navigate = useNavigate()
 
   useEffect(() => {
     productApi.getAll().then(r => setProducts(r.data)).finally(() => setLoading(false))
@@ -105,17 +110,38 @@ export default function ProductsPage() {
   const closeGenerator = () => { setSelectedProduct(null); setGenerated('') }
 
   const generate = async () => {
-    if (!selectedProduct) return
-    setGenerating(true); setGenerated(''); setSavedMsg('')
-    try {
-      const desc = await generateOne(selectedProduct, tone, keywords, token)
-      setGenerated(desc)
-      const userKey = localStorage.getItem('user_email') || 'user'
-      localStorage.setItem('used_ai_description_' + userKey, '1')
-      window.dispatchEvent(new Event('onboarding-updated'))
-    } catch { setGenerated('Error. Check your OpenAI key.') }
-    finally { setGenerating(false) }
-  }
+  if (!selectedProduct) return
+  setGenerating(true); setGenerated(''); setSavedMsg('')
+  setLimitReached(false); setLimitMessage('')
+  try {
+    const res = await fetch('/api/products/generate-description', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        productId: selectedProduct.id,
+        productTitle: selectedProduct.title,
+        price: selectedProduct.price,
+        tone, keywords
+      })
+    })
+    if (res.status === 429) {
+      const data = await res.json()
+      setLimitReached(true)
+      setLimitMessage(data.message || "You've reached your monthly limit.")
+      setGenerating(false)
+      return
+    }
+    const data = await res.json()
+    setGenerated(data.description || '')
+    const userKey = localStorage.getItem('user_email') || 'user'
+    localStorage.setItem('used_ai_description_' + userKey, '1')
+    window.dispatchEvent(new Event('onboarding-updated'))
+  } catch { setGenerated('Error. Check your OpenAI key.') }
+  finally { setGenerating(false) }
+}
 
   // CHANGE 3: saveToShopify — backup original first, then save AI description
   const saveToShopify = async () => {
@@ -208,7 +234,8 @@ export default function ProductsPage() {
 
   return (
     <div className="products-page">
-      <div className="page-header">
+  <UsageBanner />
+  <div className="page-header">
         <div>
           <h1 className="page-title">Product Optimizer</h1>
           <p className="page-sub">AI-powered description generator for your Shopify store</p>
@@ -454,7 +481,36 @@ export default function ProductsPage() {
                     />
                   </div>
                   <div className="gen-right">
-                    {!generated && !generating && (
+                    {limitReached && (
+  <div className="gen-empty">
+    <AlertTriangle size={28}
+      style={{ color: 'var(--red)', marginBottom: 10 }} />
+    <div style={{
+      fontSize: 13, fontWeight: 700,
+      color: 'var(--red)', marginBottom: 6
+    }}>
+      Monthly limit reached!
+    </div>
+    <div style={{
+      fontSize: 12, color: 'var(--text-muted)',
+      marginBottom: 16
+    }}>
+      {limitMessage}
+    </div>
+    <button
+      onClick={() => navigate('/pricing')}
+      style={{
+        background: 'var(--purple)', border: 'none',
+        borderRadius: 8, padding: '8px 20px',
+        fontSize: 12, fontWeight: 700,
+        color: 'white', cursor: 'pointer',
+      }}
+    >
+      Upgrade Plan →
+    </button>
+  </div>
+)}
+                    {!generated && !generating && !limitReached && (
                       <div className="gen-empty">
                         <Sparkles size={28} style={{ color: 'var(--purple)', marginBottom: 10 }} />
                         <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>Pick a tone and click Generate</div>

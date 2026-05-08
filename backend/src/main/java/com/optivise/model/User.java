@@ -14,16 +14,56 @@ public class User {
     private String password;
     private String role;
     private String shopDomain;
-    private String shopifyAccessToken;  // per-user Shopify token
+    private String shopifyAccessToken;
     private String plan;
     private String stripeCustomerId;
     private String subscriptionStatus;
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    public User() {}
-    @PrePersist void onCreate() { createdAt = LocalDateTime.now(); }
+    // ── NEW: Usage tracking fields ──────────────────────
+    @Column(columnDefinition = "integer default 0")
+    private Integer usageCount = 0;          // how many AI descriptions used this month
 
+    private LocalDateTime usageResetDate;    // when the counter resets (1st of next month)
+
+    public User() {}
+    @PrePersist void onCreate() {
+        createdAt = LocalDateTime.now();
+        usageCount = 0;
+        usageResetDate = LocalDateTime.now().plusMonths(1).withDayOfMonth(1)
+                .withHour(0).withMinute(0).withSecond(0);
+    }
+
+    // ── Plan limits helper ───────────────────────────────
+    public int getMonthlyLimit() {
+        if (plan == null || plan.equalsIgnoreCase("free")) return 15;
+        if (plan.equalsIgnoreCase("starter"))              return 500;
+        if (plan.equalsIgnoreCase("growth"))               return Integer.MAX_VALUE;
+        return 15; // default to free
+    }
+
+    public boolean hasReachedLimit() {
+        if (plan != null && plan.equalsIgnoreCase("growth")) return false;
+        resetIfNewMonth();
+        int count = usageCount != null ? usageCount : 0;
+        return count >= getMonthlyLimit();
+    }
+
+    public void incrementUsage() {
+        resetIfNewMonth();
+        usageCount = (usageCount != null ? usageCount : 0) + 1;
+    }
+
+    private void resetIfNewMonth() {
+        if (usageResetDate == null || LocalDateTime.now().isAfter(usageResetDate)) {
+            usageCount = 0;
+            usageResetDate = LocalDateTime.now().plusMonths(1).withDayOfMonth(1)
+                    .withHour(0).withMinute(0).withSecond(0);
+        }
+    }
+
+    // ── Getters and Setters ──────────────────────────────
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
@@ -45,6 +85,10 @@ public class User {
     public String getSubscriptionStatus() { return subscriptionStatus; }
     public void setSubscriptionStatus(String subscriptionStatus) { this.subscriptionStatus = subscriptionStatus; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public Integer getUsageCount() { return usageCount != null ? usageCount : 0; }
+    public void setUsageCount(Integer usageCount) { this.usageCount = usageCount; }
+    public LocalDateTime getUsageResetDate() { return usageResetDate; }
+    public void setUsageResetDate(LocalDateTime usageResetDate) { this.usageResetDate = usageResetDate; }
 
     public static UserBuilder builder() { return new UserBuilder(); }
     public static class UserBuilder {

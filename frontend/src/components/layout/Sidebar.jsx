@@ -4,7 +4,7 @@ import OptiviseLogo from '../OptiviseLogo'
 import LogoText from '../LogoText'
 import {
   LayoutDashboard, Sparkles, Package, TestTube2,
-  Star, BarChart3, Zap, LogOut, ChevronRight, CreditCard, RotateCcw
+  Star, BarChart3, Zap, LogOut, ChevronRight, CreditCard, RotateCcw, Megaphone
 } from 'lucide-react'
 import './Layout.css'
 
@@ -18,6 +18,7 @@ const nav = [
   { label: 'Automations',         path: '/automations',     icon: Zap },
   { label: 'Pricing & Billing',   path: '/pricing',         icon: CreditCard },
   { label: 'Description History', path: '/history',         icon: RotateCcw },
+  { label: 'Marketing Studio', path: '/marketing', icon: Megaphone },
 ]
 
 export default function Sidebar({ className = '' }) {

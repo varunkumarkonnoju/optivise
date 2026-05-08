@@ -24,11 +24,11 @@ export function InsightsPage() {
     setLoading(true)
     try {
       const [prodRes, dashRes] = await Promise.all([
-        fetch('/api/products', { headers: { Authorization: 'Bearer ' + token } }),
-        fetch('/api/dashboard/metrics', { headers: { Authorization: 'Bearer ' + token } }),
-      ])
-      const prodData  = await prodRes.json()
-      const dashData  = await dashRes.json()
+  fetch('/api/products', { headers: { Authorization: 'Bearer ' + token } }),
+  fetch('/api/dashboard', { headers: { Authorization: 'Bearer ' + token } }),
+])
+const prodData  = await prodRes.json()
+const dashData  = await dashRes.json()
       const prods     = Array.isArray(prodData) ? prodData : []
       setProducts(prods)
       calculateLeaks(prods, dashData)
@@ -341,7 +341,7 @@ export function AutomationsPage() {
     setLoading(true)
     try {
       const [dashRes, prodRes] = await Promise.all([
-        fetch('/api/dashboard/metrics', { headers: { Authorization: 'Bearer ' + token } }),
+        fetch('/api/dashboard', { headers: { Authorization: 'Bearer ' + token } }),
         fetch('/api/products', { headers: { Authorization: 'Bearer ' + token } }),
       ])
       const dash  = await dashRes.json()

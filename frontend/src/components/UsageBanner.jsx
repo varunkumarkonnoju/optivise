@@ -28,8 +28,7 @@ export default function UsageBanner() {
   const { used, limit, remaining, percentage, plan, hasReached } = usage
 
   // Only show when used >= 50% of limit
-  if (percentage < 50) return null
-
+  if (percentage < 0) return null
   const isWarning  = percentage >= 50 && percentage < 80
   const isDanger   = percentage >= 80 && !hasReached
   const isExhausted = hasReached

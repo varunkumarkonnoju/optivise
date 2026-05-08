@@ -123,13 +123,17 @@ public class ShopifyService {
     }
 
     // ── Update product description ────────────────────────
-    public boolean updateProductDescription(String productId, String description,
-                                            String domain, String token) {
+    public boolean updateProductDescription(String domain, String token,
+                                            String productId, String description) {
         try {
             String url = "https://" + domain + "/admin/api/2023-10/products/" + productId + ".json";
-            String body = "{\"product\":{\"id\":" + productId + ",\"body_html\":\"" +
-                    description.replace("\"", "\\\"") + "\"}}";
-            WebClient.create()
+            String body = "{\"product\":{\"id\":" + productId + ",\"body_html\":\""
+                    + description.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\n", "\\n")
+                    .replace("\r", "")
+                    + "\"}}";
+            shopifyWebClient
                     .put().uri(url)
                     .header("X-Shopify-Access-Token", token)
                     .header("Content-Type", "application/json")

@@ -1,6 +1,6 @@
 package com.optivise.dto;
 public class ProductDTO {
-    private Long id; private String title, optimizationStatus, imageUrl;
+    private Long id; private String title, optimizationStatus, imageUrl, description;
     private Double price, revenue, conversionRate; private Integer sessions;
     public ProductDTO() {}
     public Long getId() { return id; } public void setId(Long v) { id = v; }
@@ -11,6 +11,7 @@ public class ProductDTO {
     public Double getConversionRate() { return conversionRate; } public void setConversionRate(Double v) { conversionRate = v; }
     public String getOptimizationStatus() { return optimizationStatus; } public void setOptimizationStatus(String v) { optimizationStatus = v; }
     public String getImageUrl() { return imageUrl; } public void setImageUrl(String v) { imageUrl = v; }
+    public String getDescription() { return description; } public void setDescription(String v) { description = v; }
     public static ProductDTOBuilder builder() { return new ProductDTOBuilder(); }
     public static class ProductDTOBuilder {
         private ProductDTO d = new ProductDTO();
@@ -22,6 +23,7 @@ public class ProductDTO {
         public ProductDTOBuilder conversionRate(Double v) { d.conversionRate = v; return this; }
         public ProductDTOBuilder optimizationStatus(String v) { d.optimizationStatus = v; return this; }
         public ProductDTOBuilder imageUrl(String v) { d.imageUrl = v; return this; }
+        public ProductDTOBuilder description(String v) { d.description = v; return this; }
         public ProductDTO build() { return d; }
     }
 }

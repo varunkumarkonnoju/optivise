@@ -82,6 +82,7 @@ public class ProductController {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> images = (List<Map<String, Object>>) p.getOrDefault("images", List.of());
             if (!images.isEmpty()) dto.setImageUrl((String) images.get(0).get("src"));
+            dto.setDescription((String) p.getOrDefault("body_html", ""));
             result.add(dto);
         }
         return ResponseEntity.ok(result);

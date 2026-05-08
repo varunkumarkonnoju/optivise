@@ -49,7 +49,17 @@ public class MarketingController {
             @RequestBody Map<String, String> req,
             Principal principal) {
         try {
-            userRepo.findByEmail(principal.getName()).orElseThrow();
+            User user = userRepo.findByEmail(principal.getName()).orElseThrow();
+
+// Block free plan users from image generation
+            String plan = user.getPlan() != null ? user.getPlan() : "free";
+            if (plan.equalsIgnoreCase("free") || plan.equalsIgnoreCase("starter")) {
+                return ResponseEntity.status(403).body(Map.of(
+                        "error",      "plan_required",
+                        "message",    "AI Image generation is available on the Growth plan only.",
+                        "upgradeUrl", "/pricing"
+                ));
+            }
 
             String type        = req.getOrDefault("type", "ad");
             String productName = req.getOrDefault("productName", "");

@@ -271,24 +271,45 @@ export default function MarketingPage() {
   }
 
   const generateImage = async () => {
-    if (!getProductName().trim()) { setImgError('Please enter a product name.'); return }
-    setGeneratingImg(true); setGeneratedImg(null); setImgError('')
-    try {
-      const res = await fetch('/api/marketing/generate-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({
-          productName: getProductName(),
-          style: imgStyle, platform, mood: imgMood,
-          bgColor, size: imgSize,
-        })
-      })
-      const data = await res.json()
-      if (data.imageUrl) setGeneratedImg(data)
-      else setImgError(data.error || 'Image generation failed.')
-    } catch { setImgError('Image generation failed. Try again.') }
-    finally { setGeneratingImg(false) }
+  if (!getProductName().trim()) {
+    setImgError('Please enter a product name.')
+    return
   }
+  setGeneratingImg(true)
+  setGeneratedImg(null)
+  setImgError('')
+  try {
+    const res = await fetch('/api/marketing/generate-image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify({
+        productName: getProductName(),
+        style: imgStyle,
+        platform,
+        mood: imgMood,
+        bgColor,
+        size: imgSize,
+      })
+    })
+    const data = await res.json()
+    if (res.status === 403) {
+      setImgError('🔒 AI Images require the Growth plan. Upgrade to unlock.')
+      return
+    }
+    if (data.imageUrl) {
+      setGeneratedImg(data)
+    } else {
+      setImgError(data.error || 'Image generation failed.')
+    }
+  } catch {
+    setImgError('Image generation failed. Try again.')
+  } finally {
+    setGeneratingImg(false)
+  }
+}
 
   const downloadImage = async () => {
     if (!generatedImg?.imageUrl) return
@@ -461,15 +482,25 @@ export default function MarketingPage() {
               {imgError && <div style={{ fontSize: 12, color: '#EF4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '8px 12px' }}>{imgError}</div>}
 
               <button onClick={generateImage} disabled={generatingImg} style={{
-                width: '100%', background: tool.color, border: 'none', borderRadius: 10,
-                padding: '12px', fontSize: 13, fontWeight: 700, color: 'white',
-                cursor: generatingImg ? 'not-allowed' : 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                opacity: generatingImg ? 0.8 : 1,
-              }}>
-                <Wand2 size={14} />
-                {generatingImg ? 'Generating Image...' : 'Generate with DALL-E 3'}
-              </button>
+  width: '100%', background: tool.color, border: 'none', borderRadius: 10,
+  padding: '12px', fontSize: 13, fontWeight: 700, color: 'white',
+  cursor: generatingImg ? 'not-allowed' : 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+  opacity: generatingImg ? 0.8 : 1,
+}}>
+  <Wand2 size={14} />
+  {generatingImg ? 'Generating Image...' : 'Generate with DALL-E 3'}
+</button>
+
+{/* Growth plan badge */}
+<div style={{
+  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+  fontSize: 11, color: '#F59E0B', marginTop: 6,
+}}>
+  <span>⚡</span>
+  <span>Growth plan feature — $79/mo</span>
+  <a href="/pricing" style={{ color: '#F59E0B', fontWeight: 700 }}>Upgrade →</a>
+</div>
             </>
           ) : (
             <>

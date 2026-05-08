@@ -1,165 +1,550 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  TrendingDown, AlertTriangle, CheckCircle, Package,
+  DollarSign, Eye, ArrowRight, RefreshCw, Activity,
+  ShoppingCart, Users, Star, Zap, Clock, BarChart3
+} from 'lucide-react'
 
-function ComingSoonPage({ icon, title, description, features, color }) {
-  const [email, setEmail] = useState('')
-  const [joined, setJoined] = useState(false)
+// ══════════════════════════════════════════════════════
+// REVENUE LEAK DETECTOR (was AI Insights)
+// ══════════════════════════════════════════════════════
+export function InsightsPage() {
+  const [loading, setLoading]   = useState(true)
+  const [leaks, setLeaks]       = useState([])
+  const [products, setProducts] = useState([])
+  const [orders, setOrders]     = useState([])
+  const [totalLeak, setTotalLeak] = useState(0)
+  const token = localStorage.getItem('token')
   const navigate = useNavigate()
 
-  const handleJoin = async (e) => {
-    e.preventDefault()
-    // Store in localStorage for now
+  useEffect(() => { fetchData() }, [])
+
+  const fetchData = async () => {
+    setLoading(true)
     try {
-      // Save to backend
-      await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, feature: title })
-      })
+      const [prodRes, dashRes] = await Promise.all([
+        fetch('/api/products', { headers: { Authorization: 'Bearer ' + token } }),
+        fetch('/api/dashboard/metrics', { headers: { Authorization: 'Bearer ' + token } }),
+      ])
+      const prodData  = await prodRes.json()
+      const dashData  = await dashRes.json()
+      const prods     = Array.isArray(prodData) ? prodData : []
+      setProducts(prods)
+      calculateLeaks(prods, dashData)
     } catch (e) {
-      console.error('Waitlist save failed', e)
+      console.error(e)
+    } finally {
+      setLoading(false)
     }
-    setJoined(true)
   }
 
+  const calculateLeaks = (prods, dash) => {
+    const detected = []
+    let totalLoss  = 0
+
+    // ── Leak 1: Products with no description ────────────
+    const noDesc = prods.filter(p => !p.description || p.description.trim().length < 50)
+    if (noDesc.length > 0) {
+      const est = noDesc.length * 180
+      totalLoss += est
+      detected.push({
+        id:       'no-description',
+        severity: 'high',
+        icon:     '📝',
+        title:    `${noDesc.length} products have weak or no descriptions`,
+        detail:   `Products without compelling descriptions lose 30-40% of potential buyers. Visitors land on your page, see no reason to buy, and leave.`,
+        impact:   est,
+        fix:      'Use Product Optimizer to generate AI descriptions in 1 click',
+        fixPath:  '/products',
+        fixLabel: 'Fix Now →',
+        products: noDesc.slice(0, 3).map(p => p.title),
+      })
+    }
+
+    // ── Leak 2: Zero revenue products ───────────────────
+    const zeroRev = prods.filter(p => (!p.revenue || p.revenue === 0) && p.price > 0)
+    if (zeroRev.length > 0) {
+      const est = zeroRev.length * 120
+      totalLoss += est
+      detected.push({
+        id:       'zero-revenue',
+        severity: 'high',
+        icon:     '💀',
+        title:    `${zeroRev.length} products have generated zero revenue`,
+        detail:   `These products are taking up space, confusing visitors and diluting your store's focus. Dead products hurt your overall conversion rate.`,
+        impact:   est,
+        fix:      'Review these products — improve descriptions, lower price or remove them',
+        fixPath:  '/products',
+        fixLabel: 'Review Products →',
+        products: zeroRev.slice(0, 3).map(p => p.title),
+      })
+    }
+
+    // ── Leak 3: Low conversion rate ──────────────────────
+    const convRate = dash?.conversionRate || 0
+    if (convRate > 0 && convRate < 2.0) {
+      const est = Math.round((dash?.totalRevenue || 1000) * 0.4)
+      totalLoss += est
+      detected.push({
+        id:       'low-conversion',
+        severity: 'high',
+        icon:     '📉',
+        title:    `Your conversion rate is ${convRate.toFixed(1)}% — industry average is 2.5%`,
+        detail:   `For every 100 visitors, only ${convRate.toFixed(1)} buy. If you hit 2.5% you'd make ${Math.round((2.5 - convRate) / convRate * 100)}% more revenue without any extra traffic.`,
+        impact:   est,
+        fix:      'Run A/B tests on your top products to find what converts better',
+        fixPath:  '/abtesting',
+        fixLabel: 'Start A/B Test →',
+        products: [],
+      })
+    }
+
+    // ── Leak 4: No product images ────────────────────────
+    const noImage = prods.filter(p => !p.imageUrl)
+    if (noImage.length > 0) {
+      const est = noImage.length * 90
+      totalLoss += est
+      detected.push({
+        id:       'no-images',
+        severity: 'medium',
+        icon:     '🖼️',
+        title:    `${noImage.length} products have no images`,
+        detail:   `93% of buyers say visuals are the key deciding factor. Products without images get almost zero sales regardless of how good the description is.`,
+        impact:   est,
+        fix:      'Add product images in your Shopify admin immediately',
+        fixPath:  null,
+        fixLabel: null,
+        products: noImage.slice(0, 3).map(p => p.title),
+      })
+    }
+
+    // ── Leak 5: Price too low vs AOV ─────────────────────
+    const aov = dash?.averageOrderValue || 0
+    if (aov > 0) {
+      const underpriced = prods.filter(p => p.price > 0 && p.price < aov * 0.2 && (p.revenue || 0) > 100)
+      if (underpriced.length > 0) {
+        const est = underpriced.length * 200
+        totalLoss += est
+        detected.push({
+          id:       'underpriced',
+          severity: 'medium',
+          icon:     '💸',
+          title:    `${underpriced.length} best-selling products may be underpriced`,
+          detail:   `Your average order value is $${aov.toFixed(0)} but these products are priced much lower. Customers who are already buying are willing to pay more.`,
+          impact:   est,
+          fix:      'Test a 15-20% price increase on your best sellers — use A/B testing',
+          fixPath:  '/abtesting',
+          fixLabel: 'Test Price →',
+          products: underpriced.slice(0, 3).map(p => p.title),
+        })
+      }
+    }
+
+    // ── Leak 6: No recommendations acted on ─────────────
+    detected.push({
+      id:       'recommendations',
+      severity: 'low',
+      icon:     '💡',
+      title:    `You have unread AI growth recommendations`,
+      detail:   `Optivise generates personalized recommendations based on your real store data. Each recommendation has an estimated revenue impact.`,
+      impact:   300,
+      fix:      'Review your AI recommendations and act on the top 3',
+      fixPath:  '/recommendations',
+      fixLabel: 'View Recommendations →',
+      products: [],
+    })
+
+    totalLoss += 300
+    setLeaks(detected)
+    setTotalLeak(totalLoss)
+  }
+
+  const severityColor = {
+    high:   '#EF4444',
+    medium: '#F59E0B',
+    low:    '#6366F1',
+  }
+
+  const severityBg = {
+    high:   'rgba(239,68,68,0.08)',
+    medium: 'rgba(245,158,11,0.08)',
+    low:    'rgba(99,102,241,0.08)',
+  }
+
+  if (loading) return <div className="spinner" />
+
   return (
-    <div style={{ maxWidth: 680, margin: '0 auto', padding: '40px 0' }}>
-      {/* Hero */}
-      <div style={{ textAlign: 'center', marginBottom: 48 }}>
-        <div style={{
-          width: 80, height: 80, borderRadius: 20, margin: '0 auto 20px',
-          background: `linear-gradient(135deg, ${color}33, ${color}11)`,
-          border: `1px solid ${color}44`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36
-        }}>
-          {icon}
-        </div>
-        <div style={{
-          display: 'inline-block', background: `${color}15`, border: `1px solid ${color}40`,
-          borderRadius: 20, padding: '4px 14px', fontSize: 11, fontWeight: 700,
-          color: color, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 16
-        }}>
-          Coming Soon
-        </div>
-        <h1 style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.5px', marginBottom: 14 }}>
-          {title}
+    <div>
+      {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>
+          Revenue Leak Detector
         </h1>
-        <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.7, maxWidth: 500, margin: '0 auto' }}>
-          {description}
+        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          AI scans your real store data to find exactly where you're losing money — and how to fix it.
         </p>
       </div>
 
-      {/* Features preview */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 40 }}>
-        {features.map((f, i) => (
-          <div key={i} style={{
-            background: 'var(--bg-card)', border: '1px solid var(--border)',
-            borderRadius: 12, padding: '16px 18px', display: 'flex', gap: 12, alignItems: 'flex-start'
-          }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-              background: `${color}15`, display: 'flex', alignItems: 'center',
-              justifyContent: 'center', fontSize: 16
-            }}>
-              {f.icon}
+      {/* Total leak banner */}
+      {totalLeak > 0 && (
+        <div style={{
+          background: 'rgba(239,68,68,0.08)',
+          border: '1px solid rgba(239,68,68,0.2)',
+          borderRadius: 14, padding: '20px 24px',
+          marginBottom: 24,
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', gap: 16,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(239,68,68,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <TrendingDown size={22} color="#EF4444" />
             </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 3 }}>{f.title}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>{f.desc}</div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: '#EF4444' }}>
+                ~${totalLeak.toLocaleString()}/month
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                estimated revenue you're currently losing — {leaks.length} leaks detected
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={fetchData}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600, color: '#EF4444', cursor: 'pointer' }}
+          >
+            <RefreshCw size={12} /> Rescan
+          </button>
+        </div>
+      )}
+
+      {/* Leak cards */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {leaks.map((leak, i) => (
+          <div key={leak.id} style={{
+            background: 'var(--bg-secondary)',
+            border: `1px solid ${severityColor[leak.severity]}30`,
+            borderLeft: `4px solid ${severityColor[leak.severity]}`,
+            borderRadius: 12, padding: '20px 24px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+              <div style={{ flex: 1 }}>
+                {/* Title row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                  <span style={{ fontSize: 20 }}>{leak.icon}</span>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
+                    {leak.title}
+                  </div>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: '2px 8px',
+                    borderRadius: 20, textTransform: 'uppercase',
+                    background: severityBg[leak.severity],
+                    color: severityColor[leak.severity],
+                    border: `1px solid ${severityColor[leak.severity]}30`,
+                  }}>
+                    {leak.severity}
+                  </span>
+                </div>
+
+                {/* Detail */}
+                <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 12 }}>
+                  {leak.detail}
+                </p>
+
+                {/* Affected products */}
+                {leak.products?.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                    {leak.products.map((p, j) => (
+                      <span key={j} style={{
+                        fontSize: 11, padding: '3px 10px', borderRadius: 20,
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-muted)',
+                      }}>
+                        📦 {p}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Fix suggestion */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  background: `${severityColor[leak.severity]}08`,
+                  border: `1px solid ${severityColor[leak.severity]}15`,
+                  borderRadius: 8, padding: '8px 12px',
+                }}>
+                  <CheckCircle size={13} color={severityColor[leak.severity]} style={{ flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                    <strong>Fix:</strong> {leak.fix}
+                  </span>
+                </div>
+              </div>
+
+              {/* Impact + CTA */}
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
+                  Est. monthly loss
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: severityColor[leak.severity], marginBottom: 12 }}>
+                  ~${leak.impact.toLocaleString()}
+                </div>
+                {leak.fixPath && (
+                  <button
+                    onClick={() => navigate(leak.fixPath)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      background: severityColor[leak.severity],
+                      border: 'none', borderRadius: 8,
+                      padding: '8px 16px', fontSize: 12, fontWeight: 700,
+                      color: 'white', cursor: 'pointer', whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {leak.fixLabel} <ArrowRight size={12} />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Waitlist */}
-      <div style={{
-        background: `linear-gradient(135deg, ${color}08, var(--bg-card))`,
-        border: `1px solid ${color}30`, borderRadius: 16, padding: '28px 32px', textAlign: 'center'
-      }}>
-        {!joined ? (
-          <>
-            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
-              🚀 Get early access
-            </div>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>
-              Join the waitlist and be the first to know when this launches. Early access users get it free for 30 days.
-            </p>
-            <form onSubmit={handleJoin} style={{ display: 'flex', gap: 10, maxWidth: 400, margin: '0 auto' }}>
-              <input
-                type="email" value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="your@email.com" required
-                style={{
-                  flex: 1, background: 'var(--bg-secondary)', border: '1px solid var(--border)',
-                  borderRadius: 10, padding: '11px 14px', color: 'var(--text-primary)',
-                  fontSize: 14, outline: 'none', fontFamily: 'inherit'
-                }}
-              />
-              <button type="submit" style={{
-                background: color, color: 'white', border: 'none', borderRadius: 10,
-                padding: '11px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                fontFamily: 'inherit', whiteSpace: 'nowrap'
-              }}>
-                Join waitlist
-              </button>
-            </form>
-          </>
-        ) : (
-          <div>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>🎉</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
-              You're on the list!
-            </div>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-              We'll email you at <strong style={{color: color}}>{email}</strong> as soon as {title} launches.
-            </p>
+      {/* No leaks found */}
+      {leaks.length === 0 && !loading && (
+        <div style={{ textAlign: 'center', padding: '60px 0' }}>
+          <CheckCircle size={48} color="#10B981" style={{ marginBottom: 16 }} />
+          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
+            No major leaks detected!
           </div>
-        )}
-      </div>
-
-      {/* Back button */}
-      <div style={{ textAlign: 'center', marginTop: 24 }}>
-        <button className="btn-ghost" onClick={() => navigate('/dashboard')}>
-          ← Back to Dashboard
-        </button>
-      </div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+            Connect your Shopify store to get a full revenue analysis.
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-export function InsightsPage() {
-  return (
-    <ComingSoonPage
-      icon="🧠"
-      title="AI Insights"
-      color="#818CF8"
-      description="Deep AI analysis of your entire store — revenue trends, customer behavior, product performance, and actionable growth opportunities powered by GPT-4o."
-      features={[
-        { icon: '📈', title: 'Revenue Forecasting', desc: 'AI predicts your next 30/60/90 day revenue based on historical patterns.' },
-        { icon: '🎯', title: 'Growth Opportunities', desc: 'AI identifies your highest-impact growth levers ranked by potential revenue.' },
-        { icon: '👥', title: 'Customer Segments', desc: 'Automatic customer segmentation — VIPs, at-risk, new, repeat buyers.' },
-        { icon: '🔍', title: 'Competitor Analysis', desc: 'Track competitor pricing and positioning in your niche automatically.' },
-        { icon: '💡', title: 'Weekly AI Reports', desc: 'Every Monday, get a full AI-written performance report in your inbox.' },
-        { icon: '⚡', title: 'Real-time Alerts', desc: 'Instant alerts when revenue drops, conversion changes, or anomalies detected.' },
-      ]}
-    />
-  )
-}
-
+// ══════════════════════════════════════════════════════
+// STORE HEALTH (was Automations)
+// ══════════════════════════════════════════════════════
 export function AutomationsPage() {
+  const [loading, setLoading] = useState(true)
+  const [metrics, setMetrics] = useState(null)
+  const [products, setProducts] = useState([])
+  const token = localStorage.getItem('token')
+  const navigate = useNavigate()
+
+  useEffect(() => { fetchData() }, [])
+
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      const [dashRes, prodRes] = await Promise.all([
+        fetch('/api/dashboard/metrics', { headers: { Authorization: 'Bearer ' + token } }),
+        fetch('/api/products', { headers: { Authorization: 'Bearer ' + token } }),
+      ])
+      const dash  = await dashRes.json()
+      const prods = await prodRes.json()
+      setMetrics(dash)
+      setProducts(Array.isArray(prods) ? prods : [])
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) return <div className="spinner" />
+
+  const totalProducts    = products.length
+  const productsWithDesc = products.filter(p => p.description && p.description.length > 50).length
+  const productsWithImg  = products.filter(p => p.imageUrl).length
+  const revenueProducts  = products.filter(p => p.revenue > 0).length
+  const convRate         = metrics?.conversionRate || 0
+  const totalRevenue     = metrics?.totalRevenue || 0
+
+  const healthChecks = [
+    {
+      icon: '📝', label: 'Product Descriptions',
+      score: totalProducts > 0 ? Math.round((productsWithDesc / totalProducts) * 100) : 0,
+      detail: `${productsWithDesc} of ${totalProducts} products have descriptions`,
+      status: productsWithDesc === totalProducts ? 'good' : productsWithDesc > totalProducts * 0.7 ? 'warning' : 'poor',
+      action: 'Optimize Descriptions', path: '/products',
+    },
+    {
+      icon: '🖼️', label: 'Product Images',
+      score: totalProducts > 0 ? Math.round((productsWithImg / totalProducts) * 100) : 0,
+      detail: `${productsWithImg} of ${totalProducts} products have images`,
+      status: productsWithImg === totalProducts ? 'good' : productsWithImg > totalProducts * 0.8 ? 'warning' : 'poor',
+      action: null, path: null,
+    },
+    {
+      icon: '💰', label: 'Revenue Generating Products',
+      score: totalProducts > 0 ? Math.round((revenueProducts / totalProducts) * 100) : 0,
+      detail: `${revenueProducts} of ${totalProducts} products have generated sales`,
+      status: revenueProducts > totalProducts * 0.5 ? 'good' : revenueProducts > totalProducts * 0.3 ? 'warning' : 'poor',
+      action: 'View Analytics', path: '/analytics',
+    },
+    {
+      icon: '📊', label: 'Conversion Rate',
+      score: Math.min(100, Math.round((convRate / 3.5) * 100)),
+      detail: `${convRate.toFixed(2)}% conversion rate (industry avg: 2.5%)`,
+      status: convRate >= 2.5 ? 'good' : convRate >= 1.5 ? 'warning' : 'poor',
+      action: 'Run A/B Tests', path: '/abtesting',
+    },
+    {
+      icon: '🤖', label: 'AI Recommendations',
+      score: 70,
+      detail: 'Review and act on AI growth recommendations',
+      status: 'warning',
+      action: 'View Recommendations', path: '/recommendations',
+    },
+    {
+      icon: '🧪', label: 'A/B Testing',
+      score: (metrics?.activeAbTests || 0) > 0 ? 100 : 20,
+      detail: `${metrics?.activeAbTests || 0} active tests running`,
+      status: (metrics?.activeAbTests || 0) > 0 ? 'good' : 'poor',
+      action: 'Start A/B Test', path: '/abtesting',
+    },
+  ]
+
+  const overallScore = Math.round(healthChecks.reduce((sum, c) => sum + c.score, 0) / healthChecks.length)
+  const scoreColor   = overallScore >= 80 ? '#10B981' : overallScore >= 60 ? '#F59E0B' : '#EF4444'
+  const scoreLabel   = overallScore >= 80 ? 'Excellent' : overallScore >= 60 ? 'Good' : overallScore >= 40 ? 'Needs Work' : 'Critical'
+
+  const statusColor = { good: '#10B981', warning: '#F59E0B', poor: '#EF4444' }
+  const statusBg    = { good: 'rgba(16,185,129,0.08)', warning: 'rgba(245,158,11,0.08)', poor: 'rgba(239,68,68,0.08)' }
+  const statusLabel = { good: '✅ Good', warning: '⚠️ Needs Attention', poor: '❌ Critical' }
+
   return (
-    <ComingSoonPage
-      icon="⚡"
-      title="Automations"
-      color="#34D399"
-      description="Set it and forget it. Build powerful automation workflows that run 24/7 — no coding needed. Let AI handle the repetitive work while you focus on growing."
-      features={[
-        { icon: '🛒', title: 'Abandoned Cart Recovery', desc: 'Automatically send AI-written recovery emails to customers who left.' },
-        { icon: '💰', title: 'Dynamic Pricing', desc: 'Auto-adjust prices based on demand, inventory, and competitor pricing.' },
-        { icon: '📧', title: 'AI Email Campaigns', desc: 'Generate and send personalized email campaigns based on customer behavior.' },
-        { icon: '📦', title: 'Inventory Alerts', desc: 'Auto-reorder reminders and low stock notifications sent to you instantly.' },
-        { icon: '⭐', title: 'Review Requests', desc: 'Automatically ask happy customers for reviews at the perfect moment.' },
-        { icon: '🎁', title: 'Win-back Campaigns', desc: 'Re-engage customers who haven\'t bought in 30, 60, or 90 days.' },
-      ]}
-    />
+    <div>
+      {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>
+          Store Health
+        </h1>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          A complete health check of your Shopify store — see what's working and what needs fixing.
+        </p>
+      </div>
+
+      {/* Overall score */}
+      <div style={{
+        background: 'var(--bg-secondary)',
+        border: '1px solid var(--border)',
+        borderRadius: 14, padding: '24px',
+        marginBottom: 24,
+        display: 'flex', alignItems: 'center', gap: 24,
+      }}>
+        {/* Score circle */}
+        <div style={{ textAlign: 'center', flexShrink: 0 }}>
+          <svg width="100" height="100" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8"/>
+            <circle cx="50" cy="50" r="40" fill="none" stroke={scoreColor} strokeWidth="8"
+              strokeLinecap="round"
+              strokeDasharray={2 * Math.PI * 40}
+              strokeDashoffset={2 * Math.PI * 40 * (1 - overallScore/100)}
+              style={{ transform: 'rotate(-90deg)', transformOrigin: '50px 50px', transition: 'stroke-dashoffset 1s ease' }}
+            />
+          </svg>
+          <div style={{ marginTop: -64, marginBottom: 48 }}>
+            <div style={{ fontSize: 26, fontWeight: 900, color: scoreColor }}>{overallScore}</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>/100</div>
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: scoreColor }}>{scoreLabel}</div>
+        </div>
+
+        {/* Summary */}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
+            Overall Store Health Score
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.6 }}>
+            Based on {totalProducts} products, conversion rate, descriptions,
+            images and AI optimization status.
+          </div>
+          <div style={{ display: 'flex', gap: 16 }}>
+            {[
+              { label: 'Good', count: healthChecks.filter(c => c.status === 'good').length, color: '#10B981' },
+              { label: 'Warning', count: healthChecks.filter(c => c.status === 'warning').length, color: '#F59E0B' },
+              { label: 'Critical', count: healthChecks.filter(c => c.status === 'poor').length, color: '#EF4444' },
+            ].map((s, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.color }} />
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  {s.count} {s.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Revenue */}
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Total Revenue</div>
+          <div style={{ fontSize: 26, fontWeight: 900, color: '#10B981' }}>
+            ${totalRevenue.toLocaleString()}
+          </div>
+          <button
+            onClick={fetchData}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer', marginTop: 12, marginLeft: 'auto' }}
+          >
+            <RefreshCw size={11} /> Refresh
+          </button>
+        </div>
+      </div>
+
+      {/* Health checks */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+        {healthChecks.map((check, i) => (
+          <div key={i} style={{
+            background: 'var(--bg-secondary)',
+            border: `1px solid ${statusColor[check.status]}20`,
+            borderRadius: 12, padding: '16px 20px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 20 }}>{check.icon}</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
+                    {check.label}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    {check.detail}
+                  </div>
+                </div>
+              </div>
+              <span style={{
+                fontSize: 10, fontWeight: 700,
+                padding: '2px 8px', borderRadius: 20,
+                background: statusBg[check.status],
+                color: statusColor[check.status],
+              }}>
+                {statusLabel[check.status]}
+              </span>
+            </div>
+
+            {/* Progress bar */}
+            <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
+              <div style={{
+                height: '100%', width: `${check.score}%`,
+                background: statusColor[check.status],
+                borderRadius: 3, transition: 'width 0.8s ease',
+              }} />
+            </div>
+
+            {check.action && check.path && (
+              <button
+                onClick={() => navigate(check.path)}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: `1px solid ${statusColor[check.status]}30`, borderRadius: 6, padding: '5px 10px', fontSize: 11, fontWeight: 600, color: statusColor[check.status], cursor: 'pointer' }}
+              >
+                {check.action} <ArrowRight size={10} />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }

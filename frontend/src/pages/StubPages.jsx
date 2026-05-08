@@ -237,11 +237,14 @@ export function InsightsPage() {
 // STORE HEALTH
 // ══════════════════════════════════════════════════════
 export function AutomationsPage() {
-  // ── ALL HOOKS AT TOP ────────────────────────────────
+
+  // ── ALL HOOKS AT TOP — never move these ─────────────
   const [loading, setLoading]           = useState(true)
   const [metrics, setMetrics]           = useState(null)
   const [products, setProducts]         = useState([])
   const [displayScore, setDisplayScore] = useState(0)
+  const [animated, setAnimated]         = useState(false)
+
   const token    = localStorage.getItem('token')
   const navigate = useNavigate()
 
@@ -250,6 +253,7 @@ export function AutomationsPage() {
   const fetchData = async () => {
     setLoading(true)
     setDisplayScore(0)
+    setAnimated(false)
     try {
       const [dashRes, prodRes] = await Promise.all([
         fetch('/api/dashboard', { headers: { Authorization: 'Bearer ' + token } }),
@@ -323,29 +327,48 @@ export function AutomationsPage() {
     healthChecks.reduce((sum, c) => sum + c.score, 0) / healthChecks.length
   )
 
-  // ── ANIMATE SCORE ON LOAD ────────────────────────────
+  // ── SCORE COUNTER ANIMATION ──────────────────────────
+  // Runs after data loads, counts from 0 to overallScore
+  // Progress bars use `animated` state to trigger CSS transition
   useEffect(() => {
-    if (overallScore === 0) return
-    let start = 0
-    const duration  = 1200
-    const increment = overallScore / (duration / 16)
-    const timer = setInterval(() => {
-      start += increment
-      if (start >= overallScore) {
-        setDisplayScore(overallScore)
-        clearInterval(timer)
-      } else {
-        setDisplayScore(Math.round(start))
-      }
-    }, 16)
-    return () => clearInterval(timer)
-  }, [overallScore])
+    if (overallScore === 0 || loading) return
+
+    // Short delay so component renders at 0 first
+    const startDelay = setTimeout(() => {
+      setAnimated(true) // triggers progress bars
+
+      let current = 0
+      const total    = overallScore
+      const duration = 1400  // ms
+      const steps    = 60
+      const stepTime = duration / steps
+      const increment = total / steps
+
+      const timer = setInterval(() => {
+        current += increment
+        if (current >= total) {
+          setDisplayScore(total)
+          clearInterval(timer)
+        } else {
+          setDisplayScore(Math.round(current))
+        }
+      }, stepTime)
+
+      return () => clearInterval(timer)
+    }, 150)
+
+    return () => clearTimeout(startDelay)
+  }, [overallScore, loading])
 
   const scoreColor  = overallScore >= 80 ? '#10B981' : overallScore >= 60 ? '#F59E0B' : '#EF4444'
   const scoreLabel  = overallScore >= 80 ? 'Excellent' : overallScore >= 60 ? 'Good' : overallScore >= 40 ? 'Needs Work' : 'Critical'
   const statusColor = { good: '#10B981', warning: '#F59E0B', poor: '#EF4444' }
   const statusBg    = { good: 'rgba(16,185,129,0.08)', warning: 'rgba(245,158,11,0.08)', poor: 'rgba(239,68,68,0.08)' }
   const statusLabel = { good: '✅ Good', warning: '⚠️ Needs Attention', poor: '❌ Critical' }
+
+  // Arc progress — driven by displayScore (0 → overallScore)
+  const arcProgress   = 2 * Math.PI * 54
+  const arcOffset     = arcProgress * (1 - displayScore / 100)
 
   if (loading) return <div className="spinner" />
 
@@ -361,47 +384,79 @@ export function AutomationsPage() {
       </div>
 
       {/* Overall score card */}
-      <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 14, padding: '24px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 24 }}>
+      <div style={{
+        background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+        borderRadius: 14, padding: '24px', marginBottom: 24,
+        display: 'flex', alignItems: 'center', gap: 24,
+      }}>
 
-        {/* Premium score circle */}
+        {/* Premium animated score circle */}
         <div style={{ textAlign: 'center', flexShrink: 0, width: 140 }}>
           <div style={{ position: 'relative', width: 140, height: 140 }}>
             <svg width="140" height="140" viewBox="0 0 140 140">
-              <circle cx="70" cy="70" r="54" fill="none" stroke={scoreColor} strokeWidth="1" opacity="0.15"/>
-              <circle cx="70" cy="70" r="54" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10"/>
-              <circle cx="70" cy="70" r="54" fill="none" stroke={scoreColor} strokeWidth="10"
+              {/* Outer glow ring */}
+              <circle cx="70" cy="70" r="54" fill="none"
+                stroke={scoreColor} strokeWidth="1" opacity="0.2"/>
+              {/* Track */}
+              <circle cx="70" cy="70" r="54" fill="none"
+                stroke="rgba(255,255,255,0.06)" strokeWidth="10"/>
+              {/* Animated progress arc — driven by displayScore via JS */}
+              <circle cx="70" cy="70" r="54" fill="none"
+                stroke={scoreColor} strokeWidth="10"
                 strokeLinecap="round"
-                strokeDasharray={2 * Math.PI * 54}
-                strokeDashoffset={2 * Math.PI * 54 * (1 - displayScore / 100)}
+                strokeDasharray={arcProgress}
+                strokeDashoffset={arcOffset}
                 style={{
                   transform: 'rotate(-90deg)',
                   transformOrigin: '70px 70px',
-                  transition: 'stroke-dashoffset 0.05s linear',
-                  filter: `drop-shadow(0 0 6px ${scoreColor}88)`,
+                  filter: `drop-shadow(0 0 5px ${scoreColor}80)`,
                 }}
               />
             </svg>
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ fontSize: 38, fontWeight: 900, color: scoreColor, lineHeight: 1, letterSpacing: '-2px' }}>
+
+            {/* Score number — centered perfectly */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              pointerEvents: 'none',
+            }}>
+              <div style={{
+                fontSize: 40, fontWeight: 900,
+                color: scoreColor, lineHeight: 1,
+                letterSpacing: '-2px',
+                transition: 'color 0.3s ease',
+              }}>
                 {displayScore}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em', marginTop: 2 }}>
+              <div style={{
+                fontSize: 11, color: 'var(--text-muted)',
+                fontWeight: 600, letterSpacing: '0.05em',
+                marginTop: 3,
+              }}>
                 out of 100
               </div>
             </div>
           </div>
-          <div style={{ marginTop: 10, fontSize: 13, fontWeight: 800, color: scoreColor, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+
+          {/* Label below circle */}
+          <div style={{
+            marginTop: 10, fontSize: 12, fontWeight: 800,
+            color: scoreColor, letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}>
             {scoreLabel}
           </div>
         </div>
 
-        {/* Summary */}
+        {/* Summary text */}
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
             Overall Store Health Score
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.6 }}>
-            Based on {totalProducts} products, conversion rate, descriptions, images and AI optimization status.
+            Based on {totalProducts} products, conversion rate, descriptions,
+            images and AI optimization status.
           </div>
           <div style={{ display: 'flex', gap: 16 }}>
             {[
@@ -423,7 +478,14 @@ export function AutomationsPage() {
           <div style={{ fontSize: 26, fontWeight: 900, color: '#10B981' }}>
             ${totalRevenue.toLocaleString()}
           </div>
-          <button onClick={fetchData} style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer', marginTop: 12, marginLeft: 'auto' }}>
+          <button onClick={fetchData} style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            background: 'none', border: '1px solid var(--border)',
+            borderRadius: 8, padding: '6px 12px',
+            fontSize: 11, fontWeight: 600,
+            color: 'var(--text-muted)', cursor: 'pointer',
+            marginTop: 12, marginLeft: 'auto',
+          }}>
             <RefreshCw size={11} /> Refresh
           </button>
         </div>
@@ -432,7 +494,11 @@ export function AutomationsPage() {
       {/* Health check cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
         {healthChecks.map((check, i) => (
-          <div key={i} style={{ background: 'var(--bg-secondary)', border: `1px solid ${statusColor[check.status]}20`, borderRadius: 12, padding: '16px 20px' }}>
+          <div key={i} style={{
+            background: 'var(--bg-secondary)',
+            border: `1px solid ${statusColor[check.status]}20`,
+            borderRadius: 12, padding: '16px 20px',
+          }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 20 }}>{check.icon}</span>
@@ -441,24 +507,39 @@ export function AutomationsPage() {
                   <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{check.detail}</div>
                 </div>
               </div>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: statusBg[check.status], color: statusColor[check.status] }}>
+              <span style={{
+                fontSize: 10, fontWeight: 700, padding: '2px 8px',
+                borderRadius: 20, whiteSpace: 'nowrap',
+                background: statusBg[check.status],
+                color: statusColor[check.status],
+              }}>
                 {statusLabel[check.status]}
               </span>
             </div>
 
-            {/* Animated progress bar */}
+            {/* Progress bar — starts at 0, animates to score when `animated` = true */}
             <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
               <div style={{
                 height: '100%',
-                width: loading ? '0%' : `${check.score}%`,
+                width: animated ? `${check.score}%` : '0%',
                 background: statusColor[check.status],
                 borderRadius: 3,
-                transition: 'width 1s ease',
+                transition: animated ? `width 1.2s ease ${i * 0.1}s` : 'none',
               }} />
             </div>
 
             {check.action && check.path && (
-              <button onClick={() => navigate(check.path)} style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: `1px solid ${statusColor[check.status]}30`, borderRadius: 6, padding: '5px 10px', fontSize: 11, fontWeight: 600, color: statusColor[check.status], cursor: 'pointer' }}>
+              <button
+                onClick={() => navigate(check.path)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  background: 'none',
+                  border: `1px solid ${statusColor[check.status]}30`,
+                  borderRadius: 6, padding: '5px 10px',
+                  fontSize: 11, fontWeight: 600,
+                  color: statusColor[check.status], cursor: 'pointer',
+                }}
+              >
                 {check.action} <ArrowRight size={10} />
               </button>
             )}

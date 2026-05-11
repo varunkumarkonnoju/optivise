@@ -1,699 +1,1186 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import './Landing.css'
+import {
+  Sparkles, TrendingDown, BarChart3, RefreshCw,
+  CheckCircle, ArrowRight, ChevronDown, Zap,
+  Package, TestTube2, RotateCcw, Activity,
+  Star, Users, Clock, Shield, Play, X
+} from 'lucide-react'
 import OptiviseLogo from '../components/OptiviseLogo'
 import LogoText from '../components/LogoText'
 
-// ── Mouse tracker hook ────────────────────────────────────────────────────────
-function useMouse() {
-  const mouse = useRef({ x: 0, y: 0, nx: 0, ny: 0 })
-  useEffect(() => {
-    const h = (e) => {
-      mouse.current.x = e.clientX
-      mouse.current.y = e.clientY
-      mouse.current.nx = (e.clientX / window.innerWidth  - 0.5) * 2
-      mouse.current.ny = (e.clientY / window.innerHeight - 0.5) * 2
-    }
-    window.addEventListener('mousemove', h)
-    return () => window.removeEventListener('mousemove', h)
-  }, [])
-  return mouse
-}
-
-// ── Magnetic button ───────────────────────────────────────────────────────────
-function MagneticBtn({ children, className, onClick, style }) {
+// ── ANIMATED COUNTER ─────────────────────────────────
+function AnimatedCounter({ target, prefix = '', suffix = '', duration = 2000 }) {
+  const [count, setCount] = useState(0)
   const ref = useRef(null)
-  const raf = useRef(null)
-  const pos = useRef({ x: 0, y: 0 })
-
-  const onMove = (e) => {
-    const el = ref.current; if (!el) return
-    const r = el.getBoundingClientRect()
-    const cx = r.left + r.width  / 2
-    const cy = r.top  + r.height / 2
-    const dx = (e.clientX - cx) * 0.35
-    const dy = (e.clientY - cy) * 0.35
-    cancelAnimationFrame(raf.current)
-    const anim = () => {
-      pos.current.x += (dx - pos.current.x) * 0.18
-      pos.current.y += (dy - pos.current.y) * 0.18
-      if (el) el.style.transform = `translate(${pos.current.x}px,${pos.current.y}px) scale(1.07)`
-      raf.current = requestAnimationFrame(anim)
-    }
-    raf.current = requestAnimationFrame(anim)
-  }
-
-  const onLeave = () => {
-    cancelAnimationFrame(raf.current)
-    const el = ref.current; if (!el) return
-    const anim = () => {
-      pos.current.x *= 0.82
-      pos.current.y *= 0.82
-      if (el) el.style.transform = `translate(${pos.current.x}px,${pos.current.y}px) scale(1)`
-      if (Math.abs(pos.current.x) > 0.1 || Math.abs(pos.current.y) > 0.1)
-        raf.current = requestAnimationFrame(anim)
-    }
-    raf.current = requestAnimationFrame(anim)
-  }
-
-  return (
-    <button ref={ref} className={className} onClick={onClick} style={style}
-      onMouseMove={onMove} onMouseLeave={onLeave}>{children}</button>
-  )
-}
-
-// ── 3D Tilt card ──────────────────────────────────────────────────────────────
-function TiltCard({ children, className, style, intensity = 1 }) {
-  const ref = useRef(null)
-  const raf = useRef(null)
-  const cur = useRef({ rx: 0, ry: 0 })
-  const tgt = useRef({ rx: 0, ry: 0 })
-
-  const onMove = (e) => {
-    const el = ref.current; if (!el) return
-    const r = el.getBoundingClientRect()
-    tgt.current.rx = ((e.clientY - r.top)  / r.height - 0.5) * -18 * intensity
-    tgt.current.ry = ((e.clientX - r.left) / r.width  - 0.5) *  22 * intensity
-  }
-  const onLeave = () => { tgt.current = { rx: 0, ry: 0 } }
+  const started = useRef(false)
 
   useEffect(() => {
-    const el = ref.current; if (!el) return
-    const animate = () => {
-      cur.current.rx += (tgt.current.rx - cur.current.rx) * 0.08
-      cur.current.ry += (tgt.current.ry - cur.current.ry) * 0.08
-      const shine = `radial-gradient(circle at ${50 + cur.current.ry * 1.5}% ${50 + cur.current.rx * 1.5}%, rgba(255,255,255,0.08) 0%, transparent 60%)`
-      el.style.transform = `perspective(1000px) rotateX(${cur.current.rx}deg) rotateY(${cur.current.ry}deg)`
-      el.style.setProperty('--shine', shine)
-      raf.current = requestAnimationFrame(animate)
-    }
-    raf.current = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(raf.current)
-  }, [])
-
-  return (
-    <div ref={ref} className={className} style={style}
-      onMouseMove={onMove} onMouseLeave={onLeave}>{children}</div>
-  )
-}
-
-// ── Particle cursor trail ─────────────────────────────────────────────────────
-function CursorTrail() {
-  const canvasRef = useRef(null)
-  useEffect(() => {
-    const c = canvasRef.current; if (!c) return
-    const ctx = c.getContext('2d')
-    const particles = []
-    let w = c.width = window.innerWidth
-    let h = c.height = window.innerHeight
-    window.addEventListener('resize', () => { w = c.width = window.innerWidth; h = c.height = window.innerHeight })
-
-    const onMove = (e) => {
-      for (let i = 0; i < 3; i++) {
-        particles.push({
-          x: e.clientX, y: e.clientY,
-          vx: (Math.random() - 0.5) * 2,
-          vy: (Math.random() - 0.5) * 2 - 1,
-          life: 1, r: Math.random() * 3 + 1,
-          hue: Math.random() > 0.5 ? 250 : 190
-        })
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !started.current) {
+        started.current = true
+        let start = 0
+        const steps = 60
+        const increment = target / steps
+        const timer = setInterval(() => {
+          start += increment
+          if (start >= target) { setCount(target); clearInterval(timer) }
+          else setCount(Math.round(start))
+        }, duration / steps)
       }
-    }
-    window.addEventListener('mousemove', onMove)
-
-    let raf
-    const draw = () => {
-      ctx.clearRect(0, 0, w, h)
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i]
-        p.x += p.vx; p.y += p.vy
-        p.vy += 0.05; p.life -= 0.025
-        if (p.life <= 0) { particles.splice(i, 1); continue }
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2)
-        ctx.fillStyle = `hsla(${p.hue},80%,65%,${p.life * 0.6})`
-        ctx.fill()
-      }
-      raf = requestAnimationFrame(draw)
-    }
-    raf = requestAnimationFrame(draw)
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('mousemove', onMove) }
-  }, [])
-  return <canvas ref={canvasRef} style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:9999 }}/>
-}
-
-// ── Animated counter ──────────────────────────────────────────────────────────
-function Counter({ end, prefix='', suffix='', duration=2000 }) {
-  const [val, setVal] = useState(0)
-  const ref = useRef(null)
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => {
-      if (!e.isIntersecting) return
-      obs.disconnect()
-      const start = Date.now()
-      const tick = () => {
-        const p = Math.min((Date.now() - start) / duration, 1)
-        const ease = 1 - Math.pow(1 - p, 3)
-        setVal(Math.floor(ease * end))
-        if (p < 1) requestAnimationFrame(tick)
-      }
-      requestAnimationFrame(tick)
     }, { threshold: 0.5 })
-    if (ref.current) obs.observe(ref.current)
-    return () => obs.disconnect()
-  }, [end, duration])
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [target, duration])
 
-  // Smart display: on mobile show 2.4M, on desktop show full 2,400,000
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-  let display
-  if (isMobile && val >= 1000000) {
-    display = (val / 1000000).toFixed(1) + 'M'
-  } else if (isMobile && val >= 1000) {
-    display = (val / 1000).toFixed(0) + 'k'
-  } else {
-    display = val.toLocaleString()
+  return (
+    <span ref={ref}>
+      {prefix}{count.toLocaleString()}{suffix}
+    </span>
+  )
+}
+
+// ── TYPING EFFECT ─────────────────────────────────────
+function TypewriterText({ texts, speed = 80 }) {
+  const [displayed, setDisplayed] = useState('')
+  const [textIdx, setTextIdx] = useState(0)
+  const [charIdx, setCharIdx] = useState(0)
+  const [deleting, setDeleting] = useState(false)
+
+  useEffect(() => {
+    const current = texts[textIdx]
+    const timer = setTimeout(() => {
+      if (!deleting) {
+        if (charIdx < current.length) {
+          setDisplayed(current.slice(0, charIdx + 1))
+          setCharIdx(c => c + 1)
+        } else {
+          setTimeout(() => setDeleting(true), 2000)
+        }
+      } else {
+        if (charIdx > 0) {
+          setDisplayed(current.slice(0, charIdx - 1))
+          setCharIdx(c => c - 1)
+        } else {
+          setDeleting(false)
+          setTextIdx(i => (i + 1) % texts.length)
+        }
+      }
+    }, deleting ? speed / 2 : speed)
+    return () => clearTimeout(timer)
+  }, [charIdx, deleting, textIdx, texts, speed])
+
+  return (
+    <span>
+      {displayed}
+      <span style={{
+        display: 'inline-block', width: 2, height: '1em',
+        background: '#6366f1', marginLeft: 2,
+        animation: 'blink 1s step-end infinite',
+        verticalAlign: 'text-bottom',
+      }} />
+    </span>
+  )
+}
+
+// ── LIVE AI DEMO ──────────────────────────────────────
+function LiveDemo() {
+  const [productName, setProductName] = useState('')
+  const [generating, setGenerating] = useState(false)
+  const [result, setResult] = useState(null)
+  const [step, setStep] = useState(0)
+
+  const EXAMPLES = ['Leather Crossbody Bag', 'Running Shoes', 'Wooden Watch', 'Silk Scarf', 'Minimalist Wallet']
+
+  const MOCK_RESULTS = {
+    default: {
+      before: 'Black leather bag. Good quality. Multiple compartments. Adjustable strap.',
+      after: '<h2>The Everyday Essential You\'ve Been Looking For</h2><p>Crafted from full-grain leather that develops a rich patina over time, this crossbody bag moves seamlessly from your morning commute to after-work drinks. Three compartments keep you effortlessly organized while the adjustable strap fits every body type.</p><ul><li>Full-grain leather — built to last decades</li><li>Fits up to 11" tablet + all your essentials</li><li>RFID-blocking inner pocket for card safety</li></ul><p><strong>Limited stock. Order yours today.</strong></p>',
+      score: '+34% conversion predicted'
+    }
   }
 
-  return <span ref={ref}>{prefix}{display}{suffix}</span>
-}
+  const steps = ['Analyzing product...', 'Writing SEO copy...', 'Optimizing for conversion...', 'Done! ✓']
 
-// ── Floating orbs background ──────────────────────────────────────────────────
-function FloatingOrbs() {
-  const mouse = useMouse()
-  const ref = useRef(null)
-  useEffect(() => {
-    const el = ref.current; if (!el) return
-    let raf
-    const orbs = el.querySelectorAll('.land-orb')
-    const animate = () => {
-      const { nx, ny } = mouse.current
-      orbs.forEach((orb, i) => {
-        const factor = (i + 1) * 0.012
-        const ox = nx * 40 * factor
-        const oy = ny * 40 * factor
-        orb.style.transform = `translate(${ox}px, ${oy}px)`
-      })
-      raf = requestAnimationFrame(animate)
+  const runDemo = async () => {
+    if (!productName.trim()) return
+    setGenerating(true)
+    setResult(null)
+    setStep(0)
+    for (let i = 0; i < steps.length; i++) {
+      await new Promise(r => setTimeout(r, 700))
+      setStep(i)
     }
-    raf = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(raf)
-  }, [])
-  return (
-    <div ref={ref} className="land-orbs" aria-hidden>
-      <div className="land-orb land-orb-1"/>
-      <div className="land-orb land-orb-2"/>
-      <div className="land-orb land-orb-3"/>
-      <div className="land-orb land-orb-4"/>
-    </div>
-  )
-}
-
-// ── 3D Dashboard mockup ───────────────────────────────────────────────────────
-function Dashboard3D() {
-  const wrapRef = useRef(null)
-  const cardRef = useRef(null)
-  const glowRef = useRef(null)
-  const raf = useRef(null)
-  const cur = useRef({ rx: -12, ry: 15, gx: 50, gy: 50 })
-  const tgt = useRef({ rx: -12, ry: 15, gx: 50, gy: 50 })
-
-  useEffect(() => {
-    const wrap = wrapRef.current; if (!wrap) return
-    const onMove = (e) => {
-      const r = wrap.getBoundingClientRect()
-      const px = (e.clientX - r.left) / r.width
-      const py = (e.clientY - r.top)  / r.height
-      tgt.current.rx = (py - 0.5) * -22
-      tgt.current.ry = (px - 0.5) *  28
-      tgt.current.gx = px * 100
-      tgt.current.gy = py * 100
-    }
-    const onLeave = () => { tgt.current.rx = -12; tgt.current.ry = 15; tgt.current.gx = 50; tgt.current.gy = 50 }
-    wrap.addEventListener('mousemove', onMove)
-    wrap.addEventListener('mouseleave', onLeave)
-    const animate = () => {
-      const c = cur.current; const t = tgt.current
-      c.rx += (t.rx - c.rx) * 0.06
-      c.ry += (t.ry - c.ry) * 0.06
-      c.gx += (t.gx - c.gx) * 0.06
-      c.gy += (t.gy - c.gy) * 0.06
-      if (cardRef.current)
-        cardRef.current.style.transform = `perspective(1100px) rotateX(${c.rx}deg) rotateY(${c.ry}deg) scale3d(1,1,1)`
-      if (glowRef.current)
-        glowRef.current.style.background = `radial-gradient(ellipse at ${c.gx}% ${c.gy}%, rgba(99,102,241,0.5) 0%, rgba(6,182,212,0.2) 35%, transparent 65%)`
-      raf.current = requestAnimationFrame(animate)
-    }
-    raf.current = requestAnimationFrame(animate)
-    return () => {
-      wrap.removeEventListener('mousemove', onMove)
-      wrap.removeEventListener('mouseleave', onLeave)
-      cancelAnimationFrame(raf.current)
-    }
-  }, [])
+    await new Promise(r => setTimeout(r, 400))
+    setResult(MOCK_RESULTS.default)
+    setGenerating(false)
+  }
 
   return (
-    <div ref={wrapRef} className="d3-wrap">
-      <div ref={glowRef} className="d3-glow"/>
-      {/* Depth layers */}
-      <div className="d3-shadow-card"/>
-      <div className="d3-mid-card"/>
-      <div ref={cardRef} className="d3-card">
-        {/* Chrome */}
-        <div className="d3-chrome">
-          <span className="d3-dot" style={{background:'#FF5F57'}}/>
-          <span className="d3-dot" style={{background:'#FEBC2E'}}/>
-          <span className="d3-dot" style={{background:'#28C840'}}/>
-          <span className="d3-url">app.optivise.io</span>
-          <div className="d3-chrome-right">
-            <div className="d3-live-dot"/>
-            <span style={{fontSize:9,color:'#10B981'}}>live</span>
-          </div>
-        </div>
-        <div className="d3-body">
-          {/* Sidebar */}
-          <div className="d3-sidebar">
-            <div className="d3-brand">
-              <div className="d3-brand-icon"/>
-              <span>Optivise</span>
-            </div>
-            {['Dashboard','AI Insights','Products','A/B Tests','Analytics','Assistant'].map((item,i)=>(
-              <div key={i} className={`d3-nav ${i===0?'d3-nav-active':''}`}>
-                <div className="d3-nav-dot" style={{opacity: i===0?1:0.3}}/>
-                {item}
-              </div>
-            ))}
-            <div className="d3-sidebar-footer">
-              <div className="d3-avatar">VC</div>
-              <div>
-                <div style={{fontSize:9,fontWeight:700,color:'#E2E8F0'}}>Varun Kumar</div>
-                <div style={{fontSize:8,color:'#4A5568'}}>Store Owner</div>
-              </div>
-            </div>
-          </div>
-          {/* Main */}
-          <div className="d3-main">
-            <div className="d3-topbar">
-              <span className="d3-greeting">Good morning, Varun! 👋</span>
-              <div className="d3-topbar-right">
-                <div className="d3-search"/>
-                <div className="d3-notif"><div className="d3-notif-dot"/></div>
-                <div className="d3-new-btn">+ New</div>
-              </div>
-            </div>
-            {/* Metrics */}
-            <div className="d3-metrics">
-              {[
-                {l:'Total Revenue',v:'$24,530',d:'↑ 26.5%',c:'#818CF8',bg:'rgba(99,102,241,0.1)'},
-                {l:'Conversion',   v:'3.67%',  d:'↑ 8.2%', c:'#22D3EE',bg:'rgba(6,182,212,0.1)'},
-                {l:'AI Score',     v:'78/100', d:'Great',   c:'#34D399',bg:'rgba(16,185,129,0.1)'},
-                {l:'Suggestions',  v:'12 new', d:'High ↑',  c:'#FCD34D',bg:'rgba(245,158,11,0.1)'},
-              ].map((m,i)=>(
-                <div key={i} className="d3-metric" style={{background:m.bg,borderColor:m.c+'33'}}>
-                  <div className="d3-metric-label">{m.l}</div>
-                  <div className="d3-metric-val" style={{color:m.c}}>{m.v}</div>
-                  <div className="d3-metric-delta">{m.d}</div>
-                  {/* Mini sparkline */}
-                  <svg viewBox="0 0 50 16" style={{width:'100%',height:16,marginTop:4}}>
-                    <polyline points={`0,14 10,10 20,${12-i*2} 30,${8-i} 40,${6+i} 50,${4-i}`}
-                      fill="none" stroke={m.c} strokeWidth="1.2" strokeLinecap="round" opacity="0.7"/>
-                  </svg>
-                </div>
-              ))}
-            </div>
-            {/* Chart */}
-            <div className="d3-chart">
-              <div className="d3-chart-hdr">
-                <span style={{fontSize:9,fontWeight:700,color:'#94A3B8'}}>Performance Overview</span>
-                <div style={{display:'flex',gap:8}}>
-                  {[['#6366F1','Revenue'],['#06B6D4','Conv.'],['#F59E0B','Sessions']].map(([c,l])=>(
-                    <div key={l} style={{display:'flex',alignItems:'center',gap:3,fontSize:8,color:'#4A5568'}}>
-                      <div style={{width:6,height:6,borderRadius:2,background:c}}/>
-                      {l}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <svg viewBox="0 0 300 55" preserveAspectRatio="none" style={{width:'100%',height:55}}>
-                <defs>
-                  {[['ga','#6366F1'],['gb','#06B6D4'],['gc','#F59E0B']].map(([id,c])=>(
-                    <linearGradient key={id} id={id} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={c} stopOpacity="0.3"/>
-                      <stop offset="100%" stopColor={c} stopOpacity="0"/>
-                    </linearGradient>
-                  ))}
-                </defs>
-                <path d="M0,48 C40,42 70,30 110,24 C150,18 170,35 210,16 C250,0 270,8 300,4 L300,55 L0,55Z" fill="url(#ga)"/>
-                <path d="M0,48 C40,42 70,30 110,24 C150,18 170,35 210,16 C250,0 270,8 300,4" fill="none" stroke="#6366F1" strokeWidth="1.5"/>
-                <path d="M0,52 C50,48 80,42 120,38 C160,34 190,44 230,32 C265,22 280,28 300,22 L300,55 L0,55Z" fill="url(#gb)"/>
-                <path d="M0,52 C50,48 80,42 120,38 C160,34 190,44 230,32 C265,22 280,28 300,22" fill="none" stroke="#06B6D4" strokeWidth="1.5"/>
-                <path d="M0,50 C60,46 90,38 130,35 C165,32 195,40 235,28 C270,18 285,24 300,18 L300,55 L0,55Z" fill="url(#gc)" opacity="0.5"/>
-                <path d="M0,50 C60,46 90,38 130,35 C165,32 195,40 235,28 C270,18 285,24 300,18" fill="none" stroke="#F59E0B" strokeWidth="1"/>
-              </svg>
-            </div>
-            {/* AI strip */}
-            <div className="d3-ai-strip">
-              <div className="d3-ai-dot"/>
-              <span style={{fontSize:9,color:'#818CF8',fontWeight:700}}>AI</span>
-              <span style={{fontSize:9,color:'#64748B',flex:1}}>3 products need description optimization — High Impact</span>
-              <span style={{fontSize:9,color:'#6366F1',fontWeight:700}}>Fix now →</span>
-            </div>
-          </div>
-        </div>
-        {/* Shine layer */}
-        <div className="d3-shine"/>
-      </div>
-      {/* Floating badges */}
-      <div className="d3-badge d3-badge-1">
-        <div className="d3-badge-pulse"/>
-        <span>✨ AI generating...</span>
-      </div>
-      <div className="d3-badge d3-badge-2">
-        <span>📈 +26% Revenue</span>
-      </div>
-      <div className="d3-badge d3-badge-3">
-        <span>🎯 A/B Test Live</span>
-      </div>
-    </div>
-  )
-}
-
-// ── Feature card with 3D tilt ─────────────────────────────────────────────────
-const FEATURES = [
-  { icon: '⚡', title: 'AI Description Generator', desc: 'Generate converting product descriptions in seconds. 5 tones. Save directly to Shopify.', color: '#818CF8' },
-  { icon: '📊', title: 'Real Store Analytics',     desc: 'Live revenue, orders, and growth trends pulled directly from your Shopify store.',       color: '#22D3EE' },
-  { icon: '🧪', title: 'A/B Testing',              desc: 'Test headlines, images, and pricing. Let real data decide what converts.',                color: '#34D399' },
-  { icon: '🤖', title: 'AI Growth Assistant',      desc: 'Ask your store anything. "Why did sales drop?" Get answers backed by real data.',         color: '#FCD34D' },
-  { icon: '🎯', title: 'Smart Recommendations',    desc: 'AI surfaces the highest-impact actions ranked by revenue potential every day.',           color: '#F472B6' },
-  { icon: '🚀', title: 'Bulk Optimization',        desc: 'Optimize all product descriptions at once. Hours of work done in 2 minutes.',             color: '#FB923C' },
-]
-
-const STATS = [
-  { end: 500,  suffix: '+',  label: 'Shopify Stores' },
-  { end: 2400000, prefix: '$', suffix: '+', label: 'Revenue Optimized' },
-  { end: 18,   suffix: '%',  label: 'Avg Conversion Lift' },
-  { end: 4.9,  suffix: '★',  label: 'Average Rating' },
-]
-
-const TESTIMONIALS = [
-  { name: 'Sarah K.',  role: 'Jewelry Store Owner', text: 'Generated descriptions for 40 products in 3 minutes. Conversion jumped 18% in the first week.', avatar: 'SK', color: '#818CF8' },
-  { name: 'Marcus T.', role: 'Apparel Brand',        text: 'Finally an analytics tool for small stores. I can understand my data without an MBA.',           avatar: 'MT', color: '#22D3EE' },
-  { name: 'Priya M.',  role: 'Home Decor Shop',      text: 'The A/B testing alone is worth it. Found out my pricing page was killing conversions.',           avatar: 'PM', color: '#34D399' },
-]
-
-const FAQS = [
-  { q: 'Do I need a credit card to start?',       a: 'No. The free plan is free forever — no card required. Upgrade only when you need more.' },
-  { q: 'Does it work with my Shopify store?',     a: 'Yes. Connects directly via Shopify API. Setup takes under 5 minutes.' },
-  { q: 'How many products can I optimize?',       a: 'Free: 10 products. Starter: unlimited. Growth: unlimited + bulk generation.' },
-  { q: 'What AI model powers the descriptions?',  a: 'GPT-4o — the most capable model for high-quality, conversion-focused copy.' },
-  { q: 'Can I cancel anytime?',                   a: 'Yes. No contracts, no lock-in. Cancel from your dashboard in one click.' },
-]
-
-export default function LandingPage() {
-  const navigate = useNavigate()
-  const [faqOpen, setFaqOpen] = useState(null)
-  const mouse = useMouse()
-  const heroTextRef = useRef(null)
-
-  // Parallax hero text
-  useEffect(() => {
-    const el = heroTextRef.current; if (!el) return
-    let raf
-    const animate = () => {
-      const { nx, ny } = mouse.current
-      el.style.transform = `translate(${nx * 8}px, ${ny * 6}px)`
-      raf = requestAnimationFrame(animate)
-    }
-    raf = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(raf)
-  }, [])
-
-  return (
-    <div className="land">
-      <CursorTrail />
-      <FloatingOrbs />
-
-      {/* ── URGENCY BANNER ── */}
+    <div style={{
+      background: '#0a1628',
+      border: '1px solid rgba(99,102,241,0.2)',
+      borderRadius: 16, overflow: 'hidden',
+    }}>
+      {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #6366F1, #06B6D4)',
-        padding: '8px 20px', textAlign: 'center',
-        fontSize: 13, fontWeight: 600, color: 'white',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
+        background: '#0d1b35',
+        padding: '14px 20px',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        display: 'flex', alignItems: 'center', gap: 8,
       }}>
-        <span style={{ animation: 'bdot 1.5s infinite', display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#34D399', boxShadow: '0 0 8px #34D399' }}/>
-        🔥 Limited time: Free plan includes <strong> 15 AI descriptions </strong> — no credit card needed
-        <span onClick={() => navigate('/register')} style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: 700, marginLeft: 8 }}>
-          Claim free access →
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b' }} />
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981' }} />
+        <span style={{ marginLeft: 8, fontSize: 12, color: '#334155' }}>
+          Optivise AI · Product Description Generator
         </span>
       </div>
 
-      {/* ── NAV ── */}
-      <nav className="land-nav">
-        <div className="land-nav-inner">
-          <div className="land-logo" style={{ position: 'relative', cursor: 'pointer', overflow: 'visible', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <OptiviseLogo size={42} showText={false} />
-<LogoText nameSize={22} tagSize={9} />
+      <div style={{ padding: '20px' }}>
+        {/* Input */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 8, letterSpacing: '0.05em' }}>
+            ENTER ANY PRODUCT NAME
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              value={productName}
+              onChange={e => setProductName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && runDemo()}
+              placeholder="e.g. Leather Crossbody Bag..."
+              style={{
+                flex: 1, background: '#0d1b35',
+                border: '1px solid rgba(99,102,241,0.2)',
+                borderRadius: 8, padding: '10px 14px',
+                color: '#e2e8f0', fontSize: 13, outline: 'none',
+                fontFamily: 'inherit',
+              }}
+            />
+            <button
+              onClick={runDemo}
+              disabled={generating || !productName.trim()}
+              style={{
+                background: generating ? 'rgba(99,102,241,0.5)' : '#6366f1',
+                border: 'none', borderRadius: 8,
+                padding: '10px 20px', color: 'white',
+                fontSize: 13, fontWeight: 700,
+                cursor: generating ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', gap: 6,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <Sparkles size={13} />
+              {generating ? 'Writing...' : 'Generate free'}
+            </button>
+          </div>
+          {/* Quick examples */}
+          <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+            {EXAMPLES.map(ex => (
+              <button key={ex} onClick={() => setProductName(ex)} style={{
+                background: 'rgba(99,102,241,0.06)',
+                border: '1px solid rgba(99,102,241,0.15)',
+                borderRadius: 20, padding: '3px 10px',
+                fontSize: 11, color: '#64748b',
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}>
+                {ex}
+              </button>
+            ))}
+          </div>
+        </div>
 
+        {/* Generating state */}
+        {generating && (
+          <div style={{
+            background: '#0d1b35', borderRadius: 10,
+            padding: '16px', marginBottom: 16,
+          }}>
+            {steps.map((s, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '6px 0', opacity: i <= step ? 1 : 0.3,
+                transition: 'opacity 0.3s',
+              }}>
+                <div style={{
+                  width: 18, height: 18, borderRadius: '50%',
+                  background: i < step ? '#10b981' : i === step ? '#6366f1' : 'rgba(255,255,255,0.06)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 10, flexShrink: 0,
+                  animation: i === step ? 'pulse 1s ease-in-out infinite' : 'none',
+                }}>
+                  {i < step ? '✓' : i === step ? '...' : ''}
+                </div>
+                <span style={{ fontSize: 12, color: i <= step ? '#94a3b8' : '#334155' }}>
+                  {s}
+                </span>
+              </div>
+            ))}
           </div>
-          <div className="land-nav-links">
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#faq">FAQ</a>
+        )}
+
+        {/* Result */}
+        {result && !generating && (
+          <div>
+            <div style={{
+              display: 'grid', gridTemplateColumns: '1fr 1fr',
+              gap: 12, marginBottom: 12,
+            }}>
+              {/* Before */}
+              <div style={{
+                background: 'rgba(239,68,68,0.05)',
+                border: '1px solid rgba(239,68,68,0.15)',
+                borderRadius: 10, padding: '14px',
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#ef4444', marginBottom: 8, letterSpacing: '0.05em' }}>
+                  ❌ BEFORE — Your current description
+                </div>
+                <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.6 }}>
+                  {result.before}
+                </div>
+              </div>
+              {/* After */}
+              <div style={{
+                background: 'rgba(16,185,129,0.05)',
+                border: '1px solid rgba(16,185,129,0.2)',
+                borderRadius: 10, padding: '14px',
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#10b981', marginBottom: 8, letterSpacing: '0.05em' }}>
+                  ✅ AFTER — AI-optimized description
+                </div>
+                <div
+                  style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.6 }}
+                  dangerouslySetInnerHTML={{ __html: result.after }}
+                />
+              </div>
+            </div>
+            <div style={{
+              background: 'rgba(99,102,241,0.08)',
+              border: '1px solid rgba(99,102,241,0.2)',
+              borderRadius: 8, padding: '10px 14px',
+              display: 'flex', alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <span style={{ fontSize: 12, color: '#818cf8', fontWeight: 600 }}>
+                🎯 {result.score}
+              </span>
+              <span style={{ fontSize: 11, color: '#334155' }}>
+                This is a preview — connect your store to save to Shopify
+              </span>
+            </div>
           </div>
-          <div className="land-nav-cta">
-            <MagneticBtn className="land-btn-ghost" onClick={() => navigate('/login')}>Log in</MagneticBtn>
-            <MagneticBtn className="land-btn-primary" onClick={() => navigate('/register')}>Start free →</MagneticBtn>
+        )}
+
+        {/* Empty state */}
+        {!result && !generating && (
+          <div style={{
+            textAlign: 'center', padding: '24px',
+            background: '#0d1b35', borderRadius: 10,
+          }}>
+            <Sparkles size={24} color="#6366f1" style={{ marginBottom: 8, opacity: 0.6 }} />
+            <div style={{ fontSize: 13, color: '#334155' }}>
+              Type any product name above → see AI write a description in real-time
+            </div>
+            <div style={{ fontSize: 11, color: '#1e3a5f', marginTop: 4 }}>
+              No account needed for this preview
+            </div>
           </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── MAIN LANDING PAGE ─────────────────────────────────
+export default function LandingPage() {
+  const navigate = useNavigate()
+  const [navScrolled, setNavScrolled] = useState(false)
+  const [videoOpen, setVideoOpen] = useState(false)
+  const [billingYearly, setBillingYearly] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setNavScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  return (
+    <div style={{ background: '#020817', color: '#e2e8f0', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', overflowX: 'hidden' }}>
+
+      <style>{`
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes glow { 0%,100%{box-shadow:0 0 20px rgba(99,102,241,0.3)} 50%{box-shadow:0 0 40px rgba(99,102,241,0.6)} }
+        .hero-card { animation: float 4s ease-in-out infinite; }
+        .slide-up { animation: slideUp 0.6s ease forwards; }
+        .hover-card:hover { border-color: rgba(99,102,241,0.3) !important; transform: translateY(-2px); transition: all 0.2s ease; }
+        .hover-bright:hover { background: rgba(99,102,241,0.15) !important; transition: background 0.2s; }
+        .glow-btn { animation: glow 2s ease-in-out infinite; }
+      `}</style>
+
+      {/* ── ANNOUNCEMENT BAR ── */}
+      <div style={{
+        background: 'rgba(99,102,241,0.08)',
+        borderBottom: '1px solid rgba(99,102,241,0.15)',
+        padding: '10px 24px',
+        textAlign: 'center',
+        fontSize: 12, color: '#818cf8',
+      }}>
+        🎓 Built by a CS grad while waiting for a US work visa —{' '}
+        <strong style={{ color: '#fff' }}>now live and completely free</strong>
+        {' '}→{' '}
+        <span
+          onClick={() => navigate('/signup')}
+          style={{ color: '#818cf8', textDecoration: 'underline', cursor: 'pointer', fontWeight: 700 }}
+        >
+          Join the waitlist
+        </span>
+      </div>
+
+      {/* ── STICKY NAVBAR ── */}
+      <nav style={{
+        position: 'sticky', top: 0, zIndex: 100,
+        background: navScrolled ? 'rgba(2,8,23,0.95)' : 'transparent',
+        backdropFilter: navScrolled ? 'blur(12px)' : 'none',
+        borderBottom: navScrolled ? '1px solid rgba(255,255,255,0.05)' : 'none',
+        padding: '14px 40px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        transition: 'all 0.3s ease',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <OptiviseLogo size={36} showText={false} />
+          <LogoText nameSize={18} tagSize={8} />
+        </div>
+        <div style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
+          {['Features', 'How it works', 'Pricing', 'My story'].map(item => (
+            <a key={item} href={`#${item.toLowerCase().replace(/\s+/g, '-')}`} style={{
+              fontSize: 13, color: '#64748b',
+              textDecoration: 'none', transition: 'color 0.2s',
+            }}
+              onMouseEnter={e => e.target.style.color = '#e2e8f0'}
+              onMouseLeave={e => e.target.style.color = '#64748b'}
+            >
+              {item}
+            </a>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button
+            onClick={() => navigate('/login')}
+            style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 16px', color: '#64748b', fontSize: 13, cursor: 'pointer' }}
+          >
+            Log in
+          </button>
+          <button
+            onClick={() => navigate('/signup')}
+            className="glow-btn"
+            style={{ background: '#6366f1', border: 'none', borderRadius: 8, padding: '8px 20px', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          >
+            Start free →
+          </button>
         </div>
       </nav>
 
       {/* ── HERO ── */}
-      <section className="land-hero">
-        <div className="land-hero-content" ref={heroTextRef}>
-          <div className="land-badge hero-anim" style={{animationDelay:'0s'}}>
-            <span className="land-badge-dot"/> 🚀 Free forever · No credit card
-          </div>
-          <h1 className="land-h1 hero-anim" style={{animationDelay:'0.1s'}}>
-            Your Shopify store is<br/>
-            <span className="land-h1-accent">leaving money</span><br/>
-            on the table
-          </h1>
-          <p className="land-hero-sub hero-anim" style={{animationDelay:'0.2s'}}>
-            Most small Shopify stores never see the hidden revenue gaps that cost them thousands every month.
-            Optivise finds them — with AI analytics, smart recommendations, and automated insights. 
-            <strong style={{color:'#818CF8'}}> See your opportunities in 60 seconds. Free.</strong>
-          </p>
-          <div className="land-hero-cta hero-anim" style={{animationDelay:'0.3s'}}>
-            <MagneticBtn className="land-btn-hero" onClick={() => navigate('/register')}>
-              <span className="land-btn-hero-text">See my store's hidden opportunities</span>
-              <span className="land-btn-hero-arrow">→</span>
-            </MagneticBtn>
-            <div className="land-hero-proof">
-              <div className="land-avatars">
-                {['SK','MT','PM','JL','RK'].map(i => (
-                  <div key={i} className="land-avatar">{i}</div>
-                ))}
-              </div>
-              <span>Join <strong>500+ Shopify store owners</strong> growing with AI</span>
+      <section style={{ padding: '80px 40px 60px', maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
+          <div className="slide-up">
+            {/* Founder pill */}
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 24, padding: '6px 14px',
+              fontSize: 11, color: '#94a3b8', marginBottom: 24,
+            }}>
+              <div style={{
+                width: 22, height: 22, borderRadius: '50%',
+                background: '#6366f1',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 9, fontWeight: 800, color: '#fff',
+              }}>VK</div>
+              Built by Varun · CS grad · Concordia University, WI
+            </div>
+
+            {/* Headline */}
+            <h1 style={{
+              fontSize: 56, fontWeight: 900, lineHeight: 1.05,
+              letterSpacing: '-2.5px', color: '#fff', marginBottom: 8,
+            }}>
+              Your Shopify<br />
+              store is{' '}
+              <span style={{
+                color: '#6366f1',
+                position: 'relative',
+                display: 'inline-block',
+              }}>
+                leaking
+              </span>
+              <br />money.
+            </h1>
+
+            <p style={{
+              fontSize: 13, color: '#f59e0b',
+              fontWeight: 700, fontStyle: 'italic',
+              marginBottom: 16,
+            }}>
+              I found $2,400/month leaking from one test store. Here's the free tool I built to fix it.
+            </p>
+
+            <p style={{
+              fontSize: 15, color: '#64748b',
+              lineHeight: 1.7, marginBottom: 32, maxWidth: 440,
+            }}>
+              Optivise connects to your real Shopify data and shows exactly where revenue is escaping — 
+              then fixes it with AI descriptions, A/B tests, and real analytics.
+              <strong style={{ color: '#94a3b8' }}> No demo call. No credit card. 2 minutes to connect.</strong>
+            </p>
+
+            {/* CTAs */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
+              <button
+                onClick={() => navigate('/signup')}
+                style={{
+                  background: '#6366f1', border: 'none', borderRadius: 12,
+                  padding: '14px 28px', color: 'white',
+                  fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 8,
+                }}
+              >
+                <Zap size={15} />
+                Start free — 2 min setup
+              </button>
+              <button
+                onClick={() => setVideoOpen(true)}
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 12, padding: '14px 20px',
+                  color: '#94a3b8', fontSize: 13, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 8,
+                }}
+              >
+                <Play size={13} fill="#94a3b8" />
+                Watch 60-second demo
+              </button>
+            </div>
+
+            {/* Trust row */}
+            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+              {[
+                'Free plan forever',
+                'No credit card needed',
+                'Official Shopify OAuth',
+                'Read-only — 100% safe',
+              ].map(t => (
+                <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#475569' }}>
+                  <div style={{
+                    width: 16, height: 16, borderRadius: '50%',
+                    background: 'rgba(16,185,129,0.15)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 9, color: '#10b981', flexShrink: 0,
+                  }}>✓</div>
+                  {t}
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-        <div className="land-hero-3d hero-anim" style={{animationDelay:'0.2s'}}>
-          <Dashboard3D />
+
+          {/* Live Demo */}
+          <div className="hero-card">
+            <LiveDemo />
+          </div>
         </div>
       </section>
 
-      {/* ── STATS ── */}
-      <div className="land-stats-bar">
-        {STATS.map((s,i) => (
-          <div key={i} className="land-stat-item">
-            <div className="land-stat-val">
-              <Counter end={s.end} prefix={s.prefix||''} suffix={s.suffix}/>
+      {/* ── STATS BAR ── */}
+      <div style={{
+        background: '#0a1628',
+        borderTop: '1px solid rgba(255,255,255,0.05)',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        padding: '28px 40px',
+      }}>
+        <div style={{
+          maxWidth: 900, margin: '0 auto',
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+          textAlign: 'center', gap: 20,
+        }}>
+          {[
+            { num: 216898, prefix: '$', suffix: '', label: 'Revenue analyzed from test store' },
+            { num: 94, prefix: '', suffix: '/100', label: 'Store health score achieved' },
+            { num: 6, prefix: '', suffix: ' weeks', label: 'To build the entire platform' },
+            { num: 0, prefix: '', suffix: ' users', label: 'Honest count — day 1 of launch' },
+          ].map((s, i) => (
+            <div key={i}>
+              <div style={{ fontSize: 28, fontWeight: 900, color: i === 3 ? '#f59e0b' : '#fff' }}>
+                {s.prefix}
+                <AnimatedCounter target={s.num} duration={1800} />
+                {s.suffix}
+              </div>
+              <div style={{ fontSize: 11, color: '#334155', marginTop: 6 }}>{s.label}</div>
+              {i === 3 && (
+                <div style={{ fontSize: 10, color: '#f59e0b', marginTop: 4, fontWeight: 600 }}>
+                  I'm being honest. This is day 1.
+                </div>
+              )}
             </div>
-            <div className="land-stat-label">{s.label}</div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      {/* ── FEATURES ── */}
-      <section className="land-section" id="features">
-        <div className="land-section-header">
-          <div className="land-section-tag">Features</div>
-          <h2 className="land-h2">Everything your store needs to grow</h2>
-          <p className="land-section-sub">All the tools $1M stores use — in one dashboard, at a fraction of the cost.</p>
+      {/* ── SHOPIFY PAIN POINTS ── */}
+      <section id="features" style={{ padding: '70px 40px', maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <div style={{
+            display: 'inline-block',
+            background: 'rgba(239,68,68,0.08)',
+            border: '1px solid rgba(239,68,68,0.2)',
+            borderRadius: 6, padding: '3px 12px',
+            fontSize: 10, fontWeight: 700,
+            color: '#ef4444', letterSpacing: '1px',
+            marginBottom: 12,
+          }}>
+            THE REAL PROBLEM
+          </div>
+          <h2 style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-1.5px', marginBottom: 10 }}>
+            Most Shopify store owners<br />
+            <span style={{ color: '#ef4444' }}>are flying blind.</span>
+          </h2>
+          <p style={{ fontSize: 15, color: '#475569', maxWidth: 500, margin: '0 auto' }}>
+            Sound familiar? These are the 5 exact problems Shopify store owners face every day.
+          </p>
         </div>
-        <div className="land-features-grid">
-          {FEATURES.map((f, i) => (
-            <TiltCard key={i} className="land-feature-card">
-              <div className="land-feature-glow" style={{background: f.color + '22'}}/>
-              <div className="land-feature-icon" style={{fontSize:28}}>{f.icon}</div>
-              <div className="land-feature-title" style={{color: f.color}}>{f.title}</div>
-              <div className="land-feature-desc">{f.desc}</div>
-              <div className="land-feature-shine"/>
-            </TiltCard>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
+          {[
+            { icon: '📝', problem: '"My product descriptions are terrible but I don\'t know how to fix them"', loss: '-$720/mo' },
+            { icon: '📊', problem: '"I have no idea which of my 47 products are actually making me money"', loss: '-$1,200/mo' },
+            { icon: '💸', problem: '"I spent $300 on Facebook ads last week — I have no idea if it worked"', loss: '-$900/mo' },
+            { icon: '🛒', problem: '"My conversion rate is 1.2% and I don\'t know why people aren\'t buying"', loss: '-$1,800/mo' },
+            { icon: '😤', problem: '"I have 15 tabs open and no single tool that actually shows me what\'s wrong"', loss: '-$600/mo' },
+          ].map((p, i) => (
+            <div key={i} className="hover-card" style={{
+              background: '#0a1628',
+              border: '1px solid rgba(255,255,255,0.05)',
+              borderRadius: 12, padding: '20px 16px',
+              cursor: 'default',
+            }}>
+              <div style={{ fontSize: 28, marginBottom: 12 }}>{p.icon}</div>
+              <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.6, marginBottom: 12 }}>
+                {p.problem}
+              </div>
+              <div style={{
+                fontSize: 13, fontWeight: 800, color: '#ef4444',
+                background: 'rgba(239,68,68,0.08)',
+                borderRadius: 6, padding: '4px 10px',
+                display: 'inline-block',
+              }}>
+                {p.loss}
+              </div>
+            </div>
           ))}
+        </div>
+      </section>
+
+      {/* ── BEFORE / AFTER SECTION ── */}
+      <section style={{
+        padding: '60px 40px',
+        background: '#060e1e',
+        borderTop: '1px solid rgba(255,255,255,0.04)',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
+      }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 36 }}>
+            <div style={{
+              display: 'inline-block',
+              background: 'rgba(99,102,241,0.08)',
+              border: '1px solid rgba(99,102,241,0.2)',
+              borderRadius: 6, padding: '3px 12px',
+              fontSize: 10, fontWeight: 700,
+              color: '#6366f1', letterSpacing: '1px', marginBottom: 12,
+            }}>
+              REAL EXAMPLE
+            </div>
+            <h2 style={{ fontSize: 32, fontWeight: 900, color: '#fff', letterSpacing: '-1px', marginBottom: 8 }}>
+              This is what AI descriptions actually look like
+            </h2>
+            <p style={{ fontSize: 14, color: '#475569' }}>
+              Same product. 30 seconds apart. Completely different result.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 20, alignItems: 'stretch' }}>
+            {/* Before */}
+            <div style={{
+              background: 'rgba(239,68,68,0.05)',
+              border: '1px solid rgba(239,68,68,0.15)',
+              borderRadius: 14, padding: '24px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <div style={{
+                  background: 'rgba(239,68,68,0.15)', borderRadius: 6,
+                  padding: '3px 10px', fontSize: 10, fontWeight: 700, color: '#ef4444',
+                }}>
+                  ❌ BEFORE
+                </div>
+                <span style={{ fontSize: 11, color: '#475569' }}>What most store owners write</span>
+              </div>
+              <div style={{
+                background: '#0a1628', borderRadius: 8, padding: '14px',
+                fontSize: 13, color: '#64748b', lineHeight: 1.8,
+                fontStyle: 'italic',
+              }}>
+                "Premium leather jacket. Size M/L/XL. Black color. Multiple pockets. 
+                Good quality material. Fast shipping available."
+              </div>
+              <div style={{ marginTop: 14, display: 'flex', gap: 10 }}>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: '#ef4444' }}>1.1%</div>
+                  <div style={{ fontSize: 10, color: '#475569' }}>conversion rate</div>
+                </div>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: '#ef4444' }}>F</div>
+                  <div style={{ fontSize: 10, color: '#475569' }}>SEO score</div>
+                </div>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: '#ef4444' }}>4s</div>
+                  <div style={{ fontSize: 10, color: '#475569' }}>bounce time</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Arrow */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{
+                background: '#6366f1', borderRadius: '50%',
+                width: 44, height: 44,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 18,
+              }}>
+                ✨
+              </div>
+            </div>
+
+            {/* After */}
+            <div style={{
+              background: 'rgba(16,185,129,0.05)',
+              border: '1px solid rgba(16,185,129,0.2)',
+              borderRadius: 14, padding: '24px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <div style={{
+                  background: 'rgba(16,185,129,0.15)', borderRadius: 6,
+                  padding: '3px 10px', fontSize: 10, fontWeight: 700, color: '#10b981',
+                }}>
+                  ✅ AFTER
+                </div>
+                <span style={{ fontSize: 11, color: '#475569' }}>Optivise AI · 30 seconds</span>
+              </div>
+              <div style={{
+                background: '#0a1628', borderRadius: 8, padding: '14px',
+                fontSize: 13, color: '#94a3b8', lineHeight: 1.8,
+              }}>
+                <strong style={{ color: '#f1f5f9' }}>The Last Jacket You'll Ever Need.</strong>
+                <br />
+                Crafted from full-grain leather that develops a rich patina over time, 
+                this jacket is designed for people who refuse to compromise on quality. 
+                Four deep pockets. A cut that works at the office and after hours.
+                <br /><br />
+                <span style={{ color: '#10b981' }}>★ Backed by 30-day returns. Ships in 24 hours.</span>
+              </div>
+              <div style={{ marginTop: 14, display: 'flex', gap: 10 }}>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: '#10b981' }}>4.2%</div>
+                  <div style={{ fontSize: 10, color: '#475569' }}>conversion rate</div>
+                </div>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: '#10b981' }}>A</div>
+                  <div style={{ fontSize: 10, color: '#475569' }}>SEO score</div>
+                </div>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: '#10b981' }}>3.8×</div>
+                  <div style={{ fontSize: 10, color: '#475569' }}>more time on page</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: 24 }}>
+            <div style={{
+              display: 'inline-block',
+              background: 'rgba(99,102,241,0.08)',
+              border: '1px solid rgba(99,102,241,0.15)',
+              borderRadius: 8, padding: '8px 20px',
+              fontSize: 12, color: '#818cf8',
+            }}>
+              Try it yourself above ↑ — type any product name, no sign-up needed
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section className="land-section" style={{ paddingTop: 60, paddingBottom: 60 }}>
-        <div className="land-section-header">
-          <div className="land-section-tag">How it works</div>
-          <h2 className="land-h2">From zero to growing in 3 steps</h2>
-          <p className="land-section-sub">No technical skills needed. Takes less than 2 minutes.</p>
+      <section id="how-it-works" style={{ padding: '70px 40px', maxWidth: 900, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <div style={{
+            display: 'inline-block',
+            background: 'rgba(99,102,241,0.08)',
+            border: '1px solid rgba(99,102,241,0.2)',
+            borderRadius: 6, padding: '3px 12px',
+            fontSize: 10, fontWeight: 700, color: '#6366f1',
+            letterSpacing: '1px', marginBottom: 12,
+          }}>
+            HOW IT WORKS
+          </div>
+          <h2 style={{ fontSize: 32, fontWeight: 900, color: '#fff', letterSpacing: '-1px', marginBottom: 8 }}>
+            From zero to growing — in 3 steps
+          </h2>
+          <p style={{ fontSize: 14, color: '#475569' }}>
+            No developers. No complicated setup. Just your Shopify store URL.
+          </p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24, position: 'relative' }}>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, position: 'relative' }}>
           {/* Connector line */}
-          <div style={{ position: 'absolute', top: 36, left: '16.67%', right: '16.67%', height: 2, background: 'linear-gradient(90deg, #6366F1, #06B6D4)', zIndex: 0, opacity: 0.3 }}/>
+          <div style={{
+            position: 'absolute', top: 44, left: '17%', right: '17%',
+            height: 1, background: 'linear-gradient(90deg, #6366f1, #06b6d4, #10b981)',
+            opacity: 0.3, zIndex: 0,
+          }} />
+
           {[
-            { step: '1', icon: '🔗', title: 'Connect your store', desc: 'Enter your store name and click Connect. Shopify OAuth handles the rest — secure and takes 30 seconds.', color: '#6366F1' },
-            { step: '2', icon: '🤖', title: 'AI analyzes everything', desc: 'Optivise instantly reads your products, orders, and revenue to find hidden growth opportunities.', color: '#06B6D4' },
-            { step: '3', icon: '🚀', title: 'Grow on autopilot', desc: 'Get personalized recommendations, AI descriptions, and real-time alerts — all in one dashboard.', color: '#34D399' },
+            {
+              step: '01', color: '#6366f1',
+              icon: '🔗', title: 'Connect your store',
+              desc: 'Click "Connect Shopify" → authorize with official OAuth → we pull your real products, orders and revenue. Takes exactly 90 seconds.',
+              detail: 'Read-only access. We never modify without permission.',
+            },
+            {
+              step: '02', color: '#06b6d4',
+              icon: '🤖', title: 'AI scans everything',
+              desc: 'Our AI analyzes every product, your conversion rate, revenue by product, and compares against what high-performing stores look like.',
+              detail: 'GPT-4o powered analysis on your real data.',
+            },
+            {
+              step: '03', color: '#10b981',
+              icon: '🚀', title: 'Fix and grow',
+              desc: 'Get exact recommendations ranked by revenue impact. Generate AI descriptions in 1 click. Save directly to Shopify. Watch revenue grow.',
+              detail: 'Average improvement visible within 7 days.',
+            },
           ].map((s, i) => (
-            <div key={i} style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
+            <div key={i} className="hover-card" style={{
+              background: '#0a1628',
+              border: '1px solid rgba(255,255,255,0.05)',
+              borderRadius: 14, padding: '28px 24px',
+              position: 'relative', zIndex: 1,
+            }}>
               <div style={{
-                width: 72, height: 72, borderRadius: '50%', margin: '0 auto 20px',
-                background: `rgba(${s.color === '#6366F1' ? '99,102,241' : s.color === '#06B6D4' ? '6,182,212' : '52,211,153'},0.12)`,
-                border: `2px solid ${s.color}`,
+                width: 44, height: 44, borderRadius: 12,
+                background: `${s.color}15`,
+                border: `1px solid ${s.color}30`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 28, boxShadow: `0 0 30px ${s.color}40`
+                fontSize: 22, marginBottom: 16,
               }}>
                 {s.icon}
               </div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: s.color, marginBottom: 8, letterSpacing: '1px' }}>
+                STEP {s.step}
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', marginBottom: 10 }}>
+                {s.title}
+              </div>
+              <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.7, marginBottom: 10 }}>
+                {s.desc}
+              </div>
               <div style={{
-                position: 'absolute', top: -8, left: '50%', transform: 'translateX(-50%)',
-                width: 22, height: 22, borderRadius: '50%',
-                background: s.color, color: 'white',
-                fontSize: 11, fontWeight: 900,
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>{s.step}</div>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>{s.title}</h3>
-              <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.7 }}>{s.desc}</p>
+                fontSize: 11, color: s.color, fontWeight: 600,
+                background: `${s.color}08`, borderRadius: 6,
+                padding: '4px 10px', display: 'inline-block',
+              }}>
+                {s.detail}
+              </div>
             </div>
           ))}
         </div>
-        <div style={{ textAlign: 'center', marginTop: 40 }}>
-          <button onClick={() => navigate('/register')} className="land-btn-hero" style={{ display: 'inline-flex' }}>
-            <span>Start free — see results in 60 seconds</span>
-            <span className="land-btn-hero-arrow">→</span>
-          </button>
+      </section>
+
+      {/* ── FEATURES ── */}
+      <section style={{
+        padding: '60px 40px',
+        background: '#060e1e',
+        borderTop: '1px solid rgba(255,255,255,0.04)',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
+      }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <h2 style={{ fontSize: 32, fontWeight: 900, color: '#fff', letterSpacing: '-1px', marginBottom: 8 }}>
+              Built from scratch. By one person.
+            </h2>
+            <p style={{ fontSize: 14, color: '#475569' }}>
+              No templates. No no-code tools. Java + React + 6 weeks of late nights.
+            </p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+            {[
+              { icon: '✨', color: '#6366f1', title: 'AI Product Descriptions', desc: '1-click AI rewrites for any product. Saves directly to your live Shopify store. Original always backed up.', badge: 'Most used' },
+              { icon: '📉', color: '#ef4444', title: 'Revenue Leak Detector', desc: 'AI finds exactly where you\'re losing money each month — with specific dollar amounts and one-click fixes.', badge: 'Most valuable' },
+              { icon: '🏥', color: '#10b981', title: 'Store Health Score', desc: '0–100 animated health check. 6 detailed checks. See what\'s working and what\'s killing your conversions.', badge: null },
+              { icon: '📊', color: '#06b6d4', title: 'Real Analytics', desc: 'Revenue, orders, conversion rate, best sellers — all from your actual Shopify data. Not estimates. Not guesses.', badge: null },
+              { icon: '🧪', color: '#f59e0b', title: 'A/B Testing', desc: 'Test two versions of any product description. Let real customer data decide which one converts better.', badge: null },
+              { icon: '↩', color: '#96bf48', title: 'Description History', desc: 'Every original description backed up. Don\'t like the AI version? Restore your original in one click. Forever.', badge: 'Peace of mind' },
+            ].map((f, i) => (
+              <div key={i} className="hover-card" style={{
+                background: '#0a1628',
+                border: '1px solid rgba(255,255,255,0.05)',
+                borderRadius: 12, padding: '22px',
+                position: 'relative',
+              }}>
+                {f.badge && (
+                  <div style={{
+                    position: 'absolute', top: 14, right: 14,
+                    background: `${f.color}15`, border: `1px solid ${f.color}30`,
+                    borderRadius: 20, padding: '2px 8px',
+                    fontSize: 9, fontWeight: 700, color: f.color,
+                  }}>
+                    {f.badge}
+                  </div>
+                )}
+                <div style={{
+                  width: 36, height: 36, borderRadius: 9,
+                  background: `${f.color}10`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 18, marginBottom: 12,
+                }}>
+                  {f.icon}
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9', marginBottom: 8 }}>
+                  {f.title}
+                </div>
+                <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.7 }}>
+                  {f.desc}
+                </div>
+                <div style={{ height: 3, borderRadius: 2, marginTop: 14, background: 'rgba(255,255,255,0.04)' }}>
+                  <div style={{ height: '100%', borderRadius: 2, background: f.color, width: `${[88, 92, 78, 85, 72, 70][i]}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ── */}
-      <section className="land-section">
-        <div className="land-section-header">
-          <div className="land-section-tag">Love</div>
-          <h2 className="land-h2">Store owners love Optivise</h2>
-        </div>
-        <div className="land-testi-grid">
-          {TESTIMONIALS.map((t, i) => (
-            <TiltCard key={i} className="land-testi-card">
-              <div className="land-stars">★★★★★</div>
-              <p className="land-testi-text">"{t.text}"</p>
-              <div className="land-testi-author">
-                <div className="land-testi-avatar" style={{background:`linear-gradient(135deg,${t.color},${t.color}88)`}}>{t.avatar}</div>
-                <div>
-                  <div className="land-testi-name">{t.name}</div>
-                  <div className="land-testi-role">{t.role}</div>
-                </div>
+      {/* ── FOUNDER STORY ── */}
+      <section id="my-story" style={{ padding: '70px 40px', maxWidth: 1000, margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: 60, alignItems: 'center' }}>
+          {/* Left — Avatar + Timeline */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+            <div style={{
+              width: 110, height: 110, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 38, fontWeight: 900, color: '#fff',
+              border: '3px solid rgba(99,102,241,0.3)',
+              boxShadow: '0 0 30px rgba(99,102,241,0.2)',
+            }}>
+              VK
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9' }}>Varun Kumar Konnoju</div>
+              <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>MS Computer Science</div>
+              <div style={{ fontSize: 12, color: '#475569' }}>Concordia University of Wisconsin</div>
+              <div style={{ fontSize: 12, color: '#6366f1', marginTop: 2, fontWeight: 600 }}>Founder, Optivise AI</div>
+            </div>
+
+            {/* Build timeline */}
+            <div style={{
+              background: '#0a1628',
+              border: '1px solid rgba(255,255,255,0.05)',
+              borderRadius: 12, padding: '16px 20px', width: '100%',
+            }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#334155', letterSpacing: '0.5px', marginBottom: 12 }}>
+                BUILD TIMELINE
               </div>
-              <div className="land-feature-shine"/>
-            </TiltCard>
-          ))}
+              {[
+                { week: 'Wk 1–2', desc: 'Auth system, database, user accounts', color: '#6366f1', done: true },
+                { week: 'Wk 3', desc: 'Shopify OAuth + real store data', color: '#06b6d4', done: true },
+                { week: 'Wk 4', desc: 'AI descriptions + GPT-4o integration', color: '#f59e0b', done: true },
+                { week: 'Wk 5–6', desc: 'Dashboard, analytics, revenue leaks', color: '#10b981', done: true },
+                { week: 'Now', desc: 'Live · 0 users · still going · 🙏', color: '#96bf48', done: false },
+              ].map((t, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 10,
+                  padding: '6px 0',
+                  borderLeft: `1px solid rgba(255,255,255,0.05)`,
+                  paddingLeft: 14, marginLeft: 4,
+                }}>
+                  <div style={{
+                    width: 8, height: 8, borderRadius: '50%',
+                    background: t.color, flexShrink: 0, marginTop: 3,
+                    marginLeft: -18,
+                    boxShadow: `0 0 6px ${t.color}`,
+                  }} />
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: t.color }}>{t.week}</div>
+                    <div style={{ fontSize: 11, color: '#475569' }}>{t.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right — Story */}
+          <div>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'rgba(245,158,11,0.08)',
+              border: '1px solid rgba(245,158,11,0.2)',
+              borderRadius: 20, padding: '4px 14px',
+              fontSize: 10, fontWeight: 700, color: '#f59e0b',
+              marginBottom: 16,
+            }}>
+              👋 The founder
+            </div>
+
+            <h2 style={{ fontSize: 32, fontWeight: 900, color: '#fff', lineHeight: 1.2, marginBottom: 14, letterSpacing: '-1px' }}>
+              I graduated in December.<br />
+              I had to wait for my visa.<br />
+              <span style={{ color: '#6366f1' }}>I built instead.</span>
+            </h2>
+
+            <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.8, marginBottom: 12 }}>
+              After finishing my MS in Computer Science at Concordia University of Wisconsin, 
+              I had to wait for my US work authorization (OPT). No job. No income. Just time.
+            </p>
+
+            <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.8, marginBottom: 20 }}>
+              I noticed something: Shopify store owners were losing thousands of dollars every month 
+              without knowing why. Bad product descriptions, no real analytics, no idea which products 
+              were actually profitable. So I spent 6 weeks building the tool I wished existed.
+            </p>
+
+            <div style={{
+              background: '#0d1b35',
+              borderLeft: '3px solid #6366f1',
+              borderRadius: '0 10px 10px 0',
+              padding: '14px 18px', marginBottom: 20,
+              fontSize: 13, color: '#94a3b8',
+              fontStyle: 'italic', lineHeight: 1.8,
+            }}>
+              "I built the tool I wished existed — one that connects to your actual store, 
+              shows exactly where money is leaking, and fixes it with AI. For free. 
+              Because store owners deserve real answers, not guesswork."
+            </div>
+
+            <div style={{ fontSize: 12, color: '#334155', marginBottom: 24 }}>
+              — Varun Kumar Konnoju · <strong style={{ color: '#818cf8' }}>Founder, Optivise AI</strong>
+            </div>
+
+            {/* Current status */}
+            <div style={{
+              background: '#0a1628',
+              border: '1px solid rgba(255,255,255,0.05)',
+              borderRadius: 10, padding: '14px 18px',
+            }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#334155', letterSpacing: '0.5px', marginBottom: 10 }}>
+                CURRENT STATUS — BUILDING IN PUBLIC
+              </div>
+              {[
+                { color: '#10b981', text: 'Product fully live at optiviseai.io' },
+                { color: '#10b981', text: 'Shopify OAuth working in production' },
+                { color: '#f59e0b', text: 'Actively looking for first 10 users' },
+                { color: '#6366f1', text: 'OPT work authorization pending' },
+                { color: '#96bf48', text: 'Building in public — sharing everything' },
+              ].map((s, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 12, color: '#475569' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+                  {s.text}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ── PRICING ── */}
-      <section className="land-section" id="pricing">
-        <div className="land-section-header">
-          <div className="land-section-tag">Pricing</div>
-          <h2 className="land-h2">Start free. Upgrade when ready.</h2>
-          <p className="land-section-sub">No credit card. No contracts. Cancel anytime.</p>
-        </div>
-        <div className="land-pricing-grid">
-          {[
-            { name:'Free', price:'$0', desc:'Perfect start', features:['10 products','50 AI credits/mo','Basic analytics','Recommendations','Community support'], cta:'Get started free', featured:false },
-            { name:'Starter', price:'$29', desc:'For growing stores', features:['Unlimited products','500 AI credits/mo','Full analytics','A/B testing (3 tests)','AI assistant','Email support'], cta:'Start free trial', featured:false },
-            { name:'Growth', price:'$79', desc:'For serious owners', features:['Everything in Starter','Unlimited AI credits','Bulk description generator','Unlimited A/B tests','Priority AI assistant','Priority support'], cta:'Start free trial', featured:true },
-          ].map((plan,i) => (
-            <TiltCard key={i} className={`land-price-card ${plan.featured ? 'land-price-featured' : ''}`} intensity={0.6}>
-              {plan.featured && <div className="land-price-popular">Most Popular</div>}
-              <div className="land-price-name">{plan.name}</div>
-              <div className="land-price-amount">{plan.price}<span>/mo</span></div>
-              <div className="land-price-desc">{plan.desc}</div>
-              <ul className="land-price-features">
-                {plan.features.map((f,j) => <li key={j}><span className="chk">✓</span>{f}</li>)}
-              </ul>
-              <MagneticBtn
-                className={plan.featured ? 'land-btn-price-primary' : 'land-btn-price-ghost'}
-                onClick={() => navigate('/register')}>
-                {plan.cta} →
-              </MagneticBtn>
-              <div className="land-feature-shine"/>
-            </TiltCard>
-          ))}
-        </div>
-      </section>
-
-      {/* ── FAQ ── */}
-      <section className="land-section" id="faq">
-        <div className="land-section-header">
-          <div className="land-section-tag">FAQ</div>
-          <h2 className="land-h2">Common questions</h2>
-        </div>
-        <div className="land-faq">
-          {FAQS.map((f, i) => (
-            <div key={i} className={`land-faq-item ${faqOpen===i?'open':''}`} onClick={() => setFaqOpen(faqOpen===i?null:i)}>
-              <div className="land-faq-q"><span>{f.q}</span><span className="land-faq-arrow">{faqOpen===i?'−':'+'}</span></div>
-              {faqOpen===i && <div className="land-faq-a">{f.a}</div>}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── SOCIAL PROOF LOGOS ── */}
-      <div style={{
-        padding: '40px 32px', textAlign: 'center',
-        borderTop: '1px solid rgba(255,255,255,0.05)',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
+      <section id="pricing" style={{
+        padding: '70px 40px',
+        background: '#060e1e',
+        borderTop: '1px solid rgba(255,255,255,0.04)',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
       }}>
-        <p style={{ fontSize: 12, color: '#334155', marginBottom: 20, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Trusted by store owners selling</p>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
-          {['👗 Fashion', '💎 Jewelry', '🏠 Home Decor', '🎮 Electronics', '🌿 Beauty', '👟 Footwear'].map((cat, i) => (
-            <span key={i} style={{ fontSize: 13, color: '#475569', fontWeight: 600 }}>{cat}</span>
-          ))}
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <h2 style={{ fontSize: 32, fontWeight: 900, color: '#fff', letterSpacing: '-1px', marginBottom: 8 }}>
+              Start free. Upgrade when you're ready.
+            </h2>
+            <p style={{ fontSize: 14, color: '#475569', marginBottom: 20 }}>
+              No credit card. No sales call. No dark patterns.
+            </p>
+            {/* Toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center' }}>
+              <span style={{ fontSize: 13, color: billingYearly ? '#475569' : '#e2e8f0' }}>Monthly</span>
+              <div
+                onClick={() => setBillingYearly(!billingYearly)}
+                style={{
+                  width: 44, height: 24, borderRadius: 12,
+                  background: billingYearly ? '#6366f1' : 'rgba(255,255,255,0.1)',
+                  cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
+                }}
+              >
+                <div style={{
+                  width: 18, height: 18, borderRadius: '50%', background: '#fff',
+                  position: 'absolute', top: 3,
+                  left: billingYearly ? 23 : 3,
+                  transition: 'left 0.2s',
+                }} />
+              </div>
+              <span style={{ fontSize: 13, color: billingYearly ? '#e2e8f0' : '#475569' }}>
+                Yearly <span style={{ color: '#10b981', fontWeight: 700, fontSize: 11 }}>save 20%</span>
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, alignItems: 'start' }}>
+            {[
+              {
+                name: 'Free', price: 0, yearlyPrice: 0,
+                color: '#6366f1', popular: false,
+                desc: 'Perfect to start and see what you\'re missing',
+                features: ['15 AI descriptions/month', 'Revenue Leak Detector', 'Store Health Score', 'Basic Analytics', 'Description History', 'Email support'],
+                cta: 'Start free forever', ctaStyle: 'ghost',
+              },
+              {
+                name: 'Starter', price: 29, yearlyPrice: 23,
+                color: '#06b6d4', popular: true,
+                desc: 'For store owners serious about growth',
+                features: ['500 AI descriptions/month', 'Everything in Free', 'A/B Testing', 'AI Assistant — Alex', 'Priority support', 'Export reports'],
+                cta: 'Start Starter free', ctaStyle: 'filled',
+              },
+              {
+                name: 'Growth', price: 79, yearlyPrice: 63,
+                color: '#10b981', popular: false,
+                desc: 'Unlimited everything for scaling stores',
+                features: ['Unlimited AI descriptions', 'Everything in Starter', 'DALL-E 3 marketing images', 'Advanced analytics', 'Dedicated support', 'API access (coming soon)'],
+                cta: 'Start Growth free', ctaStyle: 'ghost',
+              },
+            ].map((plan, i) => (
+              <div key={i} style={{
+                background: plan.popular ? `rgba(6,182,212,0.05)` : '#0a1628',
+                border: plan.popular ? `2px solid #06b6d4` : '1px solid rgba(255,255,255,0.05)',
+                borderRadius: 16, padding: '28px 24px',
+                position: 'relative',
+              }}>
+                {plan.popular && (
+                  <div style={{
+                    position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
+                    background: '#06b6d4', borderRadius: 20,
+                    padding: '4px 16px', fontSize: 11, fontWeight: 700, color: '#fff',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    Most Popular
+                  </div>
+                )}
+                <div style={{ fontSize: 15, fontWeight: 700, color: plan.color, marginBottom: 4 }}>{plan.name}</div>
+                <div style={{ fontSize: 11, color: '#475569', marginBottom: 16 }}>{plan.desc}</div>
+                <div style={{ marginBottom: 20 }}>
+                  <span style={{ fontSize: 40, fontWeight: 900, color: '#fff' }}>
+                    ${billingYearly ? plan.yearlyPrice : plan.price}
+                  </span>
+                  <span style={{ fontSize: 13, color: '#475569' }}>/month</span>
+                  {plan.price === 0 && <div style={{ fontSize: 11, color: '#10b981', fontWeight: 600, marginTop: 2 }}>Free forever</div>}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+                  {plan.features.map((f, j) => (
+                    <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#64748b' }}>
+                      <CheckCircle size={13} color={plan.color} style={{ flexShrink: 0 }} />
+                      {f}
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => navigate('/signup')}
+                  style={{
+                    width: '100%', borderRadius: 10,
+                    padding: '12px',
+                    background: plan.ctaStyle === 'filled' ? plan.color : 'transparent',
+                    border: `1px solid ${plan.color}`,
+                    color: plan.ctaStyle === 'filled' ? '#fff' : plan.color,
+                    fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                  }}
+                >
+                  {plan.cta}
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* ── FINAL CTA ── */}
-      <section className="land-final-cta">
-        <div className="land-final-glow"/>
-        <div className="land-section-tag" style={{marginBottom:20}}>Get Started</div>
-        <h2 className="land-h2" style={{marginBottom:16}}>Your competitors are already<br/><span className="land-h1-accent">using AI to grow faster.</span></h2>
-        <p style={{color:'#64748B',marginBottom:36,fontSize:16,maxWidth:480,margin:'0 auto 36px'}}>
-          Every day without Optivise is revenue you're not seeing. Start free in 60 seconds — no credit card, no risk.
-        </p>
-        <MagneticBtn className="land-btn-hero land-btn-hero-lg" onClick={() => navigate('/register')}>
-          See my store's hidden opportunities →
-        </MagneticBtn>
+      <section style={{ padding: '80px 40px', textAlign: 'center' }}>
+        <div style={{ maxWidth: 600, margin: '0 auto' }}>
+          <div style={{
+            display: 'inline-block',
+            background: 'rgba(16,185,129,0.08)',
+            border: '1px solid rgba(16,185,129,0.2)',
+            borderRadius: 20, padding: '4px 16px',
+            fontSize: 11, fontWeight: 700, color: '#10b981',
+            marginBottom: 20,
+          }}>
+            Free forever · No credit card · No demo call
+          </div>
+          <h2 style={{ fontSize: 44, fontWeight: 900, color: '#fff', letterSpacing: '-2px', marginBottom: 12 }}>
+            Stop guessing.<br />
+            <span style={{ color: '#6366f1' }}>Start knowing.</span>
+          </h2>
+          <p style={{ fontSize: 15, color: '#475569', lineHeight: 1.7, marginBottom: 32 }}>
+            Connect your Shopify store in 2 minutes. See exactly how much revenue 
+            you're leaving on the table — and fix it with AI.
+            <br />
+            <strong style={{ color: '#94a3b8' }}>Built by one CS grad. Honest. Free. Real data only.</strong>
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 16 }}>
+            <button
+              onClick={() => navigate('/signup')}
+              style={{
+                background: '#6366f1', border: 'none', borderRadius: 14,
+                padding: '16px 36px', color: 'white',
+                fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 8,
+                boxShadow: '0 0 30px rgba(99,102,241,0.3)',
+              }}
+            >
+              <Zap size={16} />
+              Start free today
+            </button>
+          </div>
+          <div style={{ fontSize: 12, color: '#334155' }}>
+            No credit card · Cancel anytime · Real Shopify data only
+          </div>
+        </div>
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="land-footer">
-        <div className="land-logo" style={{marginBottom:8}}>
-          <OptiviseLogo size={42} showText={false} />
-          <LogoText nameSize={22} tagSize={9} />
+      <footer style={{
+        background: '#010c1a',
+        borderTop: '1px solid rgba(255,255,255,0.04)',
+        padding: '28px 40px',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      }}>
+        <div style={{ fontSize: 12, color: '#1e3a5f' }}>
+          © 2025 Optivise AI · Built by Varun Kumar Konnoju · Milwaukee, WI
         </div>
-        <div style={{fontSize:12,color:'#2D3748',display:'flex',gap:16,alignItems:'center',flexWrap:'wrap',justifyContent:'center'}}>
-          <span>© 2026 Optivise</span>
-          <span>·</span>
-          <a href="/privacy" style={{color:'#334155',textDecoration:'none'}} onMouseEnter={e=>e.target.style.color='#818CF8'} onMouseLeave={e=>e.target.style.color='#334155'}>Privacy Policy</a>
-          <span>·</span>
-          <a href="/terms" style={{color:'#334155',textDecoration:'none'}} onMouseEnter={e=>e.target.style.color='#818CF8'} onMouseLeave={e=>e.target.style.color='#334155'}>Terms of Service</a>
-          <span>·</span>
-          <span>Made with ❤️  by Varun Kumar Konnoju</span>
+        <div style={{ display: 'flex', gap: 20 }}>
+          {['Privacy', 'Terms', 'Contact', 'Help'].map(l => (
+            <span key={l} style={{ fontSize: 12, color: '#1e3a5f', cursor: 'pointer' }}>{l}</span>
+          ))}
         </div>
       </footer>
+
+      {/* Bottom accent bar */}
+      <div style={{ height: 4, background: 'linear-gradient(90deg, #6366f1 33%, #06b6d4 66%, #96bf48 100%)' }} />
+
     </div>
   )
 }

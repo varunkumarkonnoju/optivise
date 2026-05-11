@@ -92,13 +92,52 @@ function LiveDemo() {
 
   const EXAMPLES = ['Leather Crossbody Bag', 'Running Shoes', 'Wooden Watch', 'Silk Scarf', 'Minimalist Wallet']
 
-  const MOCK_RESULTS = {
-    default: {
-      before: 'Black leather bag. Good quality. Multiple compartments. Adjustable strap.',
-      after: '<h2>The Everyday Essential You\'ve Been Looking For</h2><p>Crafted from full-grain leather that develops a rich patina over time, this crossbody bag moves seamlessly from your morning commute to after-work drinks. Three compartments keep you effortlessly organized while the adjustable strap fits every body type.</p><ul><li>Full-grain leather — built to last decades</li><li>Fits up to 11" tablet + all your essentials</li><li>RFID-blocking inner pocket for card safety</li></ul><p><strong>Limited stock. Order yours today.</strong></p>',
-      score: '+34% conversion predicted'
-    }
+  const getMockResult = (name) => {
+  const n = name.toLowerCase()
+  const isPhone    = n.includes('iphone') || n.includes('phone') || n.includes('samsung') || n.includes('pixel')
+  const isShoes    = n.includes('shoe') || n.includes('sneaker') || n.includes('boot') || n.includes('running')
+  const isWatch    = n.includes('watch')
+  const isScarf    = n.includes('scarf') || n.includes('silk')
+  const isWallet   = n.includes('wallet')
+  const isBag      = n.includes('bag') || n.includes('purse') || n.includes('backpack')
+
+  if (isPhone) return {
+    before: `${name}. Latest model. Good camera. Fast processor. Multiple colors available.`,
+    after: `<h2>The Phone That Does Everything — Beautifully</h2><p>Meet the ${name} — engineered for people who refuse to compromise. The most advanced camera system ever in a smartphone captures every moment exactly as you lived it, in stunning detail.</p><ul><li>Pro camera system with 5x optical zoom</li><li>All-day battery life that keeps up with you</li><li>Titanium design — lighter, stronger, premium</li></ul><p><strong>Order now. Ships in 1–2 business days.</strong></p>`,
+    score: '+41% conversion predicted'
   }
+  if (isShoes) return {
+    before: `${name}. Comfortable fit. Good for running. Available in multiple sizes.`,
+    after: `<h2>Run Further. Feel Less.</h2><p>The ${name} is engineered for runners who demand more from every mile. Responsive cushioning absorbs impact while a breathable upper keeps you cool from start to finish.</p><ul><li>Energy-return foam for less fatigue</li><li>Wide toe box for natural foot movement</li><li>Durable outsole built for 500+ miles</li></ul><p><strong>Limited sizes remaining. Ships free.</strong></p>`,
+    score: '+38% conversion predicted'
+  }
+  if (isWatch) return {
+    before: `${name}. Stylish design. Good quality. Water resistant. Multiple colors.`,
+    after: `<h2>Time, Worn With Intention</h2><p>The ${name} isn't just a timepiece — it's a statement about how you value your hours. Hand-assembled with precision, each watch develops its own character over years of wear.</p><ul><li>Sapphire crystal glass — scratch-proof</li><li>Japanese movement — accurate to ±5 sec/day</li><li>100m water resistance for any adventure</li></ul><p><strong>Free engraving available. Ships in 3–5 days.</strong></p>`,
+    score: '+36% conversion predicted'
+  }
+  if (isScarf) return {
+    before: `${name}. Soft material. Beautiful colors. One size fits all.`,
+    after: `<h2>Effortless Elegance, Every Day</h2><p>Woven from the finest silk, this ${name} drapes like a second skin and elevates everything you wear. A single piece that takes you from morning meetings to evening events.</p><ul><li>100% pure mulberry silk</li><li>Hand-rolled edges for a couture finish</li><li>Naturally temperature-regulating fabric</li></ul><p><strong>Gift wrapping available. Free returns.</strong></p>`,
+    score: '+33% conversion predicted'
+  }
+  if (isWallet) return {
+    before: `${name}. Slim design. Multiple card slots. Good quality leather.`,
+    after: `<h2>Everything You Need. Nothing You Don't.</h2><p>The ${name} is built for the person who values function as much as form. Slim enough to forget it's in your pocket, yet holds everything you actually need.</p><ul><li>Holds 8 cards + cash without stretching</li><li>RFID blocking — protect your data</li><li>Full-grain leather that ages beautifully</li></ul><p><strong>Personalization available. Ships same day.</strong></p>`,
+    score: '+29% conversion predicted'
+  }
+  if (isBag) return {
+    before: `${name}. Good quality. Multiple compartments. Adjustable strap.`,
+    after: `<h2>The Bag That Goes Everywhere You Do</h2><p>The ${name} is designed for the person who needs to be ready for anything. Thoughtful compartments keep you organized while a refined exterior keeps you looking sharp.</p><ul><li>Full-grain leather — develops character over time</li><li>Padded laptop compartment fits up to 15"</li><li>Magnetic closure for easy one-handed access</li></ul><p><strong>Free shipping over $100. 30-day returns.</strong></p>`,
+    score: '+34% conversion predicted'
+  }
+  // Generic fallback for anything else
+  return {
+    before: `${name}. Good quality product. Fast shipping. Great value.`,
+    after: `<h2>The ${name} — Built for People Who Demand More</h2><p>This isn't just another ${name}. Every detail has been considered, every material chosen for a reason. The result is a product that works harder, lasts longer, and looks better doing it.</p><ul><li>Premium materials selected for durability</li><li>Designed for real-world daily use</li><li>Backed by our satisfaction guarantee</li></ul><p><strong>Limited stock. Free shipping. 30-day returns.</strong></p>`,
+    score: '+28% conversion predicted'
+  }
+}
 
   const steps = ['Analyzing product...', 'Writing SEO copy...', 'Optimizing for conversion...', 'Done! ✓']
 
@@ -112,7 +151,7 @@ function LiveDemo() {
       setStep(i)
     }
     await new Promise(r => setTimeout(r, 400))
-    setResult(MOCK_RESULTS.default)
+    setResult(getMockResult(productName))
     setGenerating(false)
   }
 

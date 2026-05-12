@@ -604,7 +604,7 @@ export default function LandingPage() {
             {[
               { name: 'Free', price: 0, yearlyPrice: 0, color: '#6366f1', popular: false, desc: 'Perfect to start', features: ['15 AI descriptions/month', 'Revenue Leak Detector', 'Store Health Score', 'Basic Analytics', 'Description History', 'Email support'], cta: 'Start free forever', ctaStyle: 'ghost' },
               { name: 'Starter', price: 29, yearlyPrice: 23, color: '#06b6d4', popular: true, desc: 'For serious growth', features: ['500 AI descriptions/month', 'Everything in Free', 'A/B Testing', 'AI Assistant — Alex', 'Priority support', 'Export reports'], cta: 'Start Starter free', ctaStyle: 'filled' },
-              { name: 'Growth', price: 79, yearlyPrice: 63, color: '#10b981', popular: false, desc: 'Unlimited everything', features: ['Unlimited AI descriptions', 'Everything in Starter', 'DALL-E 3 images', 'Advanced analytics', 'Dedicated support', 'API access (soon)'], cta: 'Start Growth free', ctaStyle: 'ghost' },
+              { name: 'Growth', price: 79, yearlyPrice: 63, color: '#10b981', popular: false, desc: 'Unlimited everything', features: ['Unlimited AI descriptions', 'Everything in Starter', 'Advanced analytics', 'Revenue forecasting', 'Dedicated support', 'API access (soon)'], cta: 'Start Growth free', ctaStyle: 'ghost' },
             ].map((plan, i) => (
               <div key={i} style={{ background: plan.popular ? 'rgba(6,182,212,0.05)' : '#0a1628', border: plan.popular ? '2px solid #06b6d4' : '1px solid rgba(255,255,255,0.05)', borderRadius: 16, padding: '24px 20px', position: 'relative' }}>
                 {plan.popular && (

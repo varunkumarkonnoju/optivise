@@ -93,51 +93,127 @@ function LiveDemo() {
   const EXAMPLES = ['Leather Crossbody Bag', 'Running Shoes', 'Wooden Watch', 'Silk Scarf', 'Minimalist Wallet']
 
   const getMockResult = (name) => {
-  const n = name.toLowerCase()
-  const isPhone    = n.includes('iphone') || n.includes('phone') || n.includes('samsung') || n.includes('pixel')
-  const isShoes    = n.includes('shoe') || n.includes('sneaker') || n.includes('boot') || n.includes('running')
-  const isWatch    = n.includes('watch')
-  const isScarf    = n.includes('scarf') || n.includes('silk')
-  const isWallet   = n.includes('wallet')
-  const isBag      = n.includes('bag') || n.includes('purse') || n.includes('backpack')
+    const n = name.toLowerCase()
+    const isPhone     = n.includes('iphone') || n.includes('phone') || n.includes('samsung') || n.includes('pixel')
+    const isShoes     = n.includes('shoe') || n.includes('sneaker') || n.includes('boot') || n.includes('running')
+    const isWatch     = n.includes('watch')
+    const isScarf     = n.includes('scarf') || n.includes('silk')
+    const isWallet    = n.includes('wallet')
+    const isBag       = n.includes('bag') || n.includes('purse') || n.includes('backpack')
+    const isGlasses   = n.includes('glass') || n.includes('sunglass') || n.includes('spectacle') || n.includes('eyewear')
+    const isJacket    = n.includes('jacket') || n.includes('coat') || n.includes('hoodie') || n.includes('sweater')
+    const isJewelry   = n.includes('ring') || n.includes('necklace') || n.includes('bracelet') || n.includes('earring')
+    const isShirt     = n.includes('shirt') || n.includes('tshirt') || n.includes('t-shirt') || n.includes('top') || n.includes('dress')
+    const isPants     = n.includes('pant') || n.includes('jean') || n.includes('trouser') || n.includes('shorts')
+    const isLaptop    = n.includes('laptop') || n.includes('macbook') || n.includes('computer') || n.includes('tablet') || n.includes('ipad')
+    const isHeadphone = n.includes('headphone') || n.includes('airpod') || n.includes('earbud') || n.includes('earphone')
+    const isPerfume   = n.includes('perfume') || n.includes('cologne') || n.includes('fragrance')
+    const isSkincare  = n.includes('cream') || n.includes('serum') || n.includes('moisturizer') || n.includes('skincare')
+    const isFurniture = n.includes('chair') || n.includes('desk') || n.includes('table') || n.includes('lamp') || n.includes('sofa')
 
-  if (isPhone) return {
-    before: `${name}. Latest model. Good camera. Fast processor. Multiple colors available.`,
-    after: `<h2>The Phone That Does Everything — Beautifully</h2><p>Meet the ${name} — engineered for people who refuse to compromise. The most advanced camera system ever in a smartphone captures every moment exactly as you lived it, in stunning detail.</p><ul><li>Pro camera system with 5x optical zoom</li><li>All-day battery life that keeps up with you</li><li>Titanium design — lighter, stronger, premium</li></ul><p><strong>Order now. Ships in 1–2 business days.</strong></p>`,
-    score: '+41% conversion predicted'
+    if (isPhone) return {
+      before: `${name}. Latest model. Good camera. Fast processor. Multiple colors available.`,
+      after: `<h2>The Phone That Does Everything — Beautifully</h2><p>Meet the ${name} — engineered for people who refuse to compromise. The most advanced camera system ever in a smartphone captures every moment exactly as you lived it.</p><ul><li>📸 Pro camera system with 5x optical zoom</li><li>🔋 All-day battery life that keeps up with you</li><li>🏆 Titanium design — lighter, stronger, premium</li></ul><p><strong>🚀 Order now. Ships in 1–2 business days.</strong></p>`,
+      score: '+41% conversion predicted'
+    }
+
+    if (isShoes) return {
+      before: `${name}. Comfortable fit. Good for running. Available in multiple sizes.`,
+      after: `<h2>Run Further. Feel Less.</h2><p>The ${name} is engineered for runners who demand more from every mile. Responsive cushioning absorbs impact while a breathable upper keeps you cool from start to finish.</p><ul><li>⚡ Energy-return foam for less fatigue</li><li>👣 Wide toe box for natural foot movement</li><li>💪 Durable outsole built for 500+ miles</li></ul><p><strong>🚚 Limited sizes remaining. Ships free.</strong></p>`,
+      score: '+38% conversion predicted'
+    }
+
+    if (isWatch) return {
+      before: `${name}. Stylish design. Good quality. Water resistant. Multiple colors.`,
+      after: `<h2>Time, Worn With Intention</h2><p>The ${name} isn't just a timepiece — it's a statement about how you value your hours. Hand-assembled with precision, each watch develops its own character over years of wear.</p><ul><li>Sapphire crystal glass — scratch-proof for life</li><li>Japanese movement — accurate to ±5 sec/day</li><li>100m water resistance for any adventure</li></ul><p><strong>Free engraving available. Ships in 3–5 days.</strong></p>`,
+      score: '+36% conversion predicted'
+    }
+
+    if (isScarf) return {
+      before: `${name}. Soft material. Beautiful colors. One size fits all.`,
+      after: `<h2>Effortless Elegance, Every Day</h2><p>Woven from the finest silk, this ${name} drapes like a second skin and elevates everything you wear. A single piece that takes you from morning meetings to evening events.</p><ul><li>🌸 100% pure mulberry silk</li><li>✨ Hand-rolled edges for a couture finish</li><li>🌡️ Naturally temperature-regulating fabric</li></ul><p><strong>🎁 Gift wrapping available. Free returns.</strong></p>`,
+      score: '+33% conversion predicted'
+    }
+
+    if (isWallet) return {
+      before: `${name}. Slim design. Multiple card slots. Good quality leather.`,
+      after: `<h2>Everything You Need. Nothing You Don't.</h2><p>The ${name} is built for the person who values function as much as form. Slim enough to forget it's in your pocket, yet holds everything you actually need.</p><ul><li>💳 Holds 8 cards + cash without stretching</li><li>🛡️ RFID blocking — protect your data</li><li>🌿 Full-grain leather that ages beautifully</li></ul><p><strong>✏️ Personalization available. Ships same day.</strong></p>`,
+      score: '+29% conversion predicted'
+    }
+
+    if (isBag) return {
+      before: `${name}. Good quality. Multiple compartments. Adjustable strap.`,
+      after: `<h2>The Bag That Goes Everywhere You Do</h2><p>The ${name} is designed for the person who needs to be ready for anything. Thoughtful compartments keep you organized while a refined exterior keeps you looking sharp.</p><ul><li>🌿 Full-grain leather — develops character over time</li><li>💻 Padded laptop compartment fits up to 15"</li><li>🔒 Magnetic closure for easy one-handed access</li></ul><p><strong>🚚 Free shipping over $100. 30-day returns.</strong></p>`,
+      score: '+34% conversion predicted'
+    }
+
+    if (isGlasses) return {
+      before: `${name}. UV protection. Stylish frames. Multiple colors available.`,
+      after: `<h2>See the World in Style</h2><p>The ${name} isn't just eye protection — it's a statement. Handcrafted frames that sit perfectly on any face, with UV400 lenses that protect without distorting your view.</p><ul><li>☀️ 100% UV400 protection — blocks all harmful rays</li><li>🌊 Polarized lenses eliminate glare completely</li><li>🪶 Lightweight frame — forget you're wearing them</li></ul><p><strong>🎁 Free case and cloth included. Ships in 24 hours.</strong></p>`,
+      score: '+31% conversion predicted'
+    }
+
+    if (isJacket) return {
+      before: `${name}. Good material. Multiple sizes. Fast shipping available.`,
+      after: `<h2>The Last ${name} You'll Ever Buy</h2><p>Built for people who refuse to compromise between style and function. Premium construction that holds its shape wash after wash, season after season.</p><ul><li>🧵 Premium fabric that improves with every wear</li><li>✂️ Tailored fit that works on every body type</li><li>🎒 4 deep pockets — actually useful ones</li></ul><p><strong>🔄 Free returns within 30 days. Ships same day.</strong></p>`,
+      score: '+35% conversion predicted'
+    }
+
+    if (isJewelry) return {
+      before: `${name}. Beautiful design. Good quality. Great gift idea.`,
+      after: `<h2>Worn Every Day. Treasured Forever.</h2><p>The ${name} is designed for people who believe everyday moments deserve beautiful things. Crafted to be worn constantly — through workouts, showers, and everything in between.</p><ul><li>✨ Tarnish-free — looks new after years of wear</li><li>💚 Hypoallergenic — safe for all skin types</li><li>🎁 Gift-ready packaging included free</li></ul><p><strong>✏️ Engrave it free. Ships in 2–3 days.</strong></p>`,
+      score: '+38% conversion predicted'
+    }
+
+    if (isShirt) return {
+      before: `${name}. Comfortable fabric. Multiple colors. Available in all sizes.`,
+      after: `<h2>The ${name} That Goes With Everything</h2><p>Some clothes you wear. This one you live in. Cut from fabric that breathes, moves, and holds its shape through anything your day throws at it.</p><ul><li>🌬️ Wrinkle-resistant — looks sharp all day</li><li>💧 Moisture-wicking fabric for all-day comfort</li><li>🔄 Pre-shrunk — fits the same after 100 washes</li></ul><p><strong>🔁 Free exchanges on size. Ships same day.</strong></p>`,
+      score: '+29% conversion predicted'
+    }
+
+    if (isPants) return {
+      before: `${name}. Comfortable fit. Good quality material. Multiple sizes available.`,
+      after: `<h2>The ${name} That Finally Fits Right</h2><p>Built for real bodies doing real things. Whether you're at your desk or on your feet all day, these move with you — not against you.</p><ul><li>🤸 4-way stretch fabric — total freedom of movement</li><li>📐 Sits perfectly at the waist — no constant adjusting</li><li>🧺 Machine washable — no dry cleaning, ever</li></ul><p><strong>✂️ Free hemming service. Ships in 24 hours.</strong></p>`,
+      score: '+32% conversion predicted'
+    }
+
+    if (isLaptop) return {
+      before: `${name}. Fast processor. Good battery. Lightweight design.`,
+      after: `<h2>Your Most Productive Tool Yet</h2><p>The ${name} is built for people who use their computer to build things, create things, and get things done — without waiting for it to keep up.</p><ul><li>All-day battery — unplugged from 9am to 9pm</li><li>Blazing fast — apps open instantly, every time</li><li>Featherlight — barely notice it in your bag</li></ul><p><strong>Free setup support included. Ships next business day.</strong></p>`,
+      score: '+33% conversion predicted'
+    }
+
+    if (isHeadphone) return {
+      before: `${name}. Good sound quality. Comfortable fit. Long battery life.`,
+      after: `<h2>Hear Everything. Hear It Better.</h2><p>The ${name} is engineered for people who take their audio seriously. Whether you're deep in work, a workout, or a playlist — these deliver every time.</p><ul><li>🎵 Studio-quality sound tuned by audio engineers</li><li>🔇 Active noise cancellation — total focus, anywhere</li><li>🔋 32-hour battery — never die mid-commute again</li></ul><p><strong>🔄 Try for 30 days. Free shipping both ways.</strong></p>`,
+      score: '+36% conversion predicted'
+    }
+
+    if (isPerfume) return {
+      before: `${name}. Nice scent. Long lasting. Great for gifts.`,
+      after: `<h2>The Scent People Will Ask About</h2><p>The ${name} opens with immediate presence and evolves beautifully throughout the day. The kind of fragrance that people lean closer to identify — and never forget.</p><ul><li>⏱️ Long-lasting formula — 8-12 hours of wear</li><li>🇫🇷 Crafted by master perfumers in Grasse, France</li><li>🖤 Signature bottle — display-worthy on any vanity</li></ul><p><strong>🎁 Complimentary gift wrap available. Ships in 24 hours.</strong></p>`,
+      score: '+40% conversion predicted'
+    }
+
+    if (isSkincare) return {
+      before: `${name}. Good for skin. Natural ingredients. Suitable for all skin types.`,
+      after: `<h2>The Skin You've Always Wanted Starts Here</h2><p>The ${name} is formulated with dermatologist-tested ingredients that actually work — not just feel good. Visible results in 14 days or your money back.</p><ul><li>🧪 Clinically tested — 94% saw visible improvement</li><li>🌿 Non-comedogenic — won't clog your pores</li><li>✅ Clean formula — free from parabens and sulfates</li></ul><p><strong>💯 14-day results guarantee. Free shipping over $40.</strong></p>`,
+      score: '+42% conversion predicted'
+    }
+
+    if (isFurniture) return {
+      before: `${name}. Good quality. Easy assembly. Multiple colors available.`,
+      after: `<h2>The ${name} That Pulls the Room Together</h2><p>Some furniture fills space. This ${name} defines it. Designed by architects, built by craftspeople, made to outlast every trend that comes and goes.</p><ul><li>🪵 Solid hardwood construction — built for decades</li><li>⚡ Ships fully assembled — ready in minutes</li><li>🛡️ 5-year structural warranty included</li></ul><p><strong>🚚 White glove delivery available. Free returns within 60 days.</strong></p>`,
+      score: '+30% conversion predicted'
+    }
+
+    // Generic fallback
+    return {
+      before: `${name}. Good quality product. Fast shipping. Great value.`,
+      after: `<h2>The ${name} — Built for People Who Demand More</h2><p>This isn't just another ${name}. Every detail has been considered, every material chosen for a reason. The result is something that works harder, lasts longer, and looks better doing it.</p><ul><li>⭐ Premium materials selected for durability</li><li>🎯 Designed for real-world daily use</li><li>✅ Backed by our satisfaction guarantee</li></ul><p><strong>🚚 Limited stock. Free shipping. 30-day returns.</strong></p>`,
+      score: '+28% conversion predicted'
+    }
   }
-  if (isShoes) return {
-    before: `${name}. Comfortable fit. Good for running. Available in multiple sizes.`,
-    after: `<h2>Run Further. Feel Less.</h2><p>The ${name} is engineered for runners who demand more from every mile. Responsive cushioning absorbs impact while a breathable upper keeps you cool from start to finish.</p><ul><li>Energy-return foam for less fatigue</li><li>Wide toe box for natural foot movement</li><li>Durable outsole built for 500+ miles</li></ul><p><strong>Limited sizes remaining. Ships free.</strong></p>`,
-    score: '+38% conversion predicted'
-  }
-  if (isWatch) return {
-    before: `${name}. Stylish design. Good quality. Water resistant. Multiple colors.`,
-    after: `<h2>Time, Worn With Intention</h2><p>The ${name} isn't just a timepiece — it's a statement about how you value your hours. Hand-assembled with precision, each watch develops its own character over years of wear.</p><ul><li>Sapphire crystal glass — scratch-proof</li><li>Japanese movement — accurate to ±5 sec/day</li><li>100m water resistance for any adventure</li></ul><p><strong>Free engraving available. Ships in 3–5 days.</strong></p>`,
-    score: '+36% conversion predicted'
-  }
-  if (isScarf) return {
-    before: `${name}. Soft material. Beautiful colors. One size fits all.`,
-    after: `<h2>Effortless Elegance, Every Day</h2><p>Woven from the finest silk, this ${name} drapes like a second skin and elevates everything you wear. A single piece that takes you from morning meetings to evening events.</p><ul><li>100% pure mulberry silk</li><li>Hand-rolled edges for a couture finish</li><li>Naturally temperature-regulating fabric</li></ul><p><strong>Gift wrapping available. Free returns.</strong></p>`,
-    score: '+33% conversion predicted'
-  }
-  if (isWallet) return {
-    before: `${name}. Slim design. Multiple card slots. Good quality leather.`,
-    after: `<h2>Everything You Need. Nothing You Don't.</h2><p>The ${name} is built for the person who values function as much as form. Slim enough to forget it's in your pocket, yet holds everything you actually need.</p><ul><li>Holds 8 cards + cash without stretching</li><li>RFID blocking — protect your data</li><li>Full-grain leather that ages beautifully</li></ul><p><strong>Personalization available. Ships same day.</strong></p>`,
-    score: '+29% conversion predicted'
-  }
-  if (isBag) return {
-    before: `${name}. Good quality. Multiple compartments. Adjustable strap.`,
-    after: `<h2>The Bag That Goes Everywhere You Do</h2><p>The ${name} is designed for the person who needs to be ready for anything. Thoughtful compartments keep you organized while a refined exterior keeps you looking sharp.</p><ul><li>Full-grain leather — develops character over time</li><li>Padded laptop compartment fits up to 15"</li><li>Magnetic closure for easy one-handed access</li></ul><p><strong>Free shipping over $100. 30-day returns.</strong></p>`,
-    score: '+34% conversion predicted'
-  }
-  // Generic fallback for anything else
-  return {
-    before: `${name}. Good quality product. Fast shipping. Great value.`,
-    after: `<h2>The ${name} — Built for People Who Demand More</h2><p>This isn't just another ${name}. Every detail has been considered, every material chosen for a reason. The result is a product that works harder, lasts longer, and looks better doing it.</p><ul><li>Premium materials selected for durability</li><li>Designed for real-world daily use</li><li>Backed by our satisfaction guarantee</li></ul><p><strong>Limited stock. Free shipping. 30-day returns.</strong></p>`,
-    score: '+28% conversion predicted'
-  }
-}
 
   const steps = ['Analyzing product...', 'Writing SEO copy...', 'Optimizing for conversion...', 'Done! ✓']
 
@@ -304,7 +380,7 @@ function LiveDemo() {
                 🎯 {result.score}
               </span>
               <span style={{ fontSize: 11, color: '#334155' }}>
-                This is a preview — connect your store to save to Shopify
+                Preview only — connect your store to save to Shopify
               </span>
             </div>
           </div>

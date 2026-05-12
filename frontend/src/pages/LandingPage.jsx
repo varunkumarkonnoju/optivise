@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import OptiviseLogo from '../components/OptiviseLogo'
 import LogoText from '../components/LogoText'
+import VarunPhoto from '../assets/varun.png'
 
 // ── ANIMATED COUNTER ─────────────────────────────────
 function AnimatedCounter({ target, prefix = '', suffix = '', duration = 2000 }) {
@@ -319,7 +320,7 @@ export default function LandingPage() {
         <div className="hero-grid slide-up" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56, alignItems: 'center' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: '5px 12px', fontSize: 11, color: '#94a3b8', marginBottom: 20 }}>
-              <img src="/varun.png" alt="Varun" style={{ width: 28, height: 28, objectFit: "contain", flexShrink: 0, filter: "drop-shadow(0 0 6px rgba(99,102,241,0.5))" }} />
+              <img src={VarunPhoto} alt="Varun" style={{ width: 28, height: 28, objectFit: "contain", flexShrink: 0, filter: "drop-shadow(0 0 6px rgba(99,102,241,0.5))" }} />
               Built by Varun · CS grad · Concordia University, WI
             </div>
 
@@ -528,7 +529,7 @@ export default function LandingPage() {
       <section id="my-story" className="section-pad" style={{ padding: '60px 40px', maxWidth: 1000, margin: '0 auto' }}>
         <div className="founder-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: 56, alignItems: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-            <img src="/varun.png" alt="Varun Kumar Konnoju" style={{ width: 140, height: 140, objectFit: 'contain', filter: 'drop-shadow(0 0 24px rgba(99,102,241,0.5))' }} />
+            <img src={VarunPhoto} alt="Varun Kumar Konnoju" style={{ width: 140, height: 140, objectFit: 'contain', filter: 'drop-shadow(0 0 24px rgba(99,102,241,0.5))' }} />
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>Varun Kumar Konnoju</div>
               <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>MS Computer Science</div>

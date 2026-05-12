@@ -27,11 +27,14 @@ export const dashboardApi = {
 }
 
 export const abTestApi = {
-  getAll: () => api.get('/abtests'),
-  create: (data) => api.post('/abtests', data),
-  pause: (id) => api.put(`/abtests/${id}/pause`),
-  resume: (id) => api.put(`/abtests/${id}/resume`),
-  delete: (id) => api.delete(`/abtests/${id}`),
+  getAll:       () => api.get('/abtests'),
+  create:       (data) => api.post('/abtests', data),
+  pause:        (id) => api.put(`/abtests/${id}/pause`),
+  resume:       (id) => api.put(`/abtests/${id}/resume`),
+  delete:       (id) => api.delete(`/abtests/${id}`),
+  simulate:     (id) => api.post(`/abtests/${id}/simulate`),
+  applyWinner:  (id) => api.post(`/abtests/${id}/apply-winner`),
+  getInsight:   (id) => api.post(`/abtests/${id}/insight`),
 }
 
 export const suggestionApi = {

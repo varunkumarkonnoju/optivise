@@ -1,20 +1,12 @@
 {
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "https://optivise-production.up.railway.app/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://optivise-production.up.railway.app/api/:path*"
     },
     {
-      "src": "/varun.png",
-      "dest": "/varun.png"
-    },
-    {
-      "src": "/(.*\\.(png|jpg|jpeg|gif|svg|ico|webp))",
-      "dest": "/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

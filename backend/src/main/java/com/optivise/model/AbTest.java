@@ -28,6 +28,7 @@ public class AbTest {
     private Integer variantAOrders;
     private Integer variantBOrders;
     private String winner;
+    @Column(columnDefinition = "TEXT")
     private String insight;
     private String productId;             // Shopify product ID being tested
     private String productTitle;

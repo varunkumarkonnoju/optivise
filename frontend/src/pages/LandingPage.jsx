@@ -173,6 +173,11 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // FIX: scroll to live demo
+  const scrollToDemo = () => {
+    document.getElementById('live-demo')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   const NAV_LINKS = ['Features', 'How it works', 'Pricing', 'My story']
 
   return (
@@ -191,8 +196,6 @@ export default function LandingPage() {
         .nav-links-desktop { display: flex; }
         .nav-menu-btn { display: none; }
         .mobile-menu { display: none; }
-
-        /* ── MOBILE ── */
         @media (max-width: 768px) {
           .nav-links-desktop { display: none !important; }
           .nav-menu-btn { display: flex !important; }
@@ -221,7 +224,6 @@ export default function LandingPage() {
           .before-after-stats { gap: 6px !important; }
           .pricing-toggle { flex-wrap: wrap; justify-content: center; }
         }
-
         @media (max-width: 480px) {
           .hero-h1 { font-size: 30px !important; }
           .pain-grid { grid-template-columns: 1fr !important; }
@@ -234,7 +236,7 @@ export default function LandingPage() {
         🎓 Built by a CS grad while waiting for a US work visa —{' '}
         <strong style={{ color: '#fff' }}>now live and completely free</strong>
         {' '}→{' '}
-        <span onClick={() => navigate('/signup')} style={{ color: '#818cf8', textDecoration: 'underline', cursor: 'pointer', fontWeight: 700 }}>
+        <span onClick={() => navigate('/register')} style={{ color: '#818cf8', textDecoration: 'underline', cursor: 'pointer', fontWeight: 700 }}>
           Start free
         </span>
       </div>
@@ -247,69 +249,47 @@ export default function LandingPage() {
         borderBottom: '1px solid rgba(255,255,255,0.05)',
         transition: 'all 0.3s ease',
       }}>
-        {/* ── NAVBAR INNER — 3 SEPARATE COLUMNS ── */}
         <div className="nav-inner" style={{ padding: '12px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-
-          {/* LEFT — Logo (completely independent) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             <OptiviseLogo size={32} showText={false} />
             <LogoText nameSize={16} tagSize={7} />
           </div>
-
-          {/* CENTER — Nav links (desktop only, in its own container) */}
           <div className="nav-links-desktop" style={{ gap: 28, alignItems: 'center', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
             {NAV_LINKS.map(item => (
-              <a key={item}
-                href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+              <a key={item} href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
                 style={{ fontSize: 13, color: '#64748b', textDecoration: 'none', transition: 'color 0.2s', whiteSpace: 'nowrap' }}
                 onMouseEnter={e => e.target.style.color = '#e2e8f0'}
                 onMouseLeave={e => e.target.style.color = '#64748b'}
-              >
-                {item}
-              </a>
+              >{item}</a>
             ))}
           </div>
-
-          {/* RIGHT — CTA buttons (desktop) + Hamburger (mobile) */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            {/* Desktop CTAs */}
             <button onClick={() => navigate('/login')}
               style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '7px 14px', color: '#64748b', fontSize: 12, cursor: 'pointer', display: 'flex' }}
               className="nav-links-desktop"
-            >
-              Log in
-            </button>
-            <button onClick={() => navigate('/signup')}
+            >Log in</button>
+            <button onClick={() => navigate('/register')}
               className="glow-btn"
               style={{ background: '#6366f1', border: 'none', borderRadius: 8, padding: '8px 18px', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
-            >
-              Start free →
-            </button>
-            {/* Mobile hamburger */}
+            >Start free →</button>
             <button onClick={() => setMenuOpen(!menuOpen)}
               className="nav-menu-btn"
               style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '7px', color: '#94a3b8', cursor: 'pointer', alignItems: 'center', justifyContent: 'center' }}
-            >
-              {menuOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
+            >{menuOpen ? <X size={18} /> : <Menu size={18} />}</button>
           </div>
         </div>
 
-        {/* Mobile menu dropdown */}
         {menuOpen && (
           <div className="mobile-menu" style={{ background: '#0a1628', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '16px 20px' }}>
             {NAV_LINKS.map(item => (
-              <a key={item}
-                href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+              <a key={item} href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
                 onClick={() => setMenuOpen(false)}
                 style={{ display: 'block', padding: '12px 0', fontSize: 14, color: '#94a3b8', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-              >
-                {item}
-              </a>
+              >{item}</a>
             ))}
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
               <button onClick={() => navigate('/login')} style={{ flex: 1, background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px', color: '#94a3b8', fontSize: 13, cursor: 'pointer' }}>Log in</button>
-              <button onClick={() => navigate('/signup')} style={{ flex: 1, background: '#6366f1', border: 'none', borderRadius: 8, padding: '10px', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Start free</button>
+              <button onClick={() => navigate('/register')} style={{ flex: 1, background: '#6366f1', border: 'none', borderRadius: 8, padding: '10px', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Start free</button>
             </div>
           </div>
         )}
@@ -320,7 +300,7 @@ export default function LandingPage() {
         <div className="hero-grid slide-up" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56, alignItems: 'center' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: '5px 12px', fontSize: 11, color: '#94a3b8', marginBottom: 20 }}>
-              <img src={VarunPhoto} alt="Varun" style={{ width: 28, height: 28, objectFit: "contain", flexShrink: 0, filter: "drop-shadow(0 0 6px rgba(99,102,241,0.5))" }} />
+              <img src={VarunPhoto} alt="Varun" style={{ width: 28, height: 28, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 0 6px rgba(99,102,241,0.5))' }} />
               Built by Varun · CS grad · Concordia University, WI
             </div>
 
@@ -338,11 +318,18 @@ export default function LandingPage() {
               then fixes it with AI. <strong style={{ color: '#94a3b8' }}>No demo call. No credit card. 2 minutes.</strong>
             </p>
 
+            {/* ── CTAs — FIXED ── */}
             <div className="hero-btns" style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
-              <button onClick={() => navigate('/signup')} style={{ background: '#6366f1', border: 'none', borderRadius: 12, padding: '13px 24px', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                onClick={() => navigate('/register')}
+                style={{ background: '#6366f1', border: 'none', borderRadius: 12, padding: '13px 24px', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+              >
                 <Zap size={14} />Start free — 2 min setup
               </button>
-              <button style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '13px 18px', color: '#94a3b8', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                onClick={scrollToDemo}
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '13px 18px', color: '#94a3b8', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+              >
                 <Play size={12} fill="#94a3b8" />Watch demo
               </button>
             </div>
@@ -357,7 +344,8 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="hero-card">
+          {/* ── id="live-demo" added here ── */}
+          <div className="hero-card" id="live-demo">
             <LiveDemo />
           </div>
         </div>
@@ -435,11 +423,9 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-
             <div className="arrow-divider" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ background: '#6366f1', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>✨</div>
             </div>
-
             <div style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 14, padding: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <div style={{ background: 'rgba(16,185,129,0.15)', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, color: '#10b981' }}>✅ AFTER</div>
@@ -555,7 +541,6 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
-
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 20, padding: '4px 12px', fontSize: 10, fontWeight: 700, color: '#f59e0b', marginBottom: 14 }}>👋 The founder</div>
             <h2 style={{ fontSize: 28, fontWeight: 900, color: '#fff', lineHeight: 1.2, marginBottom: 12, letterSpacing: '-1px' }}>
@@ -624,7 +609,7 @@ export default function LandingPage() {
                     </div>
                   ))}
                 </div>
-                <button onClick={() => navigate('/signup')} style={{ width: '100%', borderRadius: 10, padding: '11px', background: plan.ctaStyle === 'filled' ? plan.color : 'transparent', border: `1px solid ${plan.color}`, color: plan.ctaStyle === 'filled' ? '#fff' : plan.color, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                <button onClick={() => navigate('/register')} style={{ width: '100%', borderRadius: 10, padding: '11px', background: plan.ctaStyle === 'filled' ? plan.color : 'transparent', border: `1px solid ${plan.color}`, color: plan.ctaStyle === 'filled' ? '#fff' : plan.color, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                   {plan.cta}
                 </button>
               </div>
@@ -642,7 +627,7 @@ export default function LandingPage() {
             Connect your Shopify store in 2 minutes. See exactly how much revenue you're leaving on the table.<br />
             <strong style={{ color: '#94a3b8' }}>Built by one CS grad. Honest. Free. Real data only.</strong>
           </p>
-          <button onClick={() => navigate('/signup')} style={{ background: '#6366f1', border: 'none', borderRadius: 14, padding: '15px 32px', color: 'white', fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: '0 0 30px rgba(99,102,241,0.3)', marginBottom: 12 }}>
+          <button onClick={() => navigate('/register')} style={{ background: '#6366f1', border: 'none', borderRadius: 14, padding: '15px 32px', color: 'white', fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: '0 0 30px rgba(99,102,241,0.3)', marginBottom: 12 }}>
             <Zap size={15} />Start free today
           </button>
           <div style={{ fontSize: 11, color: '#334155' }}>No credit card · Cancel anytime · Real Shopify data only</div>

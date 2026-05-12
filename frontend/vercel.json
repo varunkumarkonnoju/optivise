@@ -5,6 +5,10 @@
       "destination": "https://optivise-production.up.railway.app/api/:path*"
     },
     {
+      "source": "/(.*\\.(png|jpg|jpeg|gif|svg|ico|webp|mp4|pdf|txt|json))",
+      "destination": "/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

@@ -34,7 +34,6 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // @Lazy breaks the circular dependency: SecurityConfig -> JwtService -> (nothing)
     @Lazy
     @Autowired
     private JwtService jwtService;
@@ -59,7 +58,13 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/h2-console/**", "/api/billing/webhook", "/api/waitlist").permitAll()
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/api/reports/test",
+                                "/h2-console/**",
+                                "/api/billing/webhook",
+                                "/api/waitlist"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .headers(headers -> headers.frameOptions(f -> f.disable()))

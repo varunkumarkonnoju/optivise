@@ -110,4 +110,4 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-}
+}// force rebuild Thu May 14 10:46:30 CDT 2026

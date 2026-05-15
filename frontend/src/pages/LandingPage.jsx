@@ -180,7 +180,16 @@ function LiveDemo() {
             </div>
             <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: 11, color: '#818cf8', fontWeight: 600 }}>🎯 {result.score}</span>
-              <span style={{ fontSize: 10, color: '#334155' }}>Preview — connect store to save</span>
+              <span
+  onClick={() => window.location.href = '/register'}
+  style={{
+    fontSize: 10, color: '#6366f1',
+    cursor: 'pointer', fontWeight: 600,
+    textDecoration: 'underline',
+  }}
+>
+  Connect your store to save →
+</span>
             </div>
           </div>
         )}

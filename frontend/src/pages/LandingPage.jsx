@@ -32,65 +32,77 @@ function AnimatedCounter({ target, prefix = '', suffix = '', duration = 2000 }) 
   return <span ref={ref}>{prefix}{count.toLocaleString()}{suffix}</span>
 }
 
-// ── LIVE AI DEMO ──────────────────────────────────────
+// ── LIVE AI DEMO — Real AI, any product ──────────────
 function LiveDemo() {
   const [productName, setProductName] = useState('')
   const [generating, setGenerating] = useState(false)
   const [result, setResult] = useState(null)
   const [step, setStep] = useState(0)
+  const [error, setError] = useState('')
 
   const EXAMPLES = ['Leather Bag', 'Running Shoes', 'Wooden Watch', 'Silk Scarf', 'Wallet']
-
-  const getMockResult = (name) => {
-    const n = name.toLowerCase()
-    const isPhone     = n.includes('iphone') || n.includes('phone') || n.includes('samsung') || n.includes('pixel')
-    const isShoes     = n.includes('shoe') || n.includes('sneaker') || n.includes('boot') || n.includes('running')
-    const isWatch     = n.includes('watch')
-    const isScarf     = n.includes('scarf') || n.includes('silk')
-    const isWallet    = n.includes('wallet')
-    const isBag       = n.includes('bag') || n.includes('purse') || n.includes('backpack')
-    const isGlasses   = n.includes('glass') || n.includes('sunglass') || n.includes('spectacle')
-    const isJacket    = n.includes('jacket') || n.includes('coat') || n.includes('hoodie') || n.includes('sweater')
-    const isJewelry   = n.includes('ring') || n.includes('necklace') || n.includes('bracelet') || n.includes('earring')
-    const isShirt     = n.includes('shirt') || n.includes('tshirt') || n.includes('t-shirt') || n.includes('top') || n.includes('dress')
-    const isPants     = n.includes('pant') || n.includes('jean') || n.includes('trouser') || n.includes('shorts')
-    const isLaptop    = n.includes('laptop') || n.includes('macbook') || n.includes('computer') || n.includes('tablet') || n.includes('ipad')
-    const isHeadphone = n.includes('headphone') || n.includes('airpod') || n.includes('earbud') || n.includes('earphone')
-    const isPerfume   = n.includes('perfume') || n.includes('cologne') || n.includes('fragrance')
-    const isSkincare  = n.includes('cream') || n.includes('serum') || n.includes('moisturizer') || n.includes('skincare')
-    const isFurniture = n.includes('chair') || n.includes('desk') || n.includes('table') || n.includes('lamp') || n.includes('sofa')
-
-    if (isPhone) return { before: `${name}. Latest model. Good camera. Fast processor. Multiple colors available.`, after: `<h2>The Phone That Does Everything — Beautifully</h2><p>Meet the ${name} — engineered for people who refuse to compromise.</p><ul><li>📸 Pro camera system with 5x optical zoom</li><li>🔋 All-day battery life that keeps up with you</li><li>🏆 Titanium design — lighter, stronger, premium</li></ul><p><strong>🚀 Order now. Ships in 1–2 business days.</strong></p>`, score: '+41% conversion predicted' }
-    if (isShoes) return { before: `${name}. Comfortable fit. Good for running. Available in multiple sizes.`, after: `<h2>Run Further. Feel Less.</h2><p>The ${name} is engineered for runners who demand more from every mile.</p><ul><li>⚡ Energy-return foam for less fatigue</li><li>👣 Wide toe box for natural foot movement</li><li>💪 Durable outsole built for 500+ miles</li></ul><p><strong>🚚 Limited sizes remaining. Ships free.</strong></p>`, score: '+38% conversion predicted' }
-    if (isWatch) return { before: `${name}. Stylish design. Good quality. Water resistant. Multiple colors.`, after: `<h2>Time, Worn With Intention</h2><p>The ${name} isn't just a timepiece — it's a statement about how you value your hours.</p><ul><li>Sapphire crystal glass — scratch-proof for life</li><li>Japanese movement — accurate to ±5 sec/day</li><li>100m water resistance for any adventure</li></ul><p><strong>Free engraving available. Ships in 3–5 days.</strong></p>`, score: '+36% conversion predicted' }
-    if (isScarf) return { before: `${name}. Soft material. Beautiful colors. One size fits all.`, after: `<h2>Effortless Elegance, Every Day</h2><p>Woven from the finest silk, this ${name} drapes like a second skin.</p><ul><li>🌸 100% pure mulberry silk</li><li>✨ Hand-rolled edges for a couture finish</li><li>🌡️ Naturally temperature-regulating fabric</li></ul><p><strong>🎁 Gift wrapping available. Free returns.</strong></p>`, score: '+33% conversion predicted' }
-    if (isWallet) return { before: `${name}. Slim design. Multiple card slots. Good quality leather.`, after: `<h2>Everything You Need. Nothing You Don't.</h2><p>The ${name} is built for the person who values function as much as form.</p><ul><li>💳 Holds 8 cards + cash without stretching</li><li>🛡️ RFID blocking — protect your data</li><li>🌿 Full-grain leather that ages beautifully</li></ul><p><strong>✏️ Personalization available. Ships same day.</strong></p>`, score: '+29% conversion predicted' }
-    if (isBag) return { before: `${name}. Good quality. Multiple compartments. Adjustable strap.`, after: `<h2>The Bag That Goes Everywhere You Do</h2><p>The ${name} is designed for the person who needs to be ready for anything.</p><ul><li>🌿 Full-grain leather — develops character over time</li><li>💻 Padded laptop compartment fits up to 15"</li><li>🔒 Magnetic closure for easy one-handed access</li></ul><p><strong>🚚 Free shipping over $100. 30-day returns.</strong></p>`, score: '+34% conversion predicted' }
-    if (isGlasses) return { before: `${name}. UV protection. Stylish frames. Multiple colors available.`, after: `<h2>See the World in Style</h2><p>The ${name} isn't just eye protection — it's a statement.</p><ul><li>☀️ 100% UV400 protection — blocks all harmful rays</li><li>🌊 Polarized lenses eliminate glare completely</li><li>🪶 Lightweight frame — forget you're wearing them</li></ul><p><strong>🎁 Free case and cloth included. Ships in 24 hours.</strong></p>`, score: '+31% conversion predicted' }
-    if (isJacket) return { before: `${name}. Good material. Multiple sizes. Fast shipping available.`, after: `<h2>The Last ${name} You'll Ever Buy</h2><p>Built for people who refuse to compromise between style and function.</p><ul><li>🧵 Premium fabric that improves with every wear</li><li>✂️ Tailored fit that works on every body type</li><li>🎒 4 deep pockets — actually useful ones</li></ul><p><strong>🔄 Free returns within 30 days. Ships same day.</strong></p>`, score: '+35% conversion predicted' }
-    if (isJewelry) return { before: `${name}. Beautiful design. Good quality. Great gift idea.`, after: `<h2>Worn Every Day. Treasured Forever.</h2><p>The ${name} is designed for people who believe everyday moments deserve beautiful things.</p><ul><li>✨ Tarnish-free — looks new after years of wear</li><li>💚 Hypoallergenic — safe for all skin types</li><li>🎁 Gift-ready packaging included free</li></ul><p><strong>✏️ Engrave it free. Ships in 2–3 days.</strong></p>`, score: '+38% conversion predicted' }
-    if (isShirt) return { before: `${name}. Comfortable fabric. Multiple colors. Available in all sizes.`, after: `<h2>The ${name} That Goes With Everything</h2><p>Some clothes you wear. This one you live in.</p><ul><li>🌬️ Wrinkle-resistant — looks sharp all day</li><li>💧 Moisture-wicking fabric for all-day comfort</li><li>🔄 Pre-shrunk — fits the same after 100 washes</li></ul><p><strong>🔁 Free exchanges on size. Ships same day.</strong></p>`, score: '+29% conversion predicted' }
-    if (isPants) return { before: `${name}. Comfortable fit. Good quality material. Multiple sizes available.`, after: `<h2>The ${name} That Finally Fits Right</h2><p>Built for real bodies doing real things.</p><ul><li>🤸 4-way stretch fabric — total freedom of movement</li><li>📐 Sits perfectly at the waist — no constant adjusting</li><li>🧺 Machine washable — no dry cleaning, ever</li></ul><p><strong>✂️ Free hemming service. Ships in 24 hours.</strong></p>`, score: '+32% conversion predicted' }
-    if (isLaptop) return { before: `${name}. Fast processor. Good battery. Lightweight design.`, after: `<h2>Your Most Productive Tool Yet</h2><p>The ${name} is built for people who use their computer to build things and get things done.</p><ul><li>All-day battery — unplugged from 9am to 9pm</li><li>Blazing fast — apps open instantly, every time</li><li>Featherlight — barely notice it in your bag</li></ul><p><strong>Free setup support included. Ships next business day.</strong></p>`, score: '+33% conversion predicted' }
-    if (isHeadphone) return { before: `${name}. Good sound quality. Comfortable fit. Long battery life.`, after: `<h2>Hear Everything. Hear It Better.</h2><p>The ${name} is engineered for people who take their audio seriously.</p><ul><li>🎵 Studio-quality sound tuned by audio engineers</li><li>🔇 Active noise cancellation — total focus, anywhere</li><li>🔋 32-hour battery — never die mid-commute again</li></ul><p><strong>🔄 Try for 30 days. Free shipping both ways.</strong></p>`, score: '+36% conversion predicted' }
-    if (isPerfume) return { before: `${name}. Nice scent. Long lasting. Great for gifts.`, after: `<h2>The Scent People Will Ask About</h2><p>The ${name} opens with immediate presence and evolves beautifully throughout the day.</p><ul><li>⏱️ Long-lasting formula — 8-12 hours of wear</li><li>🇫🇷 Crafted by master perfumers in Grasse, France</li><li>🖤 Signature bottle — display-worthy on any vanity</li></ul><p><strong>🎁 Complimentary gift wrap available. Ships in 24 hours.</strong></p>`, score: '+40% conversion predicted' }
-    if (isSkincare) return { before: `${name}. Good for skin. Natural ingredients. Suitable for all skin types.`, after: `<h2>The Skin You've Always Wanted Starts Here</h2><p>The ${name} is formulated with dermatologist-tested ingredients that actually work.</p><ul><li>🧪 Clinically tested — 94% saw visible improvement</li><li>🌿 Non-comedogenic — won't clog your pores</li><li>✅ Clean formula — free from parabens and sulfates</li></ul><p><strong>💯 14-day results guarantee. Free shipping over $40.</strong></p>`, score: '+42% conversion predicted' }
-    if (isFurniture) return { before: `${name}. Good quality. Easy assembly. Multiple colors available.`, after: `<h2>The ${name} That Pulls the Room Together</h2><p>Some furniture fills space. This ${name} defines it.</p><ul><li>🪵 Solid hardwood construction — built for decades</li><li>⚡ Ships fully assembled — ready in minutes</li><li>🛡️ 5-year structural warranty included</li></ul><p><strong>🚚 White glove delivery available. Free returns within 60 days.</strong></p>`, score: '+30% conversion predicted' }
-    return { before: `${name}. Good quality product. Fast shipping. Great value.`, after: `<h2>The ${name} — Built for People Who Demand More</h2><p>This isn't just another ${name}. Every detail has been considered, every material chosen for a reason.</p><ul><li>⭐ Premium materials selected for durability</li><li>🎯 Designed for real-world daily use</li><li>✅ Backed by our satisfaction guarantee</li></ul><p><strong>🚚 Limited stock. Free shipping. 30-day returns.</strong></p>`, score: '+28% conversion predicted' }
-  }
-
   const steps = ['Analyzing product...', 'Writing SEO copy...', 'Optimizing for conversion...', 'Done! ✓']
 
   const runDemo = async () => {
     if (!productName.trim()) return
-    setGenerating(true); setResult(null); setStep(0)
-    for (let i = 0; i < steps.length; i++) {
-      await new Promise(r => setTimeout(r, 700))
-      setStep(i)
+    setGenerating(true)
+    setResult(null)
+    setError('')
+    setStep(0)
+
+    // Start step animation
+    const stepInterval = setInterval(() => {
+      setStep(prev => {
+        if (prev < steps.length - 2) return prev + 1
+        clearInterval(stepInterval)
+        return prev
+      })
+    }, 800)
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: `You are an expert Shopify product description writer. Generate a high-converting product description for: "${productName}"
+
+Respond with ONLY a JSON object in this exact format, no other text:
+{
+  "before": "A realistic weak description a typical store owner would write (1-2 sentences, basic and bland)",
+  "after": "An HTML product description with h2 headline, p paragraph, ul with 3 li bullet points each starting with a relevant emoji, and a strong p closing CTA. Make it specific to this exact product type.",
+  "score": "+XX% conversion predicted"
+}
+
+Make the 'before' feel authentically bad (like real store owners write). Make the 'after' feel premium, specific, and conversion-focused. The score should be between 25-45%.`
+          }]
+        })
+      })
+
+      clearInterval(stepInterval)
+      setStep(steps.length - 1)
+
+      const data = await response.json()
+      const text = data.content?.[0]?.text || ''
+
+      // Parse JSON from response
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0])
+        setResult(parsed)
+      } else {
+        throw new Error('Could not parse response')
+      }
+    } catch (e) {
+      clearInterval(stepInterval)
+      setError('Generation failed — please try again')
+      console.error(e)
+    } finally {
+      setGenerating(false)
     }
-    await new Promise(r => setTimeout(r, 400))
-    setResult(getMockResult(productName))
-    setGenerating(false)
   }
 
   return (
@@ -100,22 +112,35 @@ function LiveDemo() {
         <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#f59e0b' }} />
         <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#10b981' }} />
         <span style={{ marginLeft: 6, fontSize: 11, color: '#334155' }}>Optivise AI · Description Generator</span>
+        <span style={{ marginLeft: 'auto', fontSize: 9, color: '#6366f1', fontWeight: 700, background: 'rgba(99,102,241,0.1)', padding: '2px 6px', borderRadius: 4 }}>LIVE AI</span>
       </div>
       <div style={{ padding: '16px' }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: '#475569', marginBottom: 6, letterSpacing: '0.05em' }}>ENTER ANY PRODUCT NAME</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-          <input value={productName} onChange={e => setProductName(e.target.value)} onKeyDown={e => e.key === 'Enter' && runDemo()} placeholder="e.g. Leather Crossbody Bag..."
-            style={{ flex: 1, background: '#0d1b35', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8, padding: '9px 12px', color: '#e2e8f0', fontSize: 12, outline: 'none', fontFamily: 'inherit' }} />
-          <button onClick={runDemo} disabled={generating || !productName.trim()} style={{ background: generating ? 'rgba(99,102,241,0.5)' : '#6366f1', border: 'none', borderRadius: 8, padding: '9px 16px', color: 'white', fontSize: 12, fontWeight: 700, cursor: generating ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
+          <input
+            value={productName}
+            onChange={e => setProductName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && runDemo()}
+            placeholder="Any product in the world..."
+            style={{ flex: 1, background: '#0d1b35', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8, padding: '9px 12px', color: '#e2e8f0', fontSize: 12, outline: 'none', fontFamily: 'inherit' }}
+          />
+          <button
+            onClick={runDemo}
+            disabled={generating || !productName.trim()}
+            style={{ background: generating ? 'rgba(99,102,241,0.5)' : '#6366f1', border: 'none', borderRadius: 8, padding: '9px 16px', color: 'white', fontSize: 12, fontWeight: 700, cursor: generating ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}
+          >
             <Sparkles size={12} />{generating ? 'Writing...' : 'Generate'}
           </button>
         </div>
+
+        {/* Quick examples */}
         <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 12 }}>
           {EXAMPLES.map(ex => (
             <button key={ex} onClick={() => setProductName(ex)} style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)', borderRadius: 20, padding: '2px 8px', fontSize: 10, color: '#64748b', cursor: 'pointer', fontFamily: 'inherit' }}>{ex}</button>
           ))}
         </div>
 
+        {/* Generating steps */}
         {generating && (
           <div style={{ background: '#0d1b35', borderRadius: 10, padding: '12px', marginBottom: 12 }}>
             {steps.map((s, i) => (
@@ -129,6 +154,14 @@ function LiveDemo() {
           </div>
         )}
 
+        {/* Error */}
+        {error && (
+          <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#ef4444', marginBottom: 12 }}>
+            {error}
+          </div>
+        )}
+
+        {/* Result */}
         {result && !generating && (
           <div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
@@ -148,11 +181,12 @@ function LiveDemo() {
           </div>
         )}
 
-        {!result && !generating && (
+        {/* Empty state */}
+        {!result && !generating && !error && (
           <div style={{ textAlign: 'center', padding: '20px', background: '#0d1b35', borderRadius: 10 }}>
             <Sparkles size={22} color="#6366f1" style={{ marginBottom: 6, opacity: 0.6 }} />
-            <div style={{ fontSize: 12, color: '#334155' }}>Type any product → see AI write description in real-time</div>
-            <div style={{ fontSize: 10, color: '#1e3a5f', marginTop: 3 }}>No account needed for this preview</div>
+            <div style={{ fontSize: 12, color: '#334155' }}>Type ANY product → real AI writes the description</div>
+            <div style={{ fontSize: 10, color: '#1e3a5f', marginTop: 3 }}>Powered by Claude AI · No account needed</div>
           </div>
         )}
       </div>

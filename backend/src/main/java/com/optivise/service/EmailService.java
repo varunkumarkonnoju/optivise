@@ -14,8 +14,7 @@ public class EmailService {
     @Value("${resend.api.key:re_placeholder}")
     private String resendApiKey;
 
-    @Value("${resend.from.email:onboarding@resend.dev}")
-    private String fromEmail;
+    private String fromEmail = "onboarding@resend.dev";
 
     private final WebClient webClient = WebClient.builder()
             .clientConnector(new ReactorClientHttpConnector(

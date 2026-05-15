@@ -32,7 +32,7 @@ function AnimatedCounter({ target, prefix = '', suffix = '', duration = 2000 }) 
   return <span ref={ref}>{prefix}{count.toLocaleString()}{suffix}</span>
 }
 
-// ── LIVE AI DEMO — Real AI, any product ──────────────
+// ── LIVE AI DEMO ──────────────────────────────────────
 function LiveDemo() {
   const [productName, setProductName] = useState('')
   const [generating, setGenerating] = useState(false)
@@ -50,56 +50,53 @@ function LiveDemo() {
     setError('')
     setStep(0)
 
-    // Start step animation
+    // Animate steps while waiting for AI
+    let currentStep = 0
     const stepInterval = setInterval(() => {
-      setStep(prev => {
-        if (prev < steps.length - 2) return prev + 1
+      currentStep++
+      if (currentStep < steps.length - 1) {
+        setStep(currentStep)
+      } else {
         clearInterval(stepInterval)
-        return prev
-      })
-    }, 800)
+      }
+    }, 900)
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('/api/demo/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{
-            role: 'user',
-            content: `You are an expert Shopify product description writer. Generate a high-converting product description for: "${productName}"
-
-Respond with ONLY a JSON object in this exact format, no other text:
-{
-  "before": "A realistic weak description a typical store owner would write (1-2 sentences, basic and bland)",
-  "after": "An HTML product description with h2 headline, p paragraph, ul with 3 li bullet points each starting with a relevant emoji, and a strong p closing CTA. Make it specific to this exact product type.",
-  "score": "+XX% conversion predicted"
-}
-
-Make the 'before' feel authentically bad (like real store owners write). Make the 'after' feel premium, specific, and conversion-focused. The score should be between 25-45%.`
-          }]
-        })
+        body: JSON.stringify({ productName: productName.trim() })
       })
 
       clearInterval(stepInterval)
       setStep(steps.length - 1)
 
-      const data = await response.json()
-      const text = data.content?.[0]?.text || ''
+      const text = await response.text()
 
-      // Parse JSON from response
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0])
-        setResult(parsed)
-      } else {
-        throw new Error('Could not parse response')
+      // Parse JSON
+      let parsed
+      try {
+        parsed = JSON.parse(text)
+      } catch {
+        // Try to extract JSON from response
+        const match = text.match(/\{[\s\S]*\}/)
+        if (match) {
+          parsed = JSON.parse(match[0])
+        } else {
+          throw new Error('Invalid response format')
+        }
       }
+
+      if (parsed.error) {
+        setError(parsed.error)
+      } else {
+        setResult(parsed)
+      }
+
     } catch (e) {
       clearInterval(stepInterval)
       setError('Generation failed — please try again')
-      console.error(e)
+      console.error('Demo error:', e)
     } finally {
       setGenerating(false)
     }
@@ -107,6 +104,7 @@ Make the 'before' feel authentically bad (like real store owners write). Make th
 
   return (
     <div style={{ background: '#0a1628', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 16, overflow: 'hidden' }}>
+      {/* Window bar */}
       <div style={{ background: '#0d1b35', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 6 }}>
         <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#ef4444' }} />
         <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#f59e0b' }} />
@@ -114,14 +112,17 @@ Make the 'before' feel authentically bad (like real store owners write). Make th
         <span style={{ marginLeft: 6, fontSize: 11, color: '#334155' }}>Optivise AI · Description Generator</span>
         <span style={{ marginLeft: 'auto', fontSize: 9, color: '#6366f1', fontWeight: 700, background: 'rgba(99,102,241,0.1)', padding: '2px 6px', borderRadius: 4 }}>LIVE AI</span>
       </div>
+
       <div style={{ padding: '16px' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: '#475569', marginBottom: 6, letterSpacing: '0.05em' }}>ENTER ANY PRODUCT NAME</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: '#475569', marginBottom: 6, letterSpacing: '0.05em' }}>
+          ENTER ANY PRODUCT NAME IN THE WORLD
+        </div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
           <input
             value={productName}
             onChange={e => setProductName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && runDemo()}
-            placeholder="Any product in the world..."
+            onKeyDown={e => e.key === 'Enter' && !generating && runDemo()}
+            placeholder="Any product — AI writes it perfectly..."
             style={{ flex: 1, background: '#0d1b35', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8, padding: '9px 12px', color: '#e2e8f0', fontSize: 12, outline: 'none', fontFamily: 'inherit' }}
           />
           <button
@@ -129,14 +130,17 @@ Make the 'before' feel authentically bad (like real store owners write). Make th
             disabled={generating || !productName.trim()}
             style={{ background: generating ? 'rgba(99,102,241,0.5)' : '#6366f1', border: 'none', borderRadius: 8, padding: '9px 16px', color: 'white', fontSize: 12, fontWeight: 700, cursor: generating ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}
           >
-            <Sparkles size={12} />{generating ? 'Writing...' : 'Generate'}
+            <Sparkles size={12} />
+            {generating ? 'Writing...' : 'Generate'}
           </button>
         </div>
 
         {/* Quick examples */}
         <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 12 }}>
           {EXAMPLES.map(ex => (
-            <button key={ex} onClick={() => setProductName(ex)} style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)', borderRadius: 20, padding: '2px 8px', fontSize: 10, color: '#64748b', cursor: 'pointer', fontFamily: 'inherit' }}>{ex}</button>
+            <button key={ex} onClick={() => setProductName(ex)} style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)', borderRadius: 20, padding: '2px 8px', fontSize: 10, color: '#64748b', cursor: 'pointer', fontFamily: 'inherit' }}>
+              {ex}
+            </button>
           ))}
         </div>
 
@@ -155,7 +159,7 @@ Make the 'before' feel authentically bad (like real store owners write). Make th
         )}
 
         {/* Error */}
-        {error && (
+        {error && !generating && (
           <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#ef4444', marginBottom: 12 }}>
             {error}
           </div>
@@ -185,8 +189,8 @@ Make the 'before' feel authentically bad (like real store owners write). Make th
         {!result && !generating && !error && (
           <div style={{ textAlign: 'center', padding: '20px', background: '#0d1b35', borderRadius: 10 }}>
             <Sparkles size={22} color="#6366f1" style={{ marginBottom: 6, opacity: 0.6 }} />
-            <div style={{ fontSize: 12, color: '#334155' }}>Type ANY product → real AI writes the description</div>
-            <div style={{ fontSize: 10, color: '#1e3a5f', marginTop: 3 }}>Powered by Claude AI · No account needed</div>
+            <div style={{ fontSize: 12, color: '#334155' }}>Type ANY product → real AI writes a perfect description</div>
+            <div style={{ fontSize: 10, color: '#1e3a5f', marginTop: 3 }}>Powered by Claude AI · No account needed · Any product in the world</div>
           </div>
         )}
       </div>

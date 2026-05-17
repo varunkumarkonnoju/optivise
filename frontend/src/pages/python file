@@ -1,0 +1,4 @@
+skills = ["python", "Sql", "Machine Learning"]
+print(skills[0])
+print(skills[1])
+print(skills[2])

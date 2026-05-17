@@ -21,10 +21,4 @@ public class WeeklyReportScheduler {
         weeklyReportService.sendWeeklyReportsToAllUsers();
     }
 
-    // Runs 30 seconds after startup — FOR TESTING ONLY, remove after confirmed working
-    @Scheduled(initialDelay = 30000, fixedDelay = Long.MAX_VALUE)
-    public void sendTestOnStartup() {
-        log.info("Sending test weekly report on startup...");
-        weeklyReportService.sendWeeklyReportsToAllUsers();
-    }
 }

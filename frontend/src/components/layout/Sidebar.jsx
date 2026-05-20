@@ -5,7 +5,7 @@ import LogoText from '../LogoText'
 import {
   LayoutDashboard, Package, TestTube2,
   Star, BarChart3, LogOut, ChevronRight,
-  CreditCard, RotateCcw, TrendingDown, Activity
+  CreditCard, RotateCcw, TrendingDown, Activity, Users
 } from 'lucide-react'
 import './Layout.css'
 
@@ -16,7 +16,8 @@ const nav = [
   { label: 'A/B Testing',        path: '/abtesting',       icon: TestTube2       },
   { label: 'Recommendations',    path: '/recommendations', icon: Star            },
   { label: 'Analytics',          path: '/analytics',       icon: BarChart3       },
-  { label: 'Store Health',       path: '/automations',     icon: Activity        },
+{ label: 'Customers',          path: '/customers',        icon: Users           },
+{ label: 'Store Health',       path: '/automations',      icon: Activity        },
   { label: 'Description History',path: '/history',         icon: RotateCcw       },
   { label: 'Pricing & Billing',  path: '/pricing',         icon: CreditCard      },
 ]

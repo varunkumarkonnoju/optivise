@@ -305,4 +305,67 @@ public class EmailService {
             return false;
         }
     }
+    // ── ABANDONED CART REMINDER ──────────────────────────────
+    public boolean sendAbandonedCartReminder(String toEmail, String productTitle, String cartUrl, String storeName) {
+        try {
+            String html = """
+                <!DOCTYPE html>
+                <html>
+                <head><meta charset="utf-8"></head>
+                <body style="margin:0;padding:0;background:#f4f4f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+                  <div style="max-width:520px;margin:0 auto;padding:32px 16px">
+                    <div style="background:linear-gradient(135deg,#020817,#0d1b35);border-radius:16px 16px 0 0;padding:24px 32px;text-align:center">
+                      <div style="color:#6366F1;font-size:20px;font-weight:900">%s</div>
+                    </div>
+                    <div style="background:white;padding:32px;border-radius:0 0 16px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
+                      <h2 style="color:#1a1a1a;font-size:20px;margin:0 0 12px">You left something behind! 🛒</h2>
+                      <p style="color:#555;font-size:14px;line-height:1.7;margin:0 0 20px">
+                        You added <strong>%s</strong> to your cart but didn't complete your purchase.
+                        Your cart is saved — come back and complete your order!
+                      </p>
+                      <div style="background:#f8f5ff;border-radius:10px;padding:16px;margin-bottom:24px;text-align:center">
+                        <div style="font-size:14px;color:#555;margin-bottom:4px">Still in your cart:</div>
+                        <div style="font-size:16px;font-weight:700;color:#1a1a1a">%s</div>
+                      </div>
+                      %s
+                      <p style="color:#999;font-size:12px;text-align:center;margin-top:24px">
+                        If you have any questions, just reply to this email — we're happy to help!
+                      </p>
+                    </div>
+                    <p style="text-align:center;font-size:11px;color:#aaa;margin-top:16px">
+                      You received this because you added items to your cart at %s
+                    </p>
+                  </div>
+                </body>
+                </html>
+                """.formatted(
+                    storeName,
+                    productTitle,
+                    productTitle,
+                    cartUrl != null && !cartUrl.isBlank()
+                            ? "<div style=\"text-align:center\"><a href=\"" + cartUrl + "\" style=\"background:#6366F1;color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:700;display:inline-block\">Complete My Purchase →</a></div>"
+                            : "",
+                    storeName
+            );
+
+            webClient.post()
+                    .uri("/emails")
+                    .header("Authorization", "Bearer " + resendApiKey)
+                    .header("Content-Type", "application/json")
+                    .bodyValue(Map.of(
+                            "from", "Optivise <" + fromEmail + ">",
+                            "to", new String[]{toEmail},
+                            "subject", "You left something in your cart! 🛒",
+                            "html", html
+                    ))
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            return true;
+        } catch (Exception e) {
+            System.err.println("Abandoned cart email failed: " + e.getMessage());
+            return false;
+        }
+    }
 }

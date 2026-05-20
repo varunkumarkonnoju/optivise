@@ -18,6 +18,7 @@ import AssistantPage from './pages/AssistantPage'
 import RecommendationsPage from './pages/RecommendationsPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import ProductsPage from './pages/ProductsPage'
+import CustomersPage from './pages/CustomersPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import OAuthSuccessPage from './pages/OAuthSuccessPage'
 import { InsightsPage, AutomationsPage } from './pages/StubPages'
@@ -37,7 +38,6 @@ function AppRoutes() {
   const { user } = useAuth()
   return (
     <Routes>
-      {/* Public routes */}
       <Route path="/home" element={<LandingPage />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
@@ -45,12 +45,11 @@ function AppRoutes() {
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
-
-      {/* Protected app routes */}
       <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/home" replace />} />
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/insights" element={<ProtectedRoute><InsightsPage /></ProtectedRoute>} />
       <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
+      <Route path="/customers" element={<ProtectedRoute><CustomersPage /></ProtectedRoute>} />
       <Route path="/abtesting" element={<ProtectedRoute><ABTestingPage /></ProtectedRoute>} />
       <Route path="/recommendations" element={<ProtectedRoute><RecommendationsPage /></ProtectedRoute>} />
       <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />

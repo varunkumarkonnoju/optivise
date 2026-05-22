@@ -31,7 +31,7 @@ public class ShopifyOAuthController {
     @Value("${shopify.oauth.redirect.uri:https://www.optiviseai.io/api/auth/shopify/callback}")
     private String redirectUri;
 
-    private static final String SCOPES = "read_products,write_products,read_orders";
+    private static final String SCOPES = "read_products,write_products,read_orders,read_customers,read_checkouts";
 
     // ── Step 1: Redirect to Shopify OAuth ────────────────
     @GetMapping("/install")

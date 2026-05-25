@@ -29,7 +29,7 @@ public class ShopifyOAuthController {
     @Value("${shopify.oauth.client.key}")
     private String clientSecret;
 
-    @Value("${shopify.oauth.redirect.uri:https://www.optiviseai.io/api/auth/shopify/callback}")
+    @Value("${shopify.oauth.redirect.uri:https://optivise-production.up.railway.app/api/auth/shopify/callback}")
     private String redirectUri;
 
     private static final String SCOPES =

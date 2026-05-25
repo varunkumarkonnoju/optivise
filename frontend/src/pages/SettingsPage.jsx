@@ -107,7 +107,8 @@ export default function SettingsPage() {
         .replace('https://', '').replace('http://', '').replace('/', '')
       if (!shop.includes('.myshopify.com')) shop = shop + '.myshopify.com'
 
-      const res = await fetch(`/api/auth/shopify/install?shop=${encodeURIComponent(shop)}`, {
+      const email = user?.email || ''
+      const res = await fetch(`/api/auth/shopify/install?shop=${encodeURIComponent(shop)}&email=${encodeURIComponent(email)}`, {
         headers: { 'Authorization': 'Bearer ' + token }
       })
       const data = await res.json()
@@ -122,7 +123,6 @@ export default function SettingsPage() {
   }
 
   const shopConnected = !!(user?.shopDomain)
-console.log('user:', user, 'shopConnected:', shopConnected)
 
   const Section = ({ title, children }) => (
     <div className="card" style={{ padding: 24, marginBottom: 16 }}>

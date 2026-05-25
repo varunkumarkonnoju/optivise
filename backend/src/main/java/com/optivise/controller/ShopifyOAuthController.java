@@ -14,6 +14,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/auth/shopify")
@@ -147,6 +148,27 @@ public class ShopifyOAuthController {
             return hex.toString().equals(hmac);
         } catch (Exception e) {
             return false;
+        }
+    }
+    // ── POST /api/auth/shopify/disconnect ─────────────────
+    @PostMapping("/disconnect")
+    public ResponseEntity<?> disconnect(Principal principal) {
+        try {
+            Optional<User> userOpt = userRepo.findByEmail(principal.getName());
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            User user = userOpt.get();
+            user.setShopDomain(null);
+            user.setShopifyAccessToken(null);
+            userRepo.save(user);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Shopify store disconnected"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 }

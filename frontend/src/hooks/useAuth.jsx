@@ -34,7 +34,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('dismissed_recs')
   }
 
-  return <AuthContext.Provider value={{ user, login, logout, loading }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, setUser, login, logout, loading }}>{children}</AuthContext.Provider>
 }
 
 export const useAuth = () => useContext(AuthContext)

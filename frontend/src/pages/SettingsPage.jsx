@@ -122,6 +122,7 @@ export default function SettingsPage() {
   }
 
   const shopConnected = !!(user?.shopDomain)
+console.log('user:', user, 'shopConnected:', shopConnected)
 
   const Section = ({ title, children }) => (
     <div className="card" style={{ padding: 24, marginBottom: 16 }}>

@@ -51,7 +51,7 @@ public class ShopifyOAuthController {
         // Encode email into state so callback can use it
         String statePayload = UUID.randomUUID().toString().replace("-", "");
         if (email != null && !email.isBlank()) {
-            statePayload = statePayload + "|" + email;
+            statePayload = statePayload + "___" + email;
         }
 
         String authUrl = "https://" + cleanShop + "/admin/oauth/authorize" +
@@ -101,8 +101,8 @@ public class ShopifyOAuthController {
 
             // Extract email from state if present (format: "nonce|email")
             String emailFromState = null;
-            if (state != null && state.contains("|")) {
-                emailFromState = state.substring(state.indexOf("|") + 1);
+            if (state != null && state.contains("___")) {
+                emailFromState = state.substring(state.indexOf("___") + 3);
             }
 
             User user = null;

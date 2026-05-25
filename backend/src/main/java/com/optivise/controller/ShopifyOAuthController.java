@@ -99,26 +99,36 @@ public class ShopifyOAuthController {
 
             String accessToken = (String) tokenResponse.get("access_token");
 
-            // Extract email from state if present (format: "nonce|email")
+            // Debug logs
+            System.out.println("=== OAUTH CALLBACK ===");
+            System.out.println("Shop: " + shop);
+            System.out.println("State: " + state);
+            System.out.println("Access token received: " + (accessToken != null));
+
+            // Extract email from state (format: "nonce___email@domain.com")
             String emailFromState = null;
             if (state != null && state.contains("___")) {
-                emailFromState = state.substring(state.indexOf("___") + 3);
+                emailFromState = state.substring(state.indexOf("___") + 3).trim();
             }
+            System.out.println("Email from state: " + emailFromState);
 
             User user = null;
 
-            // 1. Try to find by email from state (logged-in user reconnecting)
+            // 1. Find by email from state (logged-in user reconnecting)
             if (emailFromState != null && !emailFromState.isBlank()) {
                 user = userRepo.findByEmail(emailFromState).orElse(null);
+                System.out.println("Found by email: " + (user != null));
             }
 
-            // 2. Try to find by shop domain
+            // 2. Find by shop domain
             if (user == null) {
                 user = userRepo.findByShopDomain(shop).orElse(null);
+                System.out.println("Found by shopDomain: " + (user != null));
             }
 
-            // 3. Create new user if not found
+            // 3. Create new user
             if (user == null) {
+                System.out.println("Creating new user for shop: " + shop);
                 user = new User();
                 user.setName("Store Owner");
                 user.setEmail(shop.replace(".myshopify.com", "") + "@optiviseai.io");
@@ -131,6 +141,7 @@ public class ShopifyOAuthController {
             user.setShopDomain(shop);
             user.setShopifyAccessToken(accessToken);
             userRepo.save(user);
+            System.out.println("Saved user: " + user.getEmail() + " with shop: " + user.getShopDomain());
 
             // Generate JWT and redirect
             String jwt = jwtService.generateToken(user.getEmail());
@@ -142,6 +153,8 @@ public class ShopifyOAuthController {
                     .build();
 
         } catch (Exception e) {
+            System.err.println("=== OAUTH CALLBACK ERROR: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(302)
                     .header("Location", "https://www.optiviseai.io/login?error=oauth_failed")
                     .build();

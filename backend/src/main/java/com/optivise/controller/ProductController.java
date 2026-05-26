@@ -55,27 +55,45 @@ public class ProductController {
 
         List<ProductDTO> result = new ArrayList<>();
         for (Map<String, Object> p : shopifyProducts) {
-            ProductDTO dto = new ProductDTO();
-            dto.setId(Long.parseLong(p.get("id").toString()));
-            dto.setTitle((String) p.getOrDefault("title", "Unknown"));
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> variants = (List<Map<String, Object>>) p.getOrDefault("variants", List.of());
-            if (!variants.isEmpty()) {
-                dto.setPrice(Double.parseDouble(variants.get(0).getOrDefault("price", "0").toString()));
+            try {
+                ProductDTO dto = new ProductDTO();
+
+                // BUG 15 FIX: null-safe id parsing
+                Object idObj = p.getOrDefault("id", "0");
+                dto.setId(Long.parseLong(idObj.toString()));
+
+                dto.setTitle((String) p.getOrDefault("title", "Unknown"));
+
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> variants = (List<Map<String, Object>>) p.getOrDefault("variants", List.of());
+                if (!variants.isEmpty()) {
+                    dto.setPrice(Double.parseDouble(variants.get(0).getOrDefault("price", "0").toString()));
+                }
+
+                double revenue = revenueByProduct.getOrDefault(p.get("id").toString(), 0.0);
+                dto.setRevenue(Math.round(revenue * 100.0) / 100.0);
+
+                // BUG 10 FIX: removed random sessions and conversion rate
+                // Sessions and conversion rate require real analytics data
+                // Setting to 0 until real data source is connected
+                dto.setSessions(0);
+                dto.setConversionRate(0.0);
+
+                if (revenue > 1000)      dto.setOptimizationStatus("optimized");
+                else if (revenue > 100)  dto.setOptimizationStatus("needs-attention");
+                else                     dto.setOptimizationStatus("critical");
+
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> images = (List<Map<String, Object>>) p.getOrDefault("images", List.of());
+                if (!images.isEmpty()) dto.setImageUrl((String) images.get(0).get("src"));
+
+                dto.setDescription((String) p.getOrDefault("body_html", ""));
+                result.add(dto);
+
+            } catch (Exception e) {
+                // BUG 15 FIX: skip malformed products instead of crashing entire endpoint
+                System.err.println("Skipping malformed product: " + e.getMessage());
             }
-            double revenue = revenueByProduct.getOrDefault(p.get("id").toString(), 0.0);
-            dto.setRevenue(Math.round(revenue * 100.0) / 100.0);
-            dto.setSessions((int)(Math.random() * 500 + 100));
-            dto.setConversionRate(Math.round((Math.random() * 8 + 1) * 10.0) / 10.0);
-            if (revenue > 1000)      dto.setOptimizationStatus("optimized");
-            else if (revenue > 100)  dto.setOptimizationStatus("needs-attention");
-            else                     dto.setOptimizationStatus("critical");
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> images = (List<Map<String, Object>>) p.getOrDefault("images", List.of());
-            if (!images.isEmpty()) dto.setImageUrl((String) images.get(0).get("src"));
-            // description for backup feature
-            dto.setDescription((String) p.getOrDefault("body_html", ""));
-            result.add(dto);
         }
         return ResponseEntity.ok(result);
     }
@@ -88,7 +106,6 @@ public class ProductController {
 
         User user = userRepo.findByEmail(principal.getName()).orElseThrow();
 
-        // ── CHECK USAGE LIMIT ────────────────────────────
         if (user.hasReachedLimit()) {
             String plan  = user.getPlan() != null ? user.getPlan() : "free";
             int limit    = user.getMonthlyLimit();
@@ -131,11 +148,9 @@ public class ProductController {
                 prompt
         );
 
-        // ── INCREMENT USAGE AFTER SUCCESSFUL GENERATION ──
         user.incrementUsage();
         userRepo.save(user);
 
-        // Return description + updated usage info
         return ResponseEntity.ok(Map.of(
                 "description", description,
                 "usage", Map.of(

@@ -6,6 +6,7 @@ import com.optivise.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -22,6 +23,7 @@ public class ShopifyOAuthController {
 
     @Autowired private UserRepository userRepo;
     @Autowired private JwtService jwtService;
+    @Autowired private PasswordEncoder passwordEncoder; // BUG 23 FIX
 
     @Value("${shopify.oauth.client.id}")
     private String clientId;
@@ -36,7 +38,6 @@ public class ShopifyOAuthController {
             "read_products,write_products,read_orders,read_customers,read_checkouts";
 
     // ── Step 1: Redirect to Shopify OAuth ────────────────
-    // Accepts optional ?email= param so callback knows which user to update
     @GetMapping("/install")
     public ResponseEntity<?> install(
             @RequestParam String shop,
@@ -48,7 +49,6 @@ public class ShopifyOAuthController {
             cleanShop = cleanShop + ".myshopify.com";
         }
 
-        // Encode email into state so callback can use it
         String statePayload = UUID.randomUUID().toString().replace("-", "");
         if (email != null && !email.isBlank()) {
             statePayload = statePayload + "___" + email;
@@ -97,13 +97,27 @@ public class ShopifyOAuthController {
                     .bodyToMono(Map.class)
                     .block();
 
+            // BUG 13 + 14 FIX: null check on tokenResponse and accessToken
+            if (tokenResponse == null) {
+                System.err.println("=== OAUTH ERROR: tokenResponse is null ===");
+                return ResponseEntity.status(302)
+                        .header("Location", "https://www.optiviseai.io/login?error=oauth_failed")
+                        .build();
+            }
+
             String accessToken = (String) tokenResponse.get("access_token");
+            if (accessToken == null || accessToken.isBlank()) {
+                System.err.println("=== OAUTH ERROR: no access_token in response: " + tokenResponse);
+                return ResponseEntity.status(302)
+                        .header("Location", "https://www.optiviseai.io/login?error=oauth_failed")
+                        .build();
+            }
 
             // Debug logs
             System.out.println("=== OAUTH CALLBACK ===");
             System.out.println("Shop: " + shop);
             System.out.println("State: " + state);
-            System.out.println("Access token received: " + (accessToken != null));
+            System.out.println("Access token received: true");
 
             // Extract email from state (format: "nonce___email@domain.com")
             String emailFromState = null;
@@ -132,7 +146,8 @@ public class ShopifyOAuthController {
                 user = new User();
                 user.setName("Store Owner");
                 user.setEmail(shop.replace(".myshopify.com", "") + "@optiviseai.io");
-                user.setPassword("oauth_user_" + UUID.randomUUID());
+                // BUG 23 FIX: encrypt password instead of storing plain text
+                user.setPassword(passwordEncoder.encode("oauth_" + UUID.randomUUID()));
                 user.setRole("Store Owner");
                 user.setPlan("free");
             }

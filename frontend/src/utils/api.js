@@ -39,7 +39,7 @@ export const abTestApi = {
 
 export const suggestionApi = {
   getAll: () => api.get('/suggestions'),
-  apply: (id) => api.put(`/suggestions/${id}/apply`),
+  apply:  (id) => api.post(`/suggestions/${id}/apply`), // BUG 8 FIX: was api.put
 }
 
 export const chatApi = {

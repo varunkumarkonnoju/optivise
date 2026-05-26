@@ -45,7 +45,7 @@ export default function ShopifyCallbackPage() {
         .then(r => r.json())
         .then(user => {
           if (setUser) setUser(user)
-          setTimeout(() => navigate('/insights'), 500)
+          setTimeout(() => navigate('/diagnosis'), 500)
         })
         .catch(() => navigate('/dashboard'))
       } else {

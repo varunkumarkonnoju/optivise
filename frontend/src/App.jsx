@@ -22,6 +22,7 @@ import CustomersPage from './pages/CustomersPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import OAuthSuccessPage from './pages/OAuthSuccessPage'
 import ShopifyCallbackPage from './pages/ShopifyCallbackPage'
+import StoreDiagnosisPage from './pages/StoreDiagnosisPage'
 import { InsightsPage, AutomationsPage } from './pages/StubPages'
 import SettingsPage from './pages/SettingsPage'
 import DescriptionHistoryPage from './pages/DescriptionHistoryPage'
@@ -61,6 +62,7 @@ function AppRoutes() {
       <Route path="/oauth/success" element={<OAuthSuccessPage />} />
       {/* NEW: Shopify OAuth callback — receives code from Shopify, exchanges for token */}
       <Route path="/auth/shopify/callback" element={<ShopifyCallbackPage />} />
+      <Route path="/diagnosis" element={<ProtectedRoute><StoreDiagnosisPage /></ProtectedRoute>} />
       <Route path="/assistant" element={<ProtectedRoute><AssistantPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />

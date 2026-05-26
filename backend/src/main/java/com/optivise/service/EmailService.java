@@ -292,7 +292,7 @@ public class EmailService {
                     .bodyValue(Map.of(
                             "from", "Optivise <" + this.fromEmail + ">",
                             "to", new String[]{toEmail},
-                            "subject", trendEmoji + " Your Shopify store this week — Optivise",
+                            "subject", trendEmoji + " Your store made " + revenueFormatted + " this week (" + orders + " orders) — Optivise",
                             "html", html
                     ))
                     .retrieve()

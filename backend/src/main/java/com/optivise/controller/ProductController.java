@@ -79,9 +79,11 @@ public class ProductController {
                 dto.setSessions(0);
                 dto.setConversionRate(0.0);
 
-                if (revenue > 1000)      dto.setOptimizationStatus("optimized");
-                else if (revenue > 100)  dto.setOptimizationStatus("needs-attention");
-                else                     dto.setOptimizationStatus("critical");
+                String descText = (p.getOrDefault("body_html", "")).toString().replaceAll("<[^>]*>", "").trim();
+                boolean hasGoodDesc = descText.length() >= 100;
+                if (revenue > 1000 && hasGoodDesc) dto.setOptimizationStatus("optimized");
+                else if (revenue > 100 || hasGoodDesc) dto.setOptimizationStatus("needs-attention");
+                else dto.setOptimizationStatus("critical");
 
                 @SuppressWarnings("unchecked")
                 List<Map<String, Object>> images = (List<Map<String, Object>>) p.getOrDefault("images", List.of());

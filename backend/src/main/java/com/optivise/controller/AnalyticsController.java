@@ -166,7 +166,10 @@ public class AnalyticsController {
         AnalyticsDTO dto = new AnalyticsDTO();
         dto.setDaily(daily);
         dto.setTotalRevenue(Math.round(totalRevenue * 100.0) / 100.0);
-        dto.setAvgConversion(totalOrders > 0 ? 3.33 : 0);
+        double realConvRate = totalOrders > 0 && estimatedVisitors > 0
+                ? Math.round((double) totalOrders / estimatedVisitors * 100 * 100.0) / 100.0
+                : 0;
+        dto.setAvgConversion(realConvRate);
         dto.setTotalSessions(estimatedVisitors);
         dto.setTotalOrders((long) totalOrders);
         dto.setAvgOrderValue(avgAOV);

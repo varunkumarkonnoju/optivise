@@ -149,9 +149,15 @@ const [limitMessage, setLimitMessage] = useState('')
     setSaving(true)
     await saveBackup(selectedProduct, generated, token)        // ← backup first
     const ok = await saveOne(selectedProduct.id, generated, token)
-    setSavedMsg(ok
-      ? '✓ Saved! Original backed up — restore anytime from Description History.'
-      : 'Failed to save. Try again.')
+    if (ok) {
+  const shopDomain = JSON.parse(localStorage.getItem('user') || '{}')?.shopDomain || ''
+  const shopUrl = shopDomain ? `https://${shopDomain}/admin/products/${selectedProduct.id}` : null
+  setSavedMsg(shopUrl
+    ? `✓ Saved! <a href="${shopUrl}" target="_blank" style="color:#818cf8">View in Shopify →</a>`
+    : '✓ Saved to Shopify! Original backed up.')
+} else {
+  setSavedMsg('Failed to save. Try again.')
+}
     setSaving(false)
   }
 
@@ -442,12 +448,12 @@ const [limitMessage, setLimitMessage] = useState('')
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>${p.price?.toFixed(2)}</div>
                 <div style={{ fontSize: 13, fontWeight: 600 }}>${Math.round(p.revenue || 0)?.toLocaleString()}</div>
-                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{(p.sessions || 0)?.toLocaleString()}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{p.sessions > 0 ? p.sessions.toLocaleString() : '—'}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                   <div style={{ width: 60, height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
                     <div style={{ width: Math.min((p.conversionRate || 0) * 10, 100) + '%', height: '100%', background: (p.conversionRate || 0) > 5 ? 'var(--green)' : (p.conversionRate || 0) > 3 ? 'var(--amber)' : 'var(--red)', borderRadius: 3 }} />
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 600 }}>{p.conversionRate?.toFixed(1)}%</span>
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>{p.conversionRate > 0 ? p.conversionRate.toFixed(1) + '%' : '—'}</span>
                 </div>
                 <div className="status-pill" style={{ background: cfg.bg, color: cfg.color }}><Icon size={11}/> {cfg.label}</div>
                 <button className="gen-btn" onClick={() => isOpen ? closeGenerator() : openGenerator(p)}>
@@ -537,7 +543,7 @@ const [limitMessage, setLimitMessage] = useState('')
                           ? <div className="gen-preview" dangerouslySetInnerHTML={{ __html: generated }} />
                           : <pre className="gen-code">{generated}</pre>}
                         <div className="gen-actions">
-                          {savedMsg && <span style={{ fontSize: 12, color: savedMsg.includes('Failed') ? 'var(--red)' : 'var(--green)', fontWeight: 600 }}>{savedMsg}</span>}
+                          {savedMsg && <span style={{ fontSize: 12, color: savedMsg.includes('Failed') ? 'var(--red)' : 'var(--green)', fontWeight: 600 }} dangerouslySetInnerHTML={{ __html: savedMsg }} />}
                           <button className="gen-action-btn" onClick={copyHtml}><Copy size={12}/> Copy</button>
                           <button className="gen-action-btn primary" onClick={saveToShopify} disabled={saving}>
                             <Save size={12}/> {saving ? 'Saving...' : 'Save to Shopify'}

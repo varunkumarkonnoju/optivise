@@ -159,17 +159,7 @@ export function InsightsPage() {
       }
     }
 
-    detected.push({
-      id: 'recommendations', severity: 'low', icon: '💡',
-      title:   'You have unread AI growth recommendations',
-      detail:  'Optivise generates personalized recommendations based on your real store data. Each recommendation has an estimated revenue impact.',
-      impact:  300,
-      fix:     'Review your AI recommendations and act on the top 3.',
-      fixPath: '/recommendations', fixLabel: 'View Recommendations →',
-      products: [],
-      beforeAfter: null,
-    })
-    totalLoss += 300
+    
 
     // Calculate health score from leaks
     const criticalCount = detected.filter(l => l.severity === 'high').length

@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/analytics")
@@ -32,6 +33,17 @@ public class AnalyticsController {
         String domain = user.getShopDomain();
         String token = user.getShopifyAccessToken() != null && !user.getShopifyAccessToken().isBlank()
                 ? user.getShopifyAccessToken() : defaultToken;
+        if (domain == null || domain.isBlank()) {
+            AnalyticsDTO empty = new AnalyticsDTO();
+            empty.setAvgConversion(0.0);
+            empty.setTotalRevenue(0.0);
+            empty.setTotalOrders(0L);
+            empty.setTotalSessions(0L);
+            empty.setAvgOrderValue(0.0);
+            empty.setDaily(List.of());
+            empty.setTopProductsByRevenue(List.of());
+            return ResponseEntity.ok(empty);
+        }
 
         List<Map<String, Object>> orders = new ArrayList<>();
         List<Map<String, Object>> products = new ArrayList<>();

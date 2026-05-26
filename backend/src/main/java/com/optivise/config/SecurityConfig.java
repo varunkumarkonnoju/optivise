@@ -60,6 +60,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/**",
+                                "/api/auth/shopify/exchange",
                                 "/api/reports/test",
                                 "/api/demo/generate",
                                 "/h2-console/**",

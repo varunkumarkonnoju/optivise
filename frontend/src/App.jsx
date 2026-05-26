@@ -21,6 +21,7 @@ import ProductsPage from './pages/ProductsPage'
 import CustomersPage from './pages/CustomersPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import OAuthSuccessPage from './pages/OAuthSuccessPage'
+import ShopifyCallbackPage from './pages/ShopifyCallbackPage'
 import { InsightsPage, AutomationsPage } from './pages/StubPages'
 import SettingsPage from './pages/SettingsPage'
 import DescriptionHistoryPage from './pages/DescriptionHistoryPage'
@@ -58,10 +59,13 @@ function AppRoutes() {
       <Route path="/billing/success" element={<BillingSuccess />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/oauth/success" element={<OAuthSuccessPage />} />
+      {/* NEW: Shopify OAuth callback — receives code from Shopify, exchanges for token */}
+      <Route path="/auth/shopify/callback" element={<ShopifyCallbackPage />} />
       <Route path="/assistant" element={<ProtectedRoute><AssistantPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
       <Route path="/history" element={<ProtectedRoute><DescriptionHistoryPage /></ProtectedRoute>} />
+      <Route path="/marketing" element={<ProtectedRoute><MarketingPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )

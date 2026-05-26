@@ -224,9 +224,9 @@ function DiagnosisCard() {
             <div style={{ fontSize: 12, fontWeight: 800, color: l.sev, flexShrink: 0 }}>{l.impact}</div>
           </div>
         ))}
-        <button style={{ width: '100%', marginTop: 12, background: '#6366f1', border: 'none', borderRadius: 10, padding: '10px', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <Zap size={11} /> Fix all leaks with AI
-        </button>
+        <button onClick={() => window.location.href = '/register'} style={{ width: '100%', marginTop: 12, background: '#6366f1', border: 'none', borderRadius: 10, padding: '10px', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+  <Zap size={11} /> Fix all leaks with AI
+</button>
       </div>
     </div>
   )

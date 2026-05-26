@@ -1,5 +1,6 @@
 package com.optivise.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.optivise.model.User;
 import com.optivise.repository.UserRepository;
 import com.optivise.service.JwtService;
@@ -8,10 +9,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.InetAddress;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -23,7 +27,7 @@ public class ShopifyOAuthController {
 
     @Autowired private UserRepository userRepo;
     @Autowired private JwtService jwtService;
-    @Autowired private PasswordEncoder passwordEncoder; // BUG 23 FIX
+    @Autowired private PasswordEncoder passwordEncoder;
 
     @Value("${shopify.oauth.client.id}")
     private String clientId;
@@ -36,6 +40,82 @@ public class ShopifyOAuthController {
 
     private static final String SCOPES =
             "read_products,write_products,read_orders,read_customers,read_checkouts";
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    // ── Plain Java HTTP — bypasses Netty DNS issues ───────
+    private Map<String, Object> exchangeCodeForToken(String shop, String code) throws Exception {
+        String tokenUrl = "https://" + shop + "/admin/oauth/access_token";
+
+        // Build JSON body
+        String jsonBody = objectMapper.writeValueAsString(Map.of(
+                "client_id", clientId,
+                "client_secret", clientSecret,
+                "code", code
+        ));
+
+        System.out.println("=== RESOLVING: " + shop);
+        try {
+            InetAddress addr = InetAddress.getByName(shop);
+            System.out.println("=== RESOLVED TO: " + addr.getHostAddress());
+        } catch (Exception e) {
+            System.err.println("=== DNS RESOLUTION FAILED: " + e.getMessage());
+        }
+
+        URL url = new URL(tokenUrl);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setRequestProperty("Accept", "application/json");
+        conn.setDoOutput(true);
+        conn.setConnectTimeout(15000);
+        conn.setReadTimeout(15000);
+
+        try (OutputStream os = conn.getOutputStream()) {
+            os.write(jsonBody.getBytes(StandardCharsets.UTF_8));
+        }
+
+        int responseCode = conn.getResponseCode();
+        System.out.println("=== SHOPIFY RESPONSE CODE: " + responseCode);
+
+        java.io.InputStream is = responseCode >= 200 && responseCode < 300
+                ? conn.getInputStream() : conn.getErrorStream();
+
+        String responseBody = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        System.out.println("=== SHOPIFY RESPONSE: " + responseBody);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = objectMapper.readValue(responseBody, Map.class);
+        return result;
+    }
+
+    // ── Find or create user helper ────────────────────────
+    private User findOrCreateUser(String shop, String emailFromState, String emailFromPrincipal) {
+        User user = null;
+
+        if (emailFromPrincipal != null) {
+            user = userRepo.findByEmail(emailFromPrincipal).orElse(null);
+            System.out.println("Found by principal: " + (user != null));
+        }
+        if (user == null && emailFromState != null && !emailFromState.isBlank()) {
+            user = userRepo.findByEmail(emailFromState).orElse(null);
+            System.out.println("Found by state email: " + (user != null));
+        }
+        if (user == null) {
+            user = userRepo.findByShopDomain(shop).orElse(null);
+            System.out.println("Found by shopDomain: " + (user != null));
+        }
+        if (user == null) {
+            System.out.println("Creating new user for shop: " + shop);
+            user = new User();
+            user.setName("Store Owner");
+            user.setEmail(shop.replace(".myshopify.com", "") + "@optiviseai.io");
+            user.setPassword(passwordEncoder.encode("oauth_" + UUID.randomUUID()));
+            user.setRole("Store Owner");
+            user.setPlan("free");
+        }
+        return user;
+    }
 
     // ── Step 1: Redirect to Shopify OAuth ────────────────
     @GetMapping("/install")
@@ -60,13 +140,10 @@ public class ShopifyOAuthController {
                 "&redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8) +
                 "&state=" + URLEncoder.encode(statePayload, StandardCharsets.UTF_8);
 
-        return ResponseEntity.ok(Map.of(
-                "authUrl", authUrl,
-                "shop", cleanShop
-        ));
+        return ResponseEntity.ok(Map.of("authUrl", authUrl, "shop", cleanShop));
     }
 
-    // ── Step 2: Handle OAuth callback ────────────────────
+    // ── Step 2: Handle OAuth callback (direct Shopify redirect) ──
     @GetMapping("/callback")
     public ResponseEntity<?> callback(
             @RequestParam String code,
@@ -75,104 +152,101 @@ public class ShopifyOAuthController {
             @RequestParam String hmac,
             @RequestParam Map<String, String> allParams) {
 
+        System.out.println("=== OAUTH CALLBACK HIT ===");
+        System.out.println("Shop: " + shop);
+
         if (!verifyHmac(allParams, hmac)) {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid HMAC"));
         }
 
         try {
-            // Exchange code for access token
-            String tokenUrl = "https://" + shop + "/admin/oauth/access_token";
-            Map<String, String> tokenRequest = Map.of(
-                    "client_id", clientId,
-                    "client_secret", clientSecret,
-                    "code", code
-            );
-
-            @SuppressWarnings("unchecked")
-            Map<String, Object> tokenResponse = WebClient.create()
-                    .post().uri(tokenUrl)
-                    .header("Content-Type", "application/json")
-                    .bodyValue(tokenRequest)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
-
-            // BUG 13 + 14 FIX: null check on tokenResponse and accessToken
-            if (tokenResponse == null) {
-                System.err.println("=== OAUTH ERROR: tokenResponse is null ===");
-                return ResponseEntity.status(302)
-                        .header("Location", "https://www.optiviseai.io/login?error=oauth_failed")
-                        .build();
-            }
+            Map<String, Object> tokenResponse = exchangeCodeForToken(shop, code);
 
             String accessToken = (String) tokenResponse.get("access_token");
             if (accessToken == null || accessToken.isBlank()) {
-                System.err.println("=== OAUTH ERROR: no access_token in response: " + tokenResponse);
+                System.err.println("=== CALLBACK ERROR: no access_token: " + tokenResponse);
                 return ResponseEntity.status(302)
                         .header("Location", "https://www.optiviseai.io/login?error=oauth_failed")
                         .build();
             }
 
-            // Debug logs
-            System.out.println("=== OAUTH CALLBACK ===");
-            System.out.println("Shop: " + shop);
-            System.out.println("State: " + state);
-            System.out.println("Access token received: true");
-
-            // Extract email from state (format: "nonce___email@domain.com")
             String emailFromState = null;
             if (state != null && state.contains("___")) {
                 emailFromState = state.substring(state.indexOf("___") + 3).trim();
             }
-            System.out.println("Email from state: " + emailFromState);
 
-            User user = null;
-
-            // 1. Find by email from state (logged-in user reconnecting)
-            if (emailFromState != null && !emailFromState.isBlank()) {
-                user = userRepo.findByEmail(emailFromState).orElse(null);
-                System.out.println("Found by email: " + (user != null));
-            }
-
-            // 2. Find by shop domain
-            if (user == null) {
-                user = userRepo.findByShopDomain(shop).orElse(null);
-                System.out.println("Found by shopDomain: " + (user != null));
-            }
-
-            // 3. Create new user
-            if (user == null) {
-                System.out.println("Creating new user for shop: " + shop);
-                user = new User();
-                user.setName("Store Owner");
-                user.setEmail(shop.replace(".myshopify.com", "") + "@optiviseai.io");
-                // BUG 23 FIX: encrypt password instead of storing plain text
-                user.setPassword(passwordEncoder.encode("oauth_" + UUID.randomUUID()));
-                user.setRole("Store Owner");
-                user.setPlan("free");
-            }
-
-            // Update store credentials
+            User user = findOrCreateUser(shop, emailFromState, null);
             user.setShopDomain(shop);
             user.setShopifyAccessToken(accessToken);
             userRepo.save(user);
-            System.out.println("Saved user: " + user.getEmail() + " with shop: " + user.getShopDomain());
+            System.out.println("Saved user: " + user.getEmail());
 
-            // Generate JWT and redirect
             String jwt = jwtService.generateToken(user.getEmail());
             String redirectUrl = "https://www.optiviseai.io/oauth/success?token=" + jwt +
                     "&shop=" + URLEncoder.encode(shop, StandardCharsets.UTF_8);
 
-            return ResponseEntity.status(302)
-                    .header("Location", redirectUrl)
-                    .build();
+            return ResponseEntity.status(302).header("Location", redirectUrl).build();
 
         } catch (Exception e) {
-            System.err.println("=== OAUTH CALLBACK ERROR: " + e.getMessage());
+            System.err.println("=== CALLBACK ERROR: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(302)
                     .header("Location", "https://www.optiviseai.io/login?error=oauth_failed")
                     .build();
+        }
+    }
+
+    // ── POST /api/auth/shopify/exchange ───────────────────
+    // Called by frontend callback page
+    @PostMapping("/exchange")
+    public ResponseEntity<?> exchange(
+            @RequestParam String code,
+            @RequestParam String shop,
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String hmac,
+            Principal principal) {
+
+        System.out.println("=== SHOPIFY EXCHANGE ===");
+        System.out.println("Shop: " + shop);
+        System.out.println("State: " + state);
+
+        try {
+            Map<String, Object> tokenResponse = exchangeCodeForToken(shop, code);
+
+            String accessToken = (String) tokenResponse.get("access_token");
+            if (accessToken == null || accessToken.isBlank()) {
+                System.err.println("=== EXCHANGE ERROR: no access_token: " + tokenResponse);
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "No access token returned from Shopify"));
+            }
+
+            System.out.println("Access token received: true");
+
+            String emailFromState = null;
+            if (state != null && state.contains("___")) {
+                emailFromState = state.substring(state.indexOf("___") + 3).trim();
+            }
+
+            String emailFromPrincipal = (principal != null) ? principal.getName() : null;
+
+            User user = findOrCreateUser(shop, emailFromState, emailFromPrincipal);
+            user.setShopDomain(shop);
+            user.setShopifyAccessToken(accessToken);
+            userRepo.save(user);
+            System.out.println("Saved: " + user.getEmail() + " shop: " + user.getShopDomain());
+
+            String jwt = jwtService.generateToken(user.getEmail());
+            return ResponseEntity.ok(Map.of(
+                    "token", jwt,
+                    "shop", shop,
+                    "email", user.getEmail()
+            ));
+
+        } catch (Exception e) {
+            System.err.println("=== EXCHANGE ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -182,19 +256,13 @@ public class ShopifyOAuthController {
         try {
             Optional<User> userOpt = userRepo.findByEmail(principal.getName());
             if (userOpt.isEmpty()) return ResponseEntity.notFound().build();
-
             User user = userOpt.get();
             user.setShopDomain(null);
             user.setShopifyAccessToken(null);
             userRepo.save(user);
-
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Shopify store disconnected"
-            ));
+            return ResponseEntity.ok(Map.of("success", true, "message", "Shopify store disconnected"));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -208,124 +276,14 @@ public class ShopifyOAuthController {
             }
             Collections.sort(pairs);
             String message = String.join("&", pairs);
-
             Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(
-                    clientSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            mac.init(new SecretKeySpec(clientSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
             byte[] hash = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
             StringBuilder hex = new StringBuilder();
             for (byte b : hash) hex.append(String.format("%02x", b));
             return hex.toString().equals(hmac);
         } catch (Exception e) {
             return false;
-        }
-    }
-    // ── POST /api/auth/shopify/exchange ───────────────────
-    // Called by frontend callback page after Shopify redirects
-    @PostMapping("/exchange")
-    public ResponseEntity<?> exchange(
-            @RequestParam String code,
-            @RequestParam String shop,
-            @RequestParam(required = false) String state,
-            @RequestParam(required = false) String hmac,
-            Principal principal) {
-
-        try {
-            System.out.println("=== SHOPIFY EXCHANGE ===");
-            System.out.println("Shop: " + shop);
-            System.out.println("State: " + state);
-
-            // Exchange code for access token
-            String tokenUrl = "https://" + shop + "/admin/oauth/access_token";
-            Map<String, String> tokenRequest = Map.of(
-                    "client_id", clientId,
-                    "client_secret", clientSecret,
-                    "code", code
-            );
-
-            @SuppressWarnings("unchecked")
-            Map<String, Object> tokenResponse = WebClient.create()
-                    .post().uri(tokenUrl)
-                    .header("Content-Type", "application/json")
-                    .bodyValue(tokenRequest)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
-
-            if (tokenResponse == null) {
-                System.err.println("=== EXCHANGE ERROR: tokenResponse is null ===");
-                return ResponseEntity.badRequest().body(Map.of("error", "Failed to get token from Shopify"));
-            }
-
-            String accessToken = (String) tokenResponse.get("access_token");
-            if (accessToken == null || accessToken.isBlank()) {
-                System.err.println("=== EXCHANGE ERROR: no access_token: " + tokenResponse);
-                return ResponseEntity.badRequest().body(Map.of("error", "No access token returned"));
-            }
-
-            System.out.println("Access token received: true");
-
-            // Extract email from state (format: "nonce___email@domain.com")
-            String emailFromState = null;
-            if (state != null && state.contains("___")) {
-                emailFromState = state.substring(state.indexOf("___") + 3).trim();
-            }
-            System.out.println("Email from state: " + emailFromState);
-
-            // Also try from logged-in principal
-            String emailFromPrincipal = (principal != null) ? principal.getName() : null;
-            System.out.println("Email from principal: " + emailFromPrincipal);
-
-            User user = null;
-
-            // 1. Find by logged-in user (most reliable)
-            if (emailFromPrincipal != null) {
-                user = userRepo.findByEmail(emailFromPrincipal).orElse(null);
-                System.out.println("Found by principal: " + (user != null));
-            }
-
-            // 2. Find by email from state
-            if (user == null && emailFromState != null && !emailFromState.isBlank()) {
-                user = userRepo.findByEmail(emailFromState).orElse(null);
-                System.out.println("Found by state email: " + (user != null));
-            }
-
-            // 3. Find by shop domain
-            if (user == null) {
-                user = userRepo.findByShopDomain(shop).orElse(null);
-                System.out.println("Found by shopDomain: " + (user != null));
-            }
-
-            // 4. Create new user
-            if (user == null) {
-                System.out.println("Creating new user for shop: " + shop);
-                user = new User();
-                user.setName("Store Owner");
-                user.setEmail(shop.replace(".myshopify.com", "") + "@optiviseai.io");
-                user.setPassword(passwordEncoder.encode("oauth_" + UUID.randomUUID()));
-                user.setRole("Store Owner");
-                user.setPlan("free");
-            }
-
-            // Update store credentials
-            user.setShopDomain(shop);
-            user.setShopifyAccessToken(accessToken);
-            userRepo.save(user);
-            System.out.println("Saved: " + user.getEmail() + " shop: " + user.getShopDomain());
-
-            // Return JWT to frontend
-            String jwt = jwtService.generateToken(user.getEmail());
-            return ResponseEntity.ok(Map.of(
-                    "token", jwt,
-                    "shop", shop,
-                    "email", user.getEmail()
-            ));
-
-        } catch (Exception e) {
-            System.err.println("=== EXCHANGE ERROR: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("error", e.getMessage()));
         }
     }
 }

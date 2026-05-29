@@ -7,6 +7,7 @@ public class DashboardSummary {
     private Double revenueDelta;
     private Double conversionRate;
     private Double conversionDelta;
+    private Double avgOrderValue;
     private Integer activeAbTests;
     private Integer abTestsDelta;
     private Integer aiSuggestions;
@@ -32,6 +33,8 @@ public class DashboardSummary {
 
     public Double getConversionDelta() { return conversionDelta; }
     public void setConversionDelta(Double conversionDelta) { this.conversionDelta = conversionDelta; }
+    public Double getAvgOrderValue() { return avgOrderValue; }
+    public void setAvgOrderValue(Double avgOrderValue) { this.avgOrderValue = avgOrderValue; }
 
     public Integer getActiveAbTests() { return activeAbTests; }
     public void setActiveAbTests(Integer activeAbTests) { this.activeAbTests = activeAbTests; }

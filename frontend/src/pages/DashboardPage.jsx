@@ -195,7 +195,7 @@ function MetricCard({ label, value, rawValue, delta, deltaLabel, icon: Icon, col
       </div>
       <div className="metric-value">
         {typeof rawValue === 'number'
-          ? <AnimatedNumber value={rawValue} prefix={suffix === '%' ? '' : (label.includes('Revenue') ? '$' : '')} suffix={suffix} />
+          ? <AnimatedNumber value={rawValue} prefix={suffix === '%' ? '' : ((label.includes('Revenue') || label.includes('Order Value')) ? '$' : '')} suffix={suffix} />
           : value}{suffix && typeof rawValue !== 'number' ? suffix : ''}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
@@ -460,7 +460,7 @@ export default function DashboardPage() {
           icon={DollarSign} color="#6366F1"
         />
         <MetricCard
-          label="Conversion Rate" rawValue={data.conversionRate} suffix="%"
+          label="Avg Order Value" rawValue={data.avgOrderValue}
           delta={data.conversionDelta} deltaLabel="vs last period"
           icon={Percent} color="#06B6D4"
         />
@@ -544,8 +544,6 @@ export default function DashboardPage() {
             <span className="section-title" style={{ marginBottom: 0 }}>Performance Overview</span>
             <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
               <LegendDot color="#6366F1" label="Revenue" />
-              <LegendDot color="#06B6D4" label="Conversion" />
-              <LegendDot color="#F59E0B" label="Sessions" />
             </div>
           </div>
           <ResponsiveContainer width="100%" height={200}>
@@ -556,8 +554,6 @@ export default function DashboardPage() {
                 tickFormatter={v => '$' + (v/1000).toFixed(0) + 'k'} />
               <Tooltip content={<CustomTooltip />} />
               <Line type="monotone" name="Revenue" dataKey="revenue" stroke="#6366F1" strokeWidth={2} dot={false} />
-              <Line type="monotone" name="Conversion" dataKey="conversion" stroke="#06B6D4" strokeWidth={2} dot={false} />
-              <Line type="monotone" name="Sessions" dataKey="sessions" stroke="#F59E0B" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>

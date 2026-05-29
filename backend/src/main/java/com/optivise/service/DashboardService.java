@@ -77,24 +77,20 @@ public class DashboardService {
             } catch (Exception ignored) {}
         }
 
-        // ── Real conversion rate ──────────────────────────
-        // Estimate visitors as orders / industry avg (3.3%) then calculate real conv
-        long   estimatedVisitors = totalOrders > 0 ? (long)(totalOrders / 0.033) : 0;
-        double conversionRate    = totalOrders > 0 && estimatedVisitors > 0
-                ? Math.round((double) totalOrders / estimatedVisitors * 100 * 100.0) / 100.0
-                : 0;
+        // ── Conversion rate ───────────────────────────────
+        // A real conversion rate needs sessions/visitors, which Shopify's API does not
+        // reliably expose. Rather than fabricate it, we report 0 here and surface a real
+        // metric (Average Order Value) on the dashboard instead.
+        double conversionRate = 0;
 
         // ── Build chart data (no random values) ──────────
         List<MetricPoint> allChartData = revenueByDay.entrySet().stream().map(e -> {
             MetricPoint mp = new MetricPoint();
             mp.setLabel(e.getKey());
             mp.setRevenue(Math.round(e.getValue() * 100.0) / 100.0);
-            // Real conversion per day: orders that day / estimated visitors that day
-            int dayOrders = ordersByDay.getOrDefault(e.getKey(), 0);
-            long dayVisitors = dayOrders > 0 ? (long)(dayOrders / 0.033) : 0;
-            mp.setConversion(dayOrders > 0 && dayVisitors > 0
-                    ? Math.round((double) dayOrders / dayVisitors * 100 * 100.0) / 100.0 : 0);
-            mp.setSessions(dayVisitors);
+            // Conversion/sessions aren't tracked (no real sessions source); leave at 0.
+            mp.setConversion(0.0);
+            mp.setSessions(0L);
             return mp;
         }).collect(Collectors.toList());
 
@@ -202,6 +198,7 @@ public class DashboardService {
         summary.setRevenueDelta(revenueDelta);
         summary.setConversionRate(conversionRate);
         summary.setConversionDelta(0.0); // real delta needs historical data
+        summary.setAvgOrderValue(Math.round(avgOrderValue * 100.0) / 100.0);
         summary.setActiveAbTests(activeTests.size());
         summary.setAbTestsDelta(0);
         summary.setAiSuggestions(topSuggestions.size());

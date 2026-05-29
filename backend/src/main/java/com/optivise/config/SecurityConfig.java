@@ -65,6 +65,7 @@ public class SecurityConfig {
                                 "/api/demo/generate",
                                 "/h2-console/**",
                                 "/api/billing/webhook",
+                                "/api/shopify/compliance",
                                 "/api/waitlist"
                         ).permitAll()
                         .anyRequest().authenticated()

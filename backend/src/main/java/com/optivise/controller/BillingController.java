@@ -172,28 +172,37 @@ public class BillingController {
                 return ResponseEntity.status(400).body("Invalid signature");
             }
 
+            // Parse the raw payload directly. event.getDataObjectDeserializer().getObject()
+            // returns empty when the webhook endpoint's API version is newer than the
+            // stripe-java library (here: 2026-03-25.dahlia), so we read the fields we need
+            // straight from the JSON. The signature is already verified above.
+            com.fasterxml.jackson.databind.JsonNode obj =
+                    new com.fasterxml.jackson.databind.ObjectMapper()
+                            .readTree(payload).path("data").path("object");
+
             switch (event.getType()) {
                 case "checkout.session.completed" -> {
-                    var session = (Session) event.getDataObjectDeserializer()
-                            .getObject().orElse(null);
-                    if (session != null) {
-                        String email = session.getCustomerEmail();
-                        String plan = session.getMetadata().get("plan");
-                        String customerId = session.getCustomer();
-                        userRepo.findByEmail(email).ifPresent(u -> {
-                            u.setPlan(plan);
-                            u.setStripeCustomerId(customerId);
+                    String email = obj.path("customer_email").asText(null);
+                    if (email == null || email.isBlank())
+                        email = obj.path("customer_details").path("email").asText(null);
+                    if (email == null || email.isBlank())
+                        email = obj.path("metadata").path("userEmail").asText(null);
+                    String plan = obj.path("metadata").path("plan").asText(null);
+                    String customerId = obj.path("customer").asText(null);
+                    final String fEmail = email, fPlan = plan, fCustomerId = customerId;
+                    if (fEmail != null && fPlan != null) {
+                        userRepo.findByEmail(fEmail).ifPresent(u -> {
+                            u.setPlan(fPlan);
+                            u.setStripeCustomerId(fCustomerId);
                             u.setSubscriptionStatus("trialing");
                             userRepo.save(u);
                         });
                     }
                 }
                 case "customer.subscription.updated", "customer.subscription.deleted" -> {
-                    var sub = (Subscription) event.getDataObjectDeserializer()
-                            .getObject().orElse(null);
-                    if (sub != null) {
-                        String customerId = sub.getCustomer();
-                        String status = sub.getStatus();
+                    String customerId = obj.path("customer").asText(null);
+                    String status = obj.path("status").asText(null);
+                    if (customerId != null && status != null) {
                         userRepo.findAll().stream()
                                 .filter(u -> customerId.equals(u.getStripeCustomerId()))
                                 .findFirst()

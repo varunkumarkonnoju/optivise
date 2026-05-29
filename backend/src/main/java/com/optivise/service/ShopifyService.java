@@ -127,12 +127,12 @@ public class ShopifyService {
                                             String productId, String description) {
         try {
             String url = "https://" + domain + "/admin/api/2023-10/products/" + productId + ".json";
-            String body = "{\"product\":{\"id\":" + productId + ",\"body_html\":\""
-                    + description.replace("\\", "\\\\")
-                    .replace("\"", "\\\"")
-                    .replace("\n", "\\n")
-                    .replace("\r", "")
-                    + "\"}}";
+            // Build the request body with Jackson so all characters (quotes, newlines,
+            // tabs, unicode, control chars) are escaped correctly into valid JSON.
+            Map<String, Object> product = new java.util.HashMap<>();
+            product.put("id", Long.parseLong(productId));
+            product.put("body_html", description != null ? description : "");
+            String body = mapper.writeValueAsString(Map.of("product", product));
             shopifyWebClient
                     .put().uri(url)
                     .header("X-Shopify-Access-Token", token)

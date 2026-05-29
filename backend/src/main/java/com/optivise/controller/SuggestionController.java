@@ -97,10 +97,14 @@ public class SuggestionController {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> lineItems = (List<Map<String, Object>>) order.getOrDefault("line_items", List.of());
             for (Map<String, Object> item : lineItems) {
-                String pid = item.getOrDefault("product_id", "").toString();
+                Object pidObj = item.get("product_id");
+                if (pidObj == null) continue; // skip custom/non-catalog line items
+                String pid = pidObj.toString();
                 String title = (String) item.getOrDefault("title", "Product");
-                double price = Double.parseDouble(item.getOrDefault("price", "0").toString());
-                int qty = Integer.parseInt(item.getOrDefault("quantity", "1").toString());
+                Object priceObj = item.get("price");
+                Object qtyObj = item.get("quantity");
+                double price = priceObj != null ? Double.parseDouble(priceObj.toString()) : 0.0;
+                int qty = qtyObj != null ? Integer.parseInt(qtyObj.toString()) : 1;
                 revenueByProduct.merge(pid, price * qty, Double::sum);
                 productTitles.put(pid, title);
             }

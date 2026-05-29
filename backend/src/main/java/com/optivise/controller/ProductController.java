@@ -46,9 +46,15 @@ public class ProductController {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> lineItems = (List<Map<String, Object>>) order.getOrDefault("line_items", List.of());
             for (Map<String, Object> item : lineItems) {
-                String pid = item.getOrDefault("product_id", "").toString();
-                double price = Double.parseDouble(item.getOrDefault("price", "0").toString());
-                int qty = Integer.parseInt(item.getOrDefault("quantity", "1").toString());
+                // Shopify custom line items have product_id: null — getOrDefault returns
+                // null (not the default) when the key is present with a null value, so guard.
+                Object pidObj = item.get("product_id");
+                if (pidObj == null) continue; // skip non-catalog/custom line items
+                String pid = pidObj.toString();
+                Object priceObj = item.get("price");
+                Object qtyObj = item.get("quantity");
+                double price = priceObj != null ? Double.parseDouble(priceObj.toString()) : 0.0;
+                int qty = qtyObj != null ? Integer.parseInt(qtyObj.toString()) : 1;
                 revenueByProduct.merge(pid, price * qty, Double::sum);
             }
         }

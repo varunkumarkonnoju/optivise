@@ -23,9 +23,12 @@ export default function ShopifyCallbackPage() {
 
     setStatus('Verifying connection...')
 
-    // Forward all params to backend exchange endpoint
+    // Forward the FULL original query string so the backend can verify Shopify's HMAC
     const token = localStorage.getItem('token')
-    fetch(`/api/auth/shopify/exchange?code=${encodeURIComponent(code)}&shop=${encodeURIComponent(shop)}&state=${encodeURIComponent(state || '')}&hmac=${encodeURIComponent(hmac || '')}`, {
+    const qs = window.location.search.startsWith('?')
+      ? window.location.search.slice(1)
+      : window.location.search
+    fetch(`/api/auth/shopify/exchange?${qs}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -44,6 +47,7 @@ export default function ShopifyCallbackPage() {
         })
         .then(r => r.json())
         .then(user => {
+          localStorage.setItem('user', JSON.stringify(user))
           if (setUser) setUser(user)
           setTimeout(() => navigate('/diagnosis'), 500)
         })

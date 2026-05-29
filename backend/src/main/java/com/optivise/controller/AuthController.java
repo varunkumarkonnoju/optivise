@@ -4,7 +4,9 @@ import com.optivise.dto.AuthResponse;
 import com.optivise.dto.LoginRequest;
 import com.optivise.dto.RegisterRequest;
 import com.optivise.model.User;
+import com.optivise.model.PasswordResetToken;
 import com.optivise.repository.UserRepository;
+import com.optivise.repository.PasswordResetTokenRepository;
 import com.optivise.service.EmailService;
 import com.optivise.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 import java.security.Principal;
-import java.util.concurrent.ConcurrentHashMap;
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -22,11 +25,14 @@ import java.util.UUID;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired private UserRepository userRepo;
-    // Simple in-memory token store (token -> [email, expiry])
-    private static final ConcurrentHashMap<String, String[]> resetTokens = new ConcurrentHashMap<>();
-    @Autowired private JwtService jwtService;
-    @Autowired private EmailService emailService;
+    @Autowired
+    private UserRepository userRepo;
+    @Autowired
+    private PasswordResetTokenRepository resetTokenRepo;
+    @Autowired
+    private JwtService jwtService;
+    @Autowired
+    private EmailService emailService;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     // ── POST /api/auth/register ───────────────────────────
@@ -97,9 +103,16 @@ public class AuthController {
         }
         // Always return success (don't reveal if email exists)
         userRepo.findByEmail(email.toLowerCase().trim()).ifPresent(user -> {
+            // Invalidate any previous reset tokens for this user
+            resetTokenRepo.deleteAll(resetTokenRepo.findByEmail(user.getEmail()));
+
             String token = UUID.randomUUID().toString();
-            // Store token with expiry (1 hour)
-            resetTokens.put(token, new String[]{user.getEmail(), String.valueOf(Instant.now().plusSeconds(3600).getEpochSecond())});
+            // Store only the hash; the raw token goes in the emailed link.
+            resetTokenRepo.save(new PasswordResetToken(
+                    hashToken(token),
+                    user.getEmail(),
+                    Instant.now().plusSeconds(3600)   // 1-hour expiry
+            ));
             new Thread(() -> emailService.sendPasswordReset(email, token, user.getName())).start();
         });
         return ResponseEntity.ok(Map.of("message", "If that email exists, a reset link has been sent"));
@@ -112,20 +125,19 @@ public class AuthController {
         String newPassword = req.get("password");
         if (token == null || newPassword == null || newPassword.length() < 8)
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid request"));
-        String[] tokenData = resetTokens.get(token);
-        if (tokenData == null)
+
+        PasswordResetToken prt = resetTokenRepo.findByTokenHash(hashToken(token)).orElse(null);
+        if (prt == null)
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid or expired reset link"));
-        long expiry = Long.parseLong(tokenData[1]);
-        if (Instant.now().getEpochSecond() > expiry) {
-            resetTokens.remove(token);
+        if (prt.isExpired()) {
+            resetTokenRepo.delete(prt);
             return ResponseEntity.badRequest().body(Map.of("error", "Reset link has expired. Please request a new one."));
         }
-        String email = tokenData[0];
-        userRepo.findByEmail(email).ifPresent(user -> {
+        userRepo.findByEmail(prt.getEmail()).ifPresent(user -> {
             user.setPassword(encoder.encode(newPassword));
             userRepo.save(user);
         });
-        resetTokens.remove(token);
+        resetTokenRepo.delete(prt); // single use
         return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
     }
 
@@ -137,12 +149,26 @@ public class AuthController {
         if (userOpt.isEmpty()) return ResponseEntity.status(401).body(Map.of("error", "User not found"));
         User user = userOpt.get();
         return ResponseEntity.ok(Map.of(
-                "name",            user.getName() != null ? user.getName() : "",
-                "email",           user.getEmail() != null ? user.getEmail() : "",
-                "shopDomain",      user.getShopDomain() != null ? user.getShopDomain() : "",
+                "name", user.getName() != null ? user.getName() : "",
+                "email", user.getEmail() != null ? user.getEmail() : "",
+                "shopDomain", user.getShopDomain() != null ? user.getShopDomain() : "",
                 "hasShopifyToken", user.getShopifyAccessToken() != null && !user.getShopifyAccessToken().isBlank(),
-                "role",            user.getRole() != null ? user.getRole() : "Store Owner",
-                "plan",            user.getPlan() != null ? user.getPlan() : "free"
+                "role", user.getRole() != null ? user.getRole() : "Store Owner",
+                "plan", user.getPlan() != null ? user.getPlan() : "free"
         ));
+    }
+
+    // ── Helpers ──────────────────────────────────────────
+    // Hash reset tokens before storing so the DB never holds a usable reset link.
+    private static String hashToken(String token) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(token.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(hash.length * 2);
+            for (byte b : hash) hex.append(String.format("%02x", b));
+            return hex.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
     }
 }

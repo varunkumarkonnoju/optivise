@@ -32,6 +32,9 @@ public class BillingController {
     @Value("${stripe.price.growth.monthly}")
     private String growthPriceId;
 
+    @Value("${stripe.webhook.secret}")
+    private String webhookSecret;
+
     @Autowired
     private UserRepository userRepo;
 
@@ -131,10 +134,12 @@ public class BillingController {
             User user = userRepo.findByEmail(principal.getName()).orElseThrow();
             String plan = user.getPlan() != null ? user.getPlan() : "free";
             String status = user.getSubscriptionStatus() != null ? user.getSubscriptionStatus() : "active";
+            // Stripe uses "canceled" (one L); guard against both spellings.
+            boolean isActive = !"canceled".equals(status) && !"cancelled".equals(status);
             return ResponseEntity.ok(Map.of(
                     "plan", plan,
                     "status", status,
-                    "isActive", !"cancelled".equals(status),
+                    "isActive", isActive,
                     "customerId", user.getStripeCustomerId() != null ? user.getStripeCustomerId() : ""
             ));
         } catch (Exception e) {
@@ -150,9 +155,22 @@ public class BillingController {
             @RequestHeader(value = "Stripe-Signature", required = false) String sigHeader) {
         try {
             Stripe.apiKey = stripeSecretKey;
-            // Parse event (in prod, verify signature with webhook secret)
-            com.google.gson.Gson gson = new com.google.gson.Gson();
-            Event event = gson.fromJson(payload, Event.class);
+
+            // SECURITY: verify the webhook signature so forged requests cannot
+            // grant paid plans for free. Requires stripe.webhook.secret to be set
+            // (use the Stripe CLI's whsec_... value for local testing).
+            if (sigHeader == null || webhookSecret == null || webhookSecret.isBlank()
+                    || "whsec_placeholder".equals(webhookSecret)) {
+                System.err.println("Webhook rejected: signature header or webhook secret missing/unconfigured");
+                return ResponseEntity.badRequest().body("Webhook signature verification not configured");
+            }
+            Event event;
+            try {
+                event = com.stripe.net.Webhook.constructEvent(payload, sigHeader, webhookSecret);
+            } catch (com.stripe.exception.SignatureVerificationException e) {
+                System.err.println("Webhook signature verification failed: " + e.getMessage());
+                return ResponseEntity.status(400).body("Invalid signature");
+            }
 
             switch (event.getType()) {
                 case "checkout.session.completed" -> {

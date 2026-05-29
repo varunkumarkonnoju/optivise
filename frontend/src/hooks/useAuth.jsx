@@ -10,7 +10,10 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (token) {
-      authApi.me().then(r => setUser(r.data)).catch(() => localStorage.removeItem('token')).finally(() => setLoading(false))
+      authApi.me()
+        .then(r => { setUser(r.data); localStorage.setItem('user', JSON.stringify(r.data)) })
+        .catch(() => localStorage.removeItem('token'))
+        .finally(() => setLoading(false))
     } else {
       setLoading(false)
     }
@@ -20,6 +23,7 @@ export function AuthProvider({ children }) {
     const { data } = await authApi.login(email, password)
     localStorage.setItem('token', data.token)
     localStorage.setItem('user_email', data.email || '')
+    localStorage.setItem('user', JSON.stringify(data))
     setUser(data)
     return data
   }
@@ -27,6 +31,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem('token')
     setUser(null)
+    localStorage.removeItem('user')
     localStorage.removeItem('user_email')
     localStorage.removeItem('used_ai_description')
     localStorage.removeItem('viewed_recommendations')

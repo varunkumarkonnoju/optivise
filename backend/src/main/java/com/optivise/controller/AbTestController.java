@@ -10,8 +10,10 @@ import com.optivise.service.ShopifyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -73,7 +75,7 @@ public class AbTestController {
     // ── SIMULATE progress (called on page load for running tests) ──
     @PostMapping("/{id}/simulate")
     public ResponseEntity<AbTestDTO> simulate(@PathVariable Long id, Principal principal) {
-        AbTest test = repo.findById(id).orElseThrow();
+        AbTest test = getOwnedTest(id, principal);
         if (!"running".equals(test.getStatus())) return ResponseEntity.ok(toDTO(test));
 
         long daysRunning = ChronoUnit.DAYS.between(
@@ -135,7 +137,7 @@ public class AbTestController {
     public ResponseEntity<?> applyWinner(@PathVariable Long id, Principal principal) {
         try {
             User user = userRepo.findByEmail(principal.getName()).orElseThrow();
-            AbTest test = repo.findById(id).orElseThrow();
+            AbTest test = getOwnedTest(id, principal);
 
             if (test.getProductId() == null || test.getProductId().isBlank()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "No product linked to this test"));
@@ -177,8 +179,7 @@ public class AbTestController {
     @PostMapping("/{id}/insight")
     public ResponseEntity<?> generateInsight(@PathVariable Long id, Principal principal) {
         try {
-            userRepo.findByEmail(principal.getName()).orElseThrow();
-            AbTest test = repo.findById(id).orElseThrow();
+            AbTest test = getOwnedTest(id, principal);
 
             String prompt = String.format("""
                 Analyze this A/B test result for a Shopify store and provide a concise, actionable insight (2-3 sentences max):
@@ -221,28 +222,41 @@ public class AbTestController {
 
     // ── PAUSE ────────────────────────────────────────────
     @PutMapping("/{id}/pause")
-    public ResponseEntity<AbTestDTO> pause(@PathVariable Long id) {
-        AbTest test = repo.findById(id).orElseThrow();
+    public ResponseEntity<AbTestDTO> pause(@PathVariable Long id, Principal principal) {
+        AbTest test = getOwnedTest(id, principal);
         test.setStatus("paused");
         return ResponseEntity.ok(toDTO(repo.save(test)));
     }
 
     // ── RESUME ───────────────────────────────────────────
     @PutMapping("/{id}/resume")
-    public ResponseEntity<AbTestDTO> resume(@PathVariable Long id) {
-        AbTest test = repo.findById(id).orElseThrow();
+    public ResponseEntity<AbTestDTO> resume(@PathVariable Long id, Principal principal) {
+        AbTest test = getOwnedTest(id, principal);
         test.setStatus("running");
         return ResponseEntity.ok(toDTO(repo.save(test)));
     }
 
     // ── DELETE ───────────────────────────────────────────
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        repo.deleteById(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id, Principal principal) {
+        AbTest test = getOwnedTest(id, principal);
+        repo.delete(test);
         return ResponseEntity.ok().build();
     }
 
     // ── Helpers ──────────────────────────────────────────
+    // Loads a test only if it belongs to the current user's shop. Returns 404
+    // otherwise so tests from other tenants cannot be read or mutated by ID (IDOR).
+    private AbTest getOwnedTest(Long id, Principal principal) {
+        User user = userRepo.findByEmail(principal.getName()).orElseThrow();
+        AbTest test = repo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Test not found"));
+        if (test.getShop() == null || !test.getShop().equals(user.getShopDomain())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Test not found");
+        }
+        return test;
+    }
+
     private String generateInsight(AbTest test, long days) {
         double convA = test.getVariantAConversion();
         double convB = test.getVariantBConversion();

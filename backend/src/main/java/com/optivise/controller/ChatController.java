@@ -105,10 +105,13 @@ public class ChatController {
                 @SuppressWarnings("unchecked")
                 List<Map<String, Object>> lineItems = (List<Map<String, Object>>) order.getOrDefault("line_items", List.of());
                 for (Map<String, Object> item : lineItems) {
-                    String pid = item.getOrDefault("product_id", "").toString();
+                    Object pidObj = item.get("product_id");
+                    String pid = pidObj != null ? pidObj.toString() : "custom";
                     String title = (String) item.getOrDefault("title", "Unknown");
-                    double price = Double.parseDouble(item.getOrDefault("price", "0").toString());
-                    int qty = Integer.parseInt(item.getOrDefault("quantity", "1").toString());
+                    Object priceObj = item.get("price");
+                    Object qtyObj = item.get("quantity");
+                    double price = priceObj != null ? Double.parseDouble(priceObj.toString()) : 0.0;
+                    int qty = qtyObj != null ? Integer.parseInt(qtyObj.toString()) : 1;
                     revenueByProduct.merge(pid + "|" + title, price * qty, Double::sum);
                     qtyByProduct.merge(pid + "|" + title, qty, Integer::sum);
                 }
@@ -166,11 +169,12 @@ public class ChatController {
             - Answer questions about their store using the real data above
             - Give specific, actionable recommendations based on their actual metrics
             - Help optimize products, increase revenue, reduce cart abandonment
-            - Be concise, friendly, and data-driven
-            - Always reference specific numbers from their real store data when relevant
-            - Format responses clearly with bullet points when listing multiple items
-            
-            Never make up data — only use the real store data provided above.
+                - Be concise, friendly, and data-driven
+                            - Always reference specific numbers from their real store data when relevant
+                            - Format responses clearly with bullet points when listing multiple items
+                            - Keep a warm, encouraging tone and use a few relevant emojis (e.g. 🚀 💰 📈 ✅) to stay friendly
+                
+                            Never make up data — only use the real store data provided above.
             """.formatted(ownerName, shop, storeStats);
     }
 }

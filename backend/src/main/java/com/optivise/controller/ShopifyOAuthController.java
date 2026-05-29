@@ -19,6 +19,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.security.MessageDigest;
 import java.security.Principal;
 
 @RestController
@@ -204,6 +205,7 @@ public class ShopifyOAuthController {
             @RequestParam String shop,
             @RequestParam(required = false) String state,
             @RequestParam(required = false) String hmac,
+            @RequestParam Map<String, String> allParams,
             Principal principal) {
 
         System.out.println("=== SHOPIFY EXCHANGE ===");
@@ -211,6 +213,12 @@ public class ShopifyOAuthController {
         System.out.println("State: " + state);
 
         try {
+            // SECURITY: verify the request really came from Shopify before doing anything.
+            if (hmac == null || !verifyHmac(allParams, hmac)) {
+                System.err.println("=== EXCHANGE REJECTED: invalid HMAC ===");
+                return ResponseEntity.status(401).body(Map.of("error", "Invalid HMAC"));
+            }
+
             Map<String, Object> tokenResponse = exchangeCodeForToken(shop, code);
 
             String accessToken = (String) tokenResponse.get("access_token");
@@ -281,7 +289,11 @@ public class ShopifyOAuthController {
             byte[] hash = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
             StringBuilder hex = new StringBuilder();
             for (byte b : hash) hex.append(String.format("%02x", b));
-            return hex.toString().equals(hmac);
+            // Constant-time comparison to avoid timing attacks
+            if (hmac == null) return false;
+            return MessageDigest.isEqual(
+                    hex.toString().getBytes(StandardCharsets.UTF_8),
+                    hmac.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             return false;
         }

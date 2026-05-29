@@ -36,6 +36,7 @@ export default function RegisterPage() {
       if (!res.ok) throw new Error(data.error || 'Registration failed')
       localStorage.setItem('token', data.token)
       localStorage.setItem('user_email', form.email)
+      localStorage.setItem('user', JSON.stringify(data))
       setStep(1)
     } catch (e) {
       setError(e.message)

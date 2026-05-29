@@ -44,7 +44,7 @@ public class ClaudeService {
             var messages = new ArrayList<Map<String, String>>();
             messages.add(Map.of("role", "system", "content", systemPrompt));
             messages.addAll(history);
-            messages.add(Map.of("role", "user", "content", userMessage + " (Remember to use emojis like 🚀💰📈🏆✅ in your response!)"));
+            messages.add(Map.of("role", "user", "content", userMessage));
 
             // OpenAI request body
             var body = Map.of(

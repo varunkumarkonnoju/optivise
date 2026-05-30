@@ -3,7 +3,7 @@ import './Legal.css'
 
 export default function PrivacyPage() {
   const navigate = useNavigate()
-  const date = 'April 24, 2026'
+  const date = 'May 29, 2026'
 
   return (
     <div className="legal-page">
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
 
         <div className="legal-body">
           <Section title="1. Introduction">
-            Welcome to Optivise ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, and share information about you when you use our services at optiviseai.io (the "Service").
+            Welcome to Optivise, operated by Growyn AI LLC ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, and share information about you when you use our services at optiviseai.io (the "Service").
           </Section>
 
           <Section title="2. Information We Collect">
@@ -90,7 +90,7 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="9. Data Retention">
-            We retain your information for as long as your account is active. If you delete your account, we will delete your personal data within 30 days, except where we are required to retain it for legal purposes.
+            We retain your information for as long as your account is active. If you delete your account or uninstall the app, we will delete your personal data within 30 days, except where we are required to retain it for legal purposes. When a store is uninstalled, Shopify sends us a redaction request and we remove the stored access token and associated store data accordingly.
           </Section>
 
           <Section title="10. Your Rights">
@@ -102,7 +102,7 @@ export default function PrivacyPage() {
               <li>Export your data</li>
               <li>Opt out of marketing emails</li>
             </ul>
-            To exercise these rights, contact us at privacy@optiviseai.io
+            To exercise these rights, contact us at hello@optiviseai.io
           </Section>
 
           <Section title="11. Cookies">
@@ -110,7 +110,7 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="12. Children's Privacy">
-            Our Service is not directed to children under 13. We do not knowingly collect personal information from children under 13.
+            Our Service is intended for businesses and is not directed to children under 16. We do not knowingly collect personal information from children under 16.
           </Section>
 
           <Section title="13. Changes to This Policy">
@@ -120,7 +120,7 @@ export default function PrivacyPage() {
           <Section title="14. Contact Us">
             If you have questions about this Privacy Policy, please contact us at:
             <ul>
-              <li>Email: privacy@optiviseai.io</li>
+              <li>Email: hello@optiviseai.io</li>
               <li>Website: optiviseai.io</li>
             </ul>
           </Section>

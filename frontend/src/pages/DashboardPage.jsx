@@ -10,7 +10,7 @@ import {
   TrendingUp, TrendingDown, Sparkles, TestTube2, DollarSign,
   Percent, ChevronRight, Search, Package, BarChart3, Star,
   Settings, Zap, Users, CheckCircle, Circle, Calendar, X,
-  Activity, RefreshCw, ArrowUpRight, AlertCircle
+  Activity, ArrowUpRight, AlertCircle
 } from 'lucide-react'
 import { useSettings } from '../hooks/useSettings'
 import './Dashboard.css'
@@ -218,10 +218,9 @@ function QuickActions({ shopConnected }) {
   )
 }
 
-// ── METRIC CARD with animated counter + week comparison ──────
-function MetricCard({ label, value, rawValue, delta, deltaLabel, icon: Icon, color, suffix = '', prevValue }) {
+// ── METRIC CARD with animated counter + real sparkline ───────
+function MetricCard({ label, value, rawValue, delta, deltaLabel, icon: Icon, color, suffix = '', sparkData }) {
   const up = delta >= 0
-  const weekDiff = rawValue && prevValue ? ((rawValue - prevValue) / Math.max(prevValue, 1) * 100).toFixed(1) : null
 
   return (
     <div className="metric-card card">
@@ -241,28 +240,23 @@ function MetricCard({ label, value, rawValue, delta, deltaLabel, icon: Icon, col
           {up ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
           {' '}{up ? '+' : ''}{delta}% {deltaLabel}
         </div>
-        {weekDiff !== null && (
-          <span style={{ fontSize: 10, color: parseFloat(weekDiff) >= 0 ? '#10B981' : '#EF4444', fontWeight: 600 }}>
-            {parseFloat(weekDiff) >= 0 ? '▲' : '▼'} vs last week
-          </span>
-        )}
       </div>
-      <div className="metric-sparkline">
-        <ResponsiveContainer width="100%" height={40}>
-          <AreaChart data={Array.from({length: 7}, (_, i) => ({
-            v: typeof rawValue === 'number' ? rawValue * (0.6 + Math.random() * 0.8) : Math.random() * 100
-          }))}>
-            <defs>
-              <linearGradient id={`g-${label}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={color} stopOpacity={0.3}/>
-                <stop offset="95%" stopColor={color} stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <Area type="monotone" dataKey="v" stroke={color} strokeWidth={1.5}
-              fill={`url(#g-${label})`} dot={false} />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
+      {sparkData && sparkData.length > 1 && (
+        <div className="metric-sparkline">
+          <ResponsiveContainer width="100%" height={40}>
+            <AreaChart data={sparkData}>
+              <defs>
+                <linearGradient id={`g-${label}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={color} stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor={color} stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <Area type="monotone" dataKey="v" stroke={color} strokeWidth={1.5}
+                fill={`url(#g-${label})`} dot={false} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   )
 }
@@ -308,9 +302,6 @@ function GrowthScore({ score, label }) {
         </div>
       </div>
       <div className="growth-label" style={{ color }}>{label}</div>
-      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, textAlign: 'center' }}>
-        Better than <strong style={{ color: 'var(--text-secondary)' }}>78% of similar stores</strong>
-      </div>
       <div style={{ marginTop: 16, width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {subMetrics.map((m, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
@@ -397,19 +388,16 @@ export default function DashboardPage() {
   const { formatCurrency } = useSettings()
   const [data, setData]       = useState(null)
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const [dateRange, setDateRange]   = useState(30)
   const [cmdOpen, setCmdOpen]       = useState(false)
   const { user } = useAuth()
 
-  const load = async (showRefresh = false) => {
-    if (showRefresh) setRefreshing(true)
+  const load = async () => {
     try {
       const r = await dashboardApi.get()
       setData(r.data)
     } finally {
       setLoading(false)
-      setRefreshing(false)
     }
   }
 
@@ -489,6 +477,7 @@ export default function DashboardPage() {
           label="Total Revenue" rawValue={data.totalRevenue}
           delta={data.revenueDelta} deltaLabel="vs last period"
           icon={DollarSign} color="#6366F1"
+          sparkData={(data.revenueChart || []).map(p => ({ v: p.revenue }))}
         />
         <MetricCard
           label="Avg Order Value" rawValue={data.avgOrderValue}
@@ -510,19 +499,6 @@ export default function DashboardPage() {
           </div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
             {data.aiSuggestionsNew} new recommendations
-          </div>
-          <div className="metric-sparkline">
-            <ResponsiveContainer width="100%" height={40}>
-              <AreaChart data={Array.from({length: 7}, () => ({ v: Math.random() * 80 + 40 }))}>
-                <defs>
-                  <linearGradient id="gAmber" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#F59E0B" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <Area type="monotone" dataKey="v" stroke="#F59E0B" strokeWidth={1.5} fill="url(#gAmber)" dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
           </div>
         </div>
       </div>

@@ -322,14 +322,34 @@ function GrowthScore({ score, label }) {
 }
 
 // ── CUSTOMER SEGMENTS ─────────────────────────────────────────
-const SEGMENTS = [
-  { name: 'VIP',              value: 24, color: '#6366F1' },
-  { name: 'Repeat Customers', value: 35, color: '#06B6D4' },
-  { name: 'New Customers',    value: 25, color: '#10B981' },
-  { name: 'At Risk',          value: 16, color: '#F59E0B' },
-]
+const SEGMENT_COLORS = {
+  'VIP':              '#6366F1',
+  'Repeat Customers': '#06B6D4',
+  'New Customers':    '#10B981',
+  'At Risk':          '#F59E0B',
+}
 
-function CustomerSegments({ totalCustomers = 0 }) {
+function CustomerSegments({ segments = [], totalCustomers = 0 }) {
+  // Only show segments that have at least one customer
+  const data = segments
+    .filter(s => s.value > 0)
+    .map(s => ({ name: s.name, value: s.value, count: s.count, color: SEGMENT_COLORS[s.name] || '#6366F1' }))
+
+  // No real data yet → show an honest empty state instead of a fake donut
+  if (totalCustomers === 0 || data.length === 0) {
+    return (
+      <div className="card" style={{ padding: '20px 24px' }}>
+        <div className="card-header-row" style={{ marginBottom: 4 }}>
+          <span className="section-title" style={{ marginBottom: 0 }}>Customer Segments</span>
+          <a href="/customers" style={{ fontSize: 12, color: 'var(--purple-light)' }}>View all</a>
+        </div>
+        <div style={{ padding: '24px 8px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+          No customer data yet. Segments will appear once your store has orders with customer info.
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="card" style={{ padding: '20px 24px' }}>
       <div className="card-header-row" style={{ marginBottom: 4 }}>
@@ -337,25 +357,26 @@ function CustomerSegments({ totalCustomers = 0 }) {
         <a href="/customers" style={{ fontSize: 12, color: 'var(--purple-light)' }}>View all</a>
       </div>
       <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-        {totalCustomers > 0 ? `${totalCustomers} total customers` : 'Based on purchase behavior'}
+        {`${totalCustomers} customer${totalCustomers === 1 ? '' : 's'} · based on order history`}
       </p>
       <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
         <div style={{ flexShrink: 0 }}>
           <ResponsiveContainer width={120} height={120}>
             <PieChart>
-              <Pie data={SEGMENTS} cx={55} cy={55} innerRadius={32} outerRadius={55} dataKey="value" paddingAngle={3}>
-                {SEGMENTS.map((s, i) => <Cell key={i} fill={s.color} />)}
+              <Pie data={data} cx={55} cy={55} innerRadius={32} outerRadius={55} dataKey="value" paddingAngle={3}>
+                {data.map((s, i) => <Cell key={i} fill={s.color} />)}
               </Pie>
-              <Tooltip formatter={(v, n) => [`${v}%`, n]}
+              <Tooltip formatter={(v, n, props) => [`${v}% (${props.payload.count})`, n]}
                 contentStyle={{ background: '#0D1625', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 11 }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {SEGMENTS.map((s, i) => (
+          {data.map((s, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
               <span style={{ fontSize: 12, color: 'var(--text-secondary)', flex: 1 }}>{s.name}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.count}</span>
               <span style={{ fontSize: 12, fontWeight: 700, color: s.color }}>{s.value}%</span>
             </div>
           ))}
@@ -596,7 +617,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Customer Segments ── */}
-      <CustomerSegments totalCustomers={data.totalCustomers} />
+      <CustomerSegments segments={data.customerSegments} totalCustomers={data.totalCustomers} />
     </div>
   )
 }

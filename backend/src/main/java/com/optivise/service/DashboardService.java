@@ -77,6 +77,58 @@ public class DashboardService {
             } catch (Exception ignored) {}
         }
 
+        // ── Customer segments (real, from orders) ─────────
+        // Group orders by customer email; classify each customer.
+        Map<String, Double>      spendByCustomer  = new HashMap<>();
+        Map<String, Integer>     ordersByCustomer = new HashMap<>();
+        Map<String, LocalDate>   lastOrderByCust  = new HashMap<>();
+        for (Map<String, Object> order : orders) {
+            try {
+                String email = (String) order.getOrDefault("email", "");
+                if (email == null || email.isBlank()) continue;
+                String status = (String) order.getOrDefault("financial_status", "");
+                if ("refunded".equals(status) || "voided".equals(status)) continue;
+
+                double tot = Double.parseDouble(order.getOrDefault("total_price", "0").toString());
+                spendByCustomer.merge(email, tot, Double::sum);
+                ordersByCustomer.merge(email, 1, Integer::sum);
+
+                String createdAt = (String) order.getOrDefault("created_at", "");
+                if (createdAt.length() >= 10) {
+                    LocalDate d = LocalDate.parse(createdAt.substring(0, 10));
+                    lastOrderByCust.merge(email, d, (a, b) -> b.isAfter(a) ? b : a);
+                }
+            } catch (Exception ignored) {}
+        }
+
+        int totalCustomers = spendByCustomer.size();
+        List<SegmentDTO> customerSegments = new ArrayList<>();
+        if (totalCustomers > 0) {
+            // VIP threshold = top 20% spend, or anyone over ~3x average spend
+            double avgSpend = spendByCustomer.values().stream().mapToDouble(Double::doubleValue).average().orElse(0);
+            int vip = 0, repeat = 0, neu = 0, atRisk = 0;
+            LocalDate cutoff = LocalDate.now().minusDays(60);
+
+            for (String email : spendByCustomer.keySet()) {
+                int    cOrders = ordersByCustomer.getOrDefault(email, 0);
+                double cSpend  = spendByCustomer.getOrDefault(email, 0.0);
+                LocalDate last = lastOrderByCust.get(email);
+                boolean stale  = last != null && last.isBefore(cutoff);
+
+                if (cSpend >= avgSpend * 2 && avgSpend > 0) vip++;
+                else if (stale)            atRisk++;
+                else if (cOrders >= 2)     repeat++;
+                else                       neu++;
+            }
+
+            int t = totalCustomers;
+            customerSegments.add(new SegmentDTO("VIP",              pct(vip, t),    vip));
+            customerSegments.add(new SegmentDTO("Repeat Customers", pct(repeat, t), repeat));
+            customerSegments.add(new SegmentDTO("New Customers",    pct(neu, t),    neu));
+            customerSegments.add(new SegmentDTO("At Risk",          pct(atRisk, t), atRisk));
+        }
+
+
         // ── Conversion rate ───────────────────────────────
         // A real conversion rate needs sessions/visitors, which Shopify's API does not
         // reliably expose. Rather than fabricate it, we report 0 here and surface a real
@@ -208,10 +260,16 @@ public class DashboardService {
         summary.setRevenueChart(chartDisplay);
         summary.setTopProducts(topProducts);
         summary.setRecommendedActions(topSuggestions);
+        summary.setCustomerSegments(customerSegments);
+        summary.setTotalCustomers(totalCustomers);
         return summary;
     }
 
+    private static int pct(int part, int total) {
+        return total > 0 ? (int) Math.round((double) part / total * 100) : 0;
+    }
     private int calculateGrowthScore(double revenue, int orders) {
+
         int score = 42; // base
         if (revenue > 100000) score += 30;
         else if (revenue > 10000) score += 20;

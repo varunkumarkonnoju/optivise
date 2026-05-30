@@ -2,12 +2,15 @@ package com.optivise.dto;
 
 import java.util.List;
 
+
 public class DashboardSummary {
     private Double totalRevenue;
     private Double revenueDelta;
     private Double conversionRate;
     private Double conversionDelta;
     private Double avgOrderValue;
+    private List<SegmentDTO> customerSegments;
+    private Integer totalCustomers;
     private Integer activeAbTests;
     private Integer abTestsDelta;
     private Integer aiSuggestions;
@@ -33,8 +36,15 @@ public class DashboardSummary {
 
     public Double getConversionDelta() { return conversionDelta; }
     public void setConversionDelta(Double conversionDelta) { this.conversionDelta = conversionDelta; }
+
     public Double getAvgOrderValue() { return avgOrderValue; }
     public void setAvgOrderValue(Double avgOrderValue) { this.avgOrderValue = avgOrderValue; }
+
+    public List<SegmentDTO> getCustomerSegments() { return customerSegments; }
+    public void setCustomerSegments(List<SegmentDTO> customerSegments) { this.customerSegments = customerSegments; }
+
+    public Integer getTotalCustomers() { return totalCustomers; }
+    public void setTotalCustomers(Integer totalCustomers) { this.totalCustomers = totalCustomers; }
 
     public Integer getActiveAbTests() { return activeAbTests; }
     public void setActiveAbTests(Integer activeAbTests) { this.activeAbTests = activeAbTests; }

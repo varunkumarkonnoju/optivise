@@ -2,56 +2,19 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { formatLocalTime } from '../../utils/formatTime'
-import { Bell, Plus, Search, ChevronDown, User, Settings, LogOut, HelpCircle } from 'lucide-react'
+import { Bell, ChevronDown, User, Settings, LogOut, HelpCircle } from 'lucide-react'
 
 export default function Topbar({ onMenuClick }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const [showNew, setShowNew] = useState(false)
   const [showNotif, setShowNotif] = useState(false)
   const [showUser, setShowUser] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [dismissed, setDismissed] = useState(new Set())
-  const [allRead, setAllRead] = useState(false)
   const [loadingNotif, setLoadingNotif] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [showSearch, setShowSearch] = useState(false)
 
-  const allPages = [
-    { label: 'Dashboard', desc: 'Store overview and metrics', path: '/dashboard', icon: '📊' },
-    { label: 'AI Insights', desc: 'AI-powered store insights', path: '/insights', icon: '🤖' },
-    { label: 'Product Optimizer', desc: 'Optimize product descriptions', path: '/products', icon: '🛍️' },
-    { label: 'A/B Testing', desc: 'Run split tests', path: '/abtesting', icon: '🧪' },
-    { label: 'Recommendations', desc: 'AI growth recommendations', path: '/recommendations', icon: '🎯' },
-    { label: 'Analytics', desc: 'Revenue and order analytics', path: '/analytics', icon: '📈' },
-    { label: 'Automations', desc: 'Automate your store', path: '/automations', icon: '⚡' },
-    { label: 'AI Assistant', desc: 'Chat with your AI assistant', path: '/assistant', icon: '💬' },
-    { label: 'Pricing & Billing', desc: 'Manage your subscription', path: '/pricing', icon: '💳' },
-    { label: 'Profile', desc: 'Account settings', path: '/profile', icon: '👤' },
-    { label: 'Settings', desc: 'App preferences', path: '/settings', icon: '⚙️' },
-  ]
-
-  const searchResults = searchQuery.length > 0
-    ? allPages.filter(p =>
-        p.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.desc.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 5)
-    : []
-  const newRef = useRef(null)
   const notifRef = useRef(null)
   const userRef = useRef(null)
-
-  // ⌘K / Ctrl+K keyboard shortcut
-  useEffect(() => {
-    const handler = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        document.querySelector('input[placeholder="Search anything..."]')?.focus()
-      }
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [])
 
   const fetchNotifications = async () => {
     setLoadingNotif(true)
@@ -62,7 +25,6 @@ export default function Topbar({ onMenuClick }) {
       if (res.ok) {
         const data = await res.json()
         setNotifications(data)
-        setAllRead(false)
       }
     } catch (e) {
       console.error('Failed to fetch notifications', e)
@@ -89,7 +51,6 @@ export default function Topbar({ onMenuClick }) {
 
   const markAllRead = async () => {
     setDismissed(new Set(notifications.map(n => n.id)))
-    setAllRead(true)
     try {
       await fetch('/api/notifications/mark-all-read', {
         method: 'POST',
@@ -101,7 +62,6 @@ export default function Topbar({ onMenuClick }) {
   // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e) => {
-      if (newRef.current && !newRef.current.contains(e.target)) setShowNew(false)
       if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotif(false)
       if (userRef.current && !userRef.current.contains(e.target)) setShowUser(false)
     }
@@ -109,7 +69,6 @@ export default function Topbar({ onMenuClick }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Only dismiss notifications that are in current fetch - reset old dismissed IDs
   const currentIds = new Set(notifications.map(n => n.id))
   const activeDismissed = new Set([...dismissed].filter(id => currentIds.has(id)))
   const visibleNotifs = notifications.filter(n => !activeDismissed.has(n.id))
@@ -128,91 +87,10 @@ export default function Topbar({ onMenuClick }) {
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
-        {/* Hide search on mobile */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }} className="topbar-search">
-          <Search size={14} style={{ position: 'absolute', left: 10, color: 'var(--text-muted)', zIndex: 1 }}/>
-          <input
-            placeholder="Search anything..."
-            value={searchQuery}
-            onChange={e => { setSearchQuery(e.target.value); setShowSearch(e.target.value.length > 0) }}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && searchResults.length > 0) {
-                navigate(searchResults[0].path)
-                setSearchQuery(''); setShowSearch(false)
-              }
-              if (e.key === 'Escape') { setSearchQuery(''); setShowSearch(false) }
-            }}
-            style={{
-              background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 8,
-              padding: '7px 12px 7px 30px', fontSize: 13, color: 'var(--text-primary)',
-              width: 220, outline: 'none', fontFamily: 'inherit'
-            }}
-          />
-          {!searchQuery && <kbd style={{ position: 'absolute', right: 8, fontSize: 10, color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '2px 5px', borderRadius: 4, border: '1px solid var(--border)' }}>⌘K</kbd>}
-          {showSearch && searchResults.length > 0 && (
-            <div style={{
-              position: 'fixed', top: 68, left: 'auto', width: 280,
-              background: 'var(--bg-card)', border: '1px solid var(--border)',
-              borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 9999, overflow: 'hidden'
-            }}>
-              {searchResults.map((r, i) => (
-                <button key={i} onClick={() => { navigate(r.path); setSearchQuery(''); setShowSearch(false) }}
-                  style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontFamily: 'inherit', borderBottom: '1px solid var(--border)', textAlign: 'left' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                >
-                  <span>{r.icon}</span>
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{r.label}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.desc}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Right */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        {/* New button */}
-        <div style={{ position: 'relative' }} ref={newRef}>
-          <button onClick={() => { setShowNew(!showNew); setShowNotif(false); setShowUser(false) }} style={{
-            display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, #6366F1, #06B6D4)',
-            color: 'white', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 13,
-            fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit'
-          }}>
-            <Plus size={14}/> New
-          </button>
-          {showNew && (
-            <div style={{
-              position: 'fixed', right: 12, top: 68, width: 220,
-              background: 'var(--bg-card)', border: '1px solid var(--border)',
-              borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 9999, overflow: 'hidden'
-            }}>
-              <div style={{ padding: '8px 12px 6px', fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>Quick Actions</div>
-              {[
-                { icon: '✨', label: 'Generate AI Description', path: '/products' },
-                { icon: '🧪', label: 'Create A/B Test', path: '/abtesting' },
-                { icon: '💬', label: 'Ask AI Assistant', path: '/assistant' },
-                { icon: '📊', label: 'View Analytics', path: '/analytics' },
-                { icon: '🎯', label: 'Get Recommendations', path: '/recommendations' },
-              ].map((item, i) => (
-                <button key={i} onClick={() => { navigate(item.path); setShowNew(false) }} style={{
-                  width: '100%', padding: '9px 14px', background: 'none', border: 'none',
-                  cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center',
-                  gap: 10, fontSize: 13, fontFamily: 'inherit', borderTop: i === 0 ? '1px solid var(--border)' : 'none'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                >
-                  <span>{item.icon}</span>{item.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Notifications */}
         <div ref={notifRef} style={{ position: 'relative' }}>
           <button onClick={() => { setShowNotif(!showNotif); setShowUser(false) }} style={{
@@ -236,22 +114,15 @@ export default function Topbar({ onMenuClick }) {
               background: 'var(--bg-card)', border: '1px solid var(--border)',
               borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 9999, overflow: 'hidden'
             }}>
-              {/* Header */}
               <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
                   Notifications {newCount > 0 && <span style={{ background: '#EF4444', color: 'white', borderRadius: 10, padding: '1px 7px', fontSize: 11, marginLeft: 6 }}>{newCount}</span>}
                 </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <button onClick={fetchNotifications} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--purple-light)', fontSize: 11, fontFamily: 'inherit' }}>
-                    {loadingNotif ? '⟳ Loading...' : '↻ Refresh'}
-                  </button>
-                  <span style={{ fontSize: 11, color: 'var(--purple-light)', cursor: 'pointer', fontWeight: 600 }} onClick={markAllRead}>
-                    Mark all read
-                  </span>
-                </div>
+                <span style={{ fontSize: 11, color: 'var(--purple-light)', cursor: 'pointer', fontWeight: 600 }} onClick={markAllRead}>
+                  Mark all read
+                </span>
               </div>
 
-              {/* Notification list */}
               <div style={{ maxHeight: 380, overflowY: 'auto' }}>
                 {loadingNotif && visibleNotifs.length === 0 ? (
                   <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Loading...</div>
@@ -260,9 +131,6 @@ export default function Topbar({ onMenuClick }) {
                     <div style={{ fontSize: 28, marginBottom: 8 }}>✅</div>
                     <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>All caught up!</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>No new notifications</div>
-                    <button onClick={fetchNotifications} style={{ marginTop: 12, background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', color: 'var(--purple-light)', fontSize: 12, fontFamily: 'inherit' }}>
-                      Refresh
-                    </button>
                   </div>
                 ) : visibleNotifs.map((n, i) => (
                   <div key={n.id || i} style={{
@@ -302,16 +170,6 @@ export default function Topbar({ onMenuClick }) {
                     </div>
                   </div>
                 ))}
-              </div>
-
-              {/* Footer */}
-              <div style={{ padding: '10px 16px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
-                <span
-                  onClick={() => { navigate('/analytics'); setShowNotif(false) }}
-                  style={{ fontSize: 12, color: 'var(--purple-light)', cursor: 'pointer', fontWeight: 600 }}
-                >
-                  View all activity →
-                </span>
               </div>
             </div>
           )}

@@ -72,25 +72,57 @@ function CommandPalette({ onClose }) {
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
   const [selected, setSelected] = useState(0)
+  const [storeResults, setStoreResults] = useState([])
+  const [searching, setSearching] = useState(false)
 
-  const filtered = SEARCH_ITEMS.filter(item =>
-    item.label.toLowerCase().includes(query.toLowerCase())
-  )
+  // Page/feature matches (local)
+  const pageItems = SEARCH_ITEMS
+    .filter(item => item.label.toLowerCase().includes(query.toLowerCase()))
+    .map(item => ({ kind: 'page', label: item.label, sublabel: 'Page', icon: item.icon, path: item.path }))
+
+  // Store matches (products, customers, orders) from the backend
+  useEffect(() => {
+    if (query.trim().length < 2) { setStoreResults([]); return }
+    let cancelled = false
+    setSearching(true)
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/search?q=' + encodeURIComponent(query.trim()), {
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (!cancelled) setStoreResults(Array.isArray(data) ? data : [])
+        }
+      } catch { /* ignore */ }
+      finally { if (!cancelled) setSearching(false) }
+    }, 250)
+    return () => { cancelled = true; clearTimeout(t) }
+  }, [query])
+
+  const storeItems = storeResults.map(r => ({
+    kind: r.type, label: r.label, sublabel: r.sublabel || (r.type ? r.type[0].toUpperCase() + r.type.slice(1) : ''), path: r.path
+  }))
+
+  // Combined list: store results first, then pages
+  const results = [...storeItems, ...pageItems]
 
   const go = (path) => { navigate(path); onClose() }
 
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'Escape') onClose()
-      if (e.key === 'ArrowDown') setSelected(s => Math.min(s + 1, filtered.length - 1))
+      if (e.key === 'ArrowDown') setSelected(s => Math.min(s + 1, results.length - 1))
       if (e.key === 'ArrowUp') setSelected(s => Math.max(s - 1, 0))
-      if (e.key === 'Enter' && filtered[selected]) go(filtered[selected].path)
+      if (e.key === 'Enter' && results[selected]) go(results[selected].path)
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [onClose, filtered, selected])
+  }, [onClose, results, selected])
 
   useEffect(() => setSelected(0), [query])
+
+  const emoji = (kind) => kind === 'product' ? '🛍️' : kind === 'customer' ? '👤' : kind === 'order' ? '🧾' : null
 
   return (
     <div style={{
@@ -108,17 +140,20 @@ function CommandPalette({ onClose }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <Search size={16} color="var(--text-muted)" />
           <input autoFocus value={query} onChange={e => setQuery(e.target.value)}
-            placeholder="Search pages, features..."
+            placeholder="Search products, customers, orders, pages..."
             style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: 14, color: 'var(--text-primary)' }} />
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
             <X size={14} color="var(--text-muted)" />
           </button>
         </div>
         <div style={{ padding: '8px 0', overflowY: 'auto', maxHeight: 350 }}>
-          {filtered.length === 0 ? (
-            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>No results found</div>
-          ) : filtered.map((item, i) => {
+          {results.length === 0 ? (
+            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+              {searching ? 'Searching your store...' : query.trim().length >= 2 ? 'No results found' : 'Type to search your store'}
+            </div>
+          ) : results.map((item, i) => {
             const Icon = item.icon
+            const em = emoji(item.kind)
             return (
               <button key={i} onClick={() => go(item.path)} style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: 12,
@@ -128,11 +163,14 @@ function CommandPalette({ onClose }) {
               }}
                 onMouseEnter={() => setSelected(i)}
               >
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon size={14} color="var(--purple-light)" />
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>
+                  {Icon ? <Icon size={14} color="var(--purple-light)" /> : <span>{em}</span>}
                 </div>
-                {item.label}
-                <ChevronRight size={12} color="var(--text-muted)" style={{ marginLeft: 'auto' }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</div>
+                  {item.sublabel && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.sublabel}</div>}
+                </div>
+                <ChevronRight size={12} color="var(--text-muted)" />
               </button>
             )
           })}
@@ -414,14 +452,7 @@ export default function DashboardPage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Refresh */}
-          <button onClick={() => load(true)} disabled={refreshing}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 12px', fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer' }}>
-            <RefreshCw size={12} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
-            Refresh
-          </button>
-
-          {/* ⌘K */}
+          {/* Search store */}
           <button onClick={() => setCmdOpen(true)}
             style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 14px', fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             <Search size={13} />

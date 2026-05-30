@@ -5,11 +5,10 @@ import { useAuth } from '../hooks/useAuth'
 export default function OAuthSuccessPage() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { setUser } = useAuth()
 
   useEffect(() => {
     const token = params.get('token')
-    const shop = params.get('shop')
     if (token) {
       localStorage.setItem('token', token)
       // Fetch user info and redirect to dashboard
@@ -18,7 +17,8 @@ export default function OAuthSuccessPage() {
       })
       .then(r => r.json())
       .then(user => {
-        login({ ...user, token })
+        localStorage.setItem('user', JSON.stringify(user))
+        if (setUser) setUser(user)
         navigate('/dashboard')
       })
       .catch(() => navigate('/login'))

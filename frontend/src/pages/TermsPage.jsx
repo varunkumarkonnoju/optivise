@@ -3,7 +3,7 @@ import './Legal.css'
 
 export default function TermsPage() {
   const navigate = useNavigate()
-  const date = 'April 24, 2026'
+  const date = 'May 31, 2026'
 
   return (
     <div className="legal-page">
@@ -29,7 +29,7 @@ export default function TermsPage() {
 
         <div className="legal-body">
           <Section title="1. Acceptance of Terms">
-            By accessing or using Optivise ("Service") at optiviseai.io, you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service. These terms apply to all users, including free and paid accounts.
+            By accessing or using Optivise ("Service"), operated by Growyn AI LLC, at optiviseai.io, you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service. These terms apply to all users, including free and paid accounts.
           </Section>
 
           <Section title="2. Description of Service">
@@ -38,7 +38,7 @@ export default function TermsPage() {
               <li>AI-powered product description generation</li>
               <li>Store analytics and performance dashboards</li>
               <li>A/B testing tools</li>
-              <li>AI growth recommendations</li>
+              <li>AI growth recommendations and revenue opportunity insights</li>
               <li>Bulk product optimization tools</li>
             </ul>
           </Section>
@@ -55,13 +55,13 @@ export default function TermsPage() {
           </Section>
 
           <Section title="4. Shopify Integration">
-            To use our Service, you will provide your Shopify store API credentials. By doing so, you:
+            To use our Service, you will connect your Shopify store through Shopify's authorization process. By doing so, you:
             <ul>
               <li>Confirm you are the owner or authorized administrator of the Shopify store</li>
               <li>Grant us permission to read and write product data on your behalf</li>
               <li>Agree that we may use your store data to provide the Service</li>
             </ul>
-            You can revoke access at any time by removing the API credentials from your account settings.
+            You can revoke access at any time by uninstalling the app from your Shopify admin or disconnecting your store in your account settings.
           </Section>
 
           <Section title="5. AI Generated Content">
@@ -70,6 +70,7 @@ export default function TermsPage() {
               <li>AI-generated content may not always be accurate or appropriate</li>
               <li>You are responsible for reviewing all AI-generated content before publishing</li>
               <li>We do not guarantee the quality, accuracy, or fitness of AI-generated content</li>
+              <li>Insights and recommendations are informational only and do not guarantee any business outcome</li>
               <li>You retain full ownership of content published to your Shopify store</li>
             </ul>
           </Section>
@@ -77,7 +78,8 @@ export default function TermsPage() {
           <Section title="6. Subscription and Billing">
             <p><strong>Free Plan:</strong> Available at no cost with limited features as described on our pricing page.</p>
             <p><strong>Paid Plans:</strong> Starter ($29/mo) and Growth ($79/mo) plans are billed monthly.</p>
-            <p><strong>Free Trial:</strong> Paid plans include a 14-day free trial. You will not be charged until the trial ends.</p>
+            <p><strong>Free Trial:</strong> Paid plans include a free trial as described on our pricing page. You will not be charged until the trial ends.</p>
+            <p><strong>Billing:</strong> Subscriptions may be billed through Shopify's billing system or another payment processor as indicated at checkout.</p>
             <p><strong>Cancellation:</strong> You may cancel your subscription at any time. Cancellation takes effect at the end of the current billing period. No refunds for partial months.</p>
             <p><strong>Price Changes:</strong> We reserve the right to change pricing with 30 days notice.</p>
           </Section>
@@ -95,7 +97,7 @@ export default function TermsPage() {
           </Section>
 
           <Section title="8. Intellectual Property">
-            The Service and its original content, features, and functionality are owned by Optivise and are protected by international copyright, trademark, and other intellectual property laws. You retain ownership of your store data and any content you create using the Service.
+            The Service and its original content, features, and functionality are owned by Growyn AI LLC and are protected by international copyright, trademark, and other intellectual property laws. You retain ownership of your store data and any content you create using the Service.
           </Section>
 
           <Section title="9. Disclaimer of Warranties">
@@ -103,11 +105,11 @@ export default function TermsPage() {
           </Section>
 
           <Section title="10. Limitation of Liability">
-            TO THE MAXIMUM EXTENT PERMITTED BY LAW, OPTIVISE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR BUSINESS OPPORTUNITIES, ARISING FROM YOUR USE OF THE SERVICE. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT YOU PAID US IN THE 12 MONTHS PRECEDING THE CLAIM.
+            TO THE MAXIMUM EXTENT PERMITTED BY LAW, GROWYN AI LLC SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR BUSINESS OPPORTUNITIES, ARISING FROM YOUR USE OF THE SERVICE. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT YOU PAID US IN THE 12 MONTHS PRECEDING THE CLAIM.
           </Section>
 
           <Section title="11. Indemnification">
-            You agree to indemnify and hold harmless Optivise, its officers, directors, employees, and agents from any claims, damages, or expenses arising from your use of the Service, violation of these Terms, or violation of any third-party rights.
+            You agree to indemnify and hold harmless Growyn AI LLC, its officers, directors, employees, and agents from any claims, damages, or expenses arising from your use of the Service, violation of these Terms, or violation of any third-party rights.
           </Section>
 
           <Section title="12. Termination">
@@ -115,7 +117,7 @@ export default function TermsPage() {
           </Section>
 
           <Section title="13. Governing Law">
-            These Terms shall be governed by the laws of the State of Delaware, United States, without regard to its conflict of law provisions.
+            These Terms shall be governed by the laws of the State of Wisconsin, United States, without regard to its conflict of law provisions.
           </Section>
 
           <Section title="14. Changes to Terms">
@@ -125,7 +127,7 @@ export default function TermsPage() {
           <Section title="15. Contact Us">
             If you have questions about these Terms, please contact us at:
             <ul>
-              <li>Email: legal@optiviseai.io</li>
+              <li>Email: hello@optiviseai.io</li>
               <li>Website: optiviseai.io</li>
             </ul>
           </Section>

@@ -9,6 +9,7 @@ import com.optivise.repository.UserRepository;
 import com.optivise.repository.PasswordResetTokenRepository;
 import com.optivise.service.EmailService;
 import com.optivise.service.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,6 +21,7 @@ import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -34,6 +36,49 @@ public class AuthController {
     @Autowired
     private EmailService emailService;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+    // ── Simple in-memory login rate limiter ───────────────
+    // Blocks an IP after too many failed login attempts in a window.
+    private static final int    MAX_ATTEMPTS   = 8;          // allowed failures
+    private static final long   WINDOW_MS      = 15 * 60_000;// 15-minute window
+    private static final long   LOCK_MS        = 15 * 60_000;// 15-minute lock
+    private final ConcurrentHashMap<String, Attempt> attempts = new ConcurrentHashMap<>();
+
+    private static class Attempt {
+        int count;
+        long windowStart;
+        long lockedUntil;
+    }
+
+    private boolean isLocked(String ip) {
+        Attempt a = attempts.get(ip);
+        return a != null && a.lockedUntil > System.currentTimeMillis();
+    }
+
+    private void recordFailure(String ip) {
+        long now = System.currentTimeMillis();
+        attempts.compute(ip, (k, a) -> {
+            if (a == null || now - a.windowStart > WINDOW_MS) {
+                a = new Attempt();
+                a.windowStart = now;
+            }
+            a.count++;
+            if (a.count >= MAX_ATTEMPTS) {
+                a.lockedUntil = now + LOCK_MS;
+            }
+            return a;
+        });
+    }
+
+    private void recordSuccess(String ip) {
+        attempts.remove(ip); // clear on successful login
+    }
+
+    private String clientIp(HttpServletRequest req) {
+        String fwd = req.getHeader("X-Forwarded-For");
+        if (fwd != null && !fwd.isBlank()) return fwd.split(",")[0].trim();
+        return req.getRemoteAddr();
+    }
 
     // ── POST /api/auth/register ───────────────────────────
     @PostMapping("/register")
@@ -75,15 +120,27 @@ public class AuthController {
 
     // ── POST /api/auth/login ──────────────────────────────
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest req, HttpServletRequest httpReq) {
+        String ip = clientIp(httpReq);
+
+        // Rate limit: reject if this IP is temporarily locked.
+        if (isLocked(ip)) {
+            return ResponseEntity.status(429)
+                    .body(Map.of("error", "Too many login attempts. Please try again in a few minutes."));
+        }
+
         var userOpt = userRepo.findByEmail(req.getEmail().toLowerCase().trim());
         if (userOpt.isEmpty()) {
+            recordFailure(ip);
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid email or password"));
         }
         User user = userOpt.get();
         if (!encoder.matches(req.getPassword(), user.getPassword())) {
+            recordFailure(ip);
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid email or password"));
         }
+
+        recordSuccess(ip);
         String token = jwtService.generateToken(user.getEmail());
         AuthResponse resp = new AuthResponse();
         resp.setToken(token);

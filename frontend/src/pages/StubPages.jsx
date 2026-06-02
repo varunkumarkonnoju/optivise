@@ -128,8 +128,8 @@ export function InsightsPage() {
         title: `${newSeg.count} of your ${totalCust} customers have only ordered once`,
         detail: `Winning back an existing customer is far cheaper than finding a new one. A simple win-back email or a returning-customer offer can turn one-time buyers into repeat revenue.`,
         fact: `${newSeg.count} one-time customers`,
-        fix: 'Review AI recommendations for retention ideas.',
-        fixPath: '/recommendations', fixLabel: 'See Recommendations',
+        fix: 'Try bundling complementary products or a free-shipping threshold.',
+        fixPath: '/assistant', fixLabel: 'Ask the AI Assistant',
         products: [],
         beforeAfter: null,
       })

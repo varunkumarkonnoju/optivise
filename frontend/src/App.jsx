@@ -15,7 +15,6 @@ import BillingSuccess from './pages/BillingSuccess'
 import DashboardPage from './pages/DashboardPage'
 import ABTestingPage from './pages/ABTestingPage'
 import AssistantPage from './pages/AssistantPage'
-import RecommendationsPage from './pages/RecommendationsPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import ProductsPage from './pages/ProductsPage'
 import CustomersPage from './pages/CustomersPage'
@@ -53,7 +52,7 @@ function AppRoutes() {
       <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
       <Route path="/customers" element={<ProtectedRoute><CustomersPage /></ProtectedRoute>} />
       <Route path="/abtesting" element={<ProtectedRoute><ABTestingPage /></ProtectedRoute>} />
-      <Route path="/recommendations" element={<ProtectedRoute><RecommendationsPage /></ProtectedRoute>} />
+      <Route path="/recommendations" element={<Navigate to="/insights" replace />} />
       <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
       <Route path="/automations" element={<ProtectedRoute><AutomationsPage /></ProtectedRoute>} />
       <Route path="/pricing" element={<ProtectedRoute><PricingPage /></ProtectedRoute>} />

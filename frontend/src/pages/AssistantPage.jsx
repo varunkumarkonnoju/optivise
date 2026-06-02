@@ -5,10 +5,10 @@ import { Send, Sparkles, Bot } from 'lucide-react'
 import './Assistant.css'
 
 const QUICK = [
-  "Why did my sales drop last week?",
-  "Which products need optimization?",
-  "How can I improve my conversion rate?",
-  "What A/B tests should I run?",
+  "What are my best-selling products?",
+  "Which products need better descriptions?",
+  "How can I increase my average order value?",
+  "How do I get more repeat customers?",
 ]
 
 export default function AssistantPage() {

@@ -14,10 +14,9 @@ const nav = [
   { label: 'Revenue Leaks',      path: '/insights',        icon: TrendingDown    },
   { label: 'Product Optimizer',  path: '/products',        icon: Package         },
   { label: 'A/B Testing',        path: '/abtesting',       icon: TestTube2       },
-  { label: 'Recommendations',    path: '/recommendations', icon: Star            },
   { label: 'Analytics',          path: '/analytics',       icon: BarChart3       },
-{ label: 'Customers',          path: '/customers',        icon: Users           },
-{ label: 'Store Health',       path: '/automations',      icon: Activity        },
+  { label: 'Customers',          path: '/customers',       icon: Users           },
+  { label: 'Store Health',       path: '/automations',     icon: Activity        },
   { label: 'Description History',path: '/history',         icon: RotateCcw       },
   { label: 'Pricing & Billing',  path: '/pricing',         icon: CreditCard      },
 ]

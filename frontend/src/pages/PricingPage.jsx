@@ -73,20 +73,20 @@ export default function PricingPage() {
     {
       id: 'free', name: 'Free', price: 0,
       desc: 'Perfect for getting started',
-      features: ['Up to 10 products','15 AI descriptions/mo','Basic analytics','AI recommendations','Email support'],
+      features: ['10 AI generations/mo','Product descriptions','Revenue opportunities','Store health','1 store'],
       cta: 'Current plan', disabled: true
     },
     {
       id: 'starter', name: 'Starter', price: 29,
       desc: 'For growing stores',
-      features: ['Unlimited products','500 AI credits/mo','Full analytics','A/B testing (3 tests)','AI assistant','Email support'],
-      cta: 'Start 14-day trial', featured: false
+      features: ['100 AI generations/mo','All AI tools','Full analytics','Revenue opportunities','1 store','Email support'],
+      cta: 'Start 7-day trial', featured: false
     },
     {
       id: 'growth', name: 'Growth', price: 79,
       desc: 'For serious store owners',
-      features: ['Everything in Starter','Unlimited AI credits','Bulk description generator','Unlimited A/B tests','Priority AI assistant','Priority support'],
-      cta: 'Start 14-day trial', featured: true
+      features: ['Everything in Starter','Unlimited AI generations','Bulk generation','Priority support','Up to 3 stores'],
+      cta: 'Start 7-day trial', featured: true
     },
   ]
 
@@ -116,7 +116,7 @@ export default function PricingPage() {
 
               {plan.price > 0 && (
                 <div className="pricing-trial-note">
-                  ✓ 14-day free trial — no card charged today
+                  ✓ 7-day free trial — no card charged today
                 </div>
               )}
 
@@ -149,7 +149,7 @@ export default function PricingPage() {
       <div className="pricing-faq">
         <h3 style={{fontSize:16,fontWeight:700,color:'var(--text-primary)',marginBottom:16}}>Common questions</h3>
         {[
-          ['When will I be charged?', 'Not until your 14-day trial ends. Cancel anytime before then and pay nothing.'],
+          ['When will I be charged?', 'Not until your 7-day trial ends. Cancel anytime before then and pay nothing.'],
           ['Can I switch plans?', 'Yes. Upgrade or downgrade anytime from the billing portal.'],
           ['What payment methods are accepted?', 'All major credit and debit cards via Stripe. Secure and encrypted.'],
           ['Is my data safe?', 'Yes. Your Shopify data is never stored on our servers — it\'s fetched live when you use the app.'],

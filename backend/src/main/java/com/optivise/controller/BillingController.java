@@ -47,10 +47,10 @@ public class BillingController {
                 "plans", List.of(
                         Map.of("id", "starter", "name", "Starter", "price", 29,
                                 "priceId", starterPriceId,
-                                "features", List.of("Unlimited products","500 AI credits/mo","Full analytics","A/B testing","AI assistant")),
+                                "features", List.of("100 AI generations/mo","All AI tools","Full analytics","Revenue opportunities","1 store")),
                         Map.of("id", "growth", "name", "Growth", "price", 79,
                                 "priceId", growthPriceId,
-                                "features", List.of("Everything in Starter","Unlimited AI credits","Bulk generator","Unlimited A/B tests","Priority support"))
+                                "features", List.of("Everything in Starter","Unlimited AI generations","Bulk generation","Priority support","Up to 3 stores"))
                 )
         ));
     }
@@ -76,7 +76,7 @@ public class BillingController {
                             .setQuantity(1L)
                             .build())
                     .setSubscriptionData(SessionCreateParams.SubscriptionData.builder()
-                            .setTrialPeriodDays(14L) // 14-day free trial
+                            .setTrialPeriodDays(7L) // 7-day free trial
                             .build())
                     .setSuccessUrl(appUrl + "/billing/success?session_id={CHECKOUT_SESSION_ID}")
                     .setCancelUrl(appUrl + "/pricing")

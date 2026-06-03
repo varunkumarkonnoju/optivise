@@ -19,7 +19,7 @@ export default function BillingSuccess() {
           You're all set!
         </h1>
         <p style={{ color: '#64748B', fontSize: 16, marginBottom: 8 }}>
-          Your 14-day free trial has started.
+          Your 7-day free trial has started.
         </p>
         <p style={{ color: '#334155', fontSize: 13, marginBottom: 32 }}>
           No charge until your trial ends. Cancel anytime.

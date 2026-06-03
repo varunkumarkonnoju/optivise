@@ -37,10 +37,10 @@ public class User {
 
     // ── Plan limits helper ───────────────────────────────
     public int getMonthlyLimit() {
-        if (plan == null || plan.equalsIgnoreCase("free")) return 15;
-        if (plan.equalsIgnoreCase("starter"))              return 500;
+        if (plan == null || plan.equalsIgnoreCase("free")) return 10;
+        if (plan.equalsIgnoreCase("starter"))              return 100;
         if (plan.equalsIgnoreCase("growth"))               return Integer.MAX_VALUE;
-        return 15; // default to free
+        return 10; // default to free
     }
 
     public boolean hasReachedLimit() {

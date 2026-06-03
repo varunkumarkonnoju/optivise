@@ -126,7 +126,7 @@ export default function AnalyticsPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
               <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#4A5568' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: '#4A5568' }} axisLine={false} tickLine={false} width={30} />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={false} />
               <Bar name="Revenue" dataKey="revenue" fill="#10B981" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

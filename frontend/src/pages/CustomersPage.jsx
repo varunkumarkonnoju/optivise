@@ -276,10 +276,9 @@ export default function CustomersPage() {
       .catch(() => setError('Failed to load customers. Make sure your Shopify store is connected.'))
       .finally(() => setLoading(false))
 
-    api.getAbandonedCarts()
-      .then(data => setCarts(Array.isArray(data) ? data : data.checkouts || []))
-      .catch(() => setCarts([]))
-      .finally(() => setCartsLoading(false))
+    // Abandoned carts fetch disabled — endpoint requires Shopify checkout scope not currently granted.
+    // Re-enable when scopes + compliant reminder emails are in place.
+    setCartsLoading(false)
   }, [])
 
   const handleSendReminder = async (email, productTitle, cartUrl) => {
@@ -358,11 +357,10 @@ export default function CustomersPage() {
         })}
       </div>
 
-      {/* Abandoned carts */}
-      {!cartsLoading && carts.length > 0 && (
+      {/* Abandoned carts — hidden until Shopify checkout scope + email consent are in place */}
+      {/* {!cartsLoading && carts.length > 0 && (
         <AbandonedCartsPanel carts={carts} onSendReminder={handleSendReminder} />
-      )}
-
+      )} */}
       {/* Search + filter + sort */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 200, display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px' }}>

@@ -37,11 +37,25 @@ function SegmentBadge({ segment }) {
 }
 
 function getSegment(customer) {
-  const spent = customer.total_spent || 0
+  const spent = parseFloat(customer.total_spent || 0)
   const orders = customer.orders_count || 0
-  if (spent > 500 || orders > 5) return 'vip'
+
+  // Days since last activity (for at-risk detection)
+  const lastActive = customer.last_order_date || customer.updated_at
+  const daysSince = lastActive
+    ? Math.floor((Date.now() - new Date(lastActive).getTime()) / 86400000)
+    : 9999
+
+  // At Risk: ordered before but has gone quiet (90+ days)
+  if (orders >= 1 && daysSince > 90) return 'at_risk'
+
+  // VIP: genuinely loyal AND valuable — repeat buyer with high spend
+  if (orders >= 3 && spent >= 500) return 'vip'
+
+  // Repeat: ordered more than once
   if (orders > 1) return 'repeat'
-  if (orders === 0) return 'at_risk'
+
+  // New: a single order
   return 'new'
 }
 

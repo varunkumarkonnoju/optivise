@@ -69,7 +69,6 @@ public class AnalyticsController {
         Map<String, Integer> ordersByDay = new LinkedHashMap<>();
         Set<String> repeatCustomers = new HashSet<>();
         Set<String> allCustomers = new HashSet<>();
-        Map<String, Integer> ordersByHour = new LinkedHashMap<>();
 
         for (Map<String, Object> order : orders) {
             try {
@@ -91,7 +90,9 @@ public class AnalyticsController {
                     if (!custId.isEmpty()) {
                         if (allCustomers.contains(custId)) repeatCustomers.add(custId);
                         allCustomers.add(custId);
-                        if (Integer.parseInt(ordersCount) > 1) repeatCustomers.add(custId);
+                        try {
+                            if (Integer.parseInt(ordersCount) > 1) repeatCustomers.add(custId);
+                        } catch (NumberFormatException ignored) {}
                     }
                 }
 
@@ -123,14 +124,14 @@ public class AnalyticsController {
             } catch (Exception ignored) {}
         }
 
-        // Build daily MetricPoints
+        // Build daily MetricPoints — revenue only (no fabricated sessions/conversion)
         List<MetricPoint> daily = byDay.entrySet().stream().map(e -> {
             double[] d = e.getValue();
             MetricPoint mp = new MetricPoint();
             mp.setLabel(e.getKey());
             mp.setRevenue(Math.round(d[0] * 100.0) / 100.0);
-            mp.setConversion(d[1] > 0 ? Math.round((3.0 + (Math.random() * 2 - 1)) * 100.0) / 100.0 : 0);
-            mp.setSessions(d[1] > 0 ? (long)(d[1] / 0.033) : 0);
+            mp.setConversion(0.0);
+            mp.setSessions(0L);
             return mp;
         }).collect(Collectors.toList());
 
@@ -155,7 +156,7 @@ public class AnalyticsController {
         double retentionRate = allCustomers.isEmpty() ? 0 :
                 Math.round((double) repeatCustomers.size() / allCustomers.size() * 100 * 10.0) / 10.0;
 
-        // Revenue growth
+        // Revenue growth (this week vs last week) — real, from daily revenue
         double thisWeek = daily.stream().skip(Math.max(0, daily.size() - 7)).mapToDouble(MetricPoint::getRevenue).sum();
         double lastWeek = daily.stream().skip(Math.max(0, daily.size() - 14)).limit(7).mapToDouble(MetricPoint::getRevenue).sum();
         double revenueGrowth = lastWeek > 0 ? Math.round(((thisWeek - lastWeek) / lastWeek * 100) * 10.0) / 10.0 : 0;
@@ -164,25 +165,12 @@ public class AnalyticsController {
         Optional<MetricPoint> bestDay = daily.stream().max(Comparator.comparingDouble(MetricPoint::getRevenue));
         double avgAOV = totalOrders > 0 ? Math.round((totalAOV / totalOrders) * 100.0) / 100.0 : 0;
 
-        // Conversion funnel (estimated from orders)
-        Map<String, Object> funnel = new LinkedHashMap<>();
-        long estimatedVisitors = totalOrders > 0 ? (long)(totalOrders / 0.033) : 0;
-        long estimatedAddToCart = (long)(estimatedVisitors * 0.08);
-        long estimatedCheckout = (long)(estimatedVisitors * 0.05);
-        funnel.put("visitors", estimatedVisitors);
-        funnel.put("addToCart", estimatedAddToCart);
-        funnel.put("checkout", estimatedCheckout);
-        funnel.put("purchased", (long) totalOrders);
-
-        // Build response
+        // Build response — real data only
         AnalyticsDTO dto = new AnalyticsDTO();
         dto.setDaily(daily);
         dto.setTotalRevenue(Math.round(totalRevenue * 100.0) / 100.0);
-        double realConvRate = totalOrders > 0 && estimatedVisitors > 0
-                ? Math.round((double) totalOrders / estimatedVisitors * 100 * 100.0) / 100.0
-                : 0;
-        dto.setAvgConversion(realConvRate);
-        dto.setTotalSessions(estimatedVisitors);
+        dto.setAvgConversion(0.0);
+        dto.setTotalSessions(0L);
         dto.setTotalOrders((long) totalOrders);
         dto.setAvgOrderValue(avgAOV);
         dto.setRevenueGrowth(revenueGrowth);
@@ -193,7 +181,6 @@ public class AnalyticsController {
         dto.setRetentionRate(retentionRate);
         dto.setRepeatCustomers((long) repeatCustomers.size());
         dto.setTotalCustomers((long) allCustomers.size());
-        dto.setConversionFunnel(funnel);
 
         return ResponseEntity.ok(dto);
     }

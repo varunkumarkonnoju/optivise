@@ -81,7 +81,6 @@ export default function AnalyticsPage() {
           { label: 'Total Revenue',    value: fmt(data.totalRevenue),                color: 'var(--purple)',       sub: data.revenueGrowth != null ? (data.revenueGrowth >= 0 ? '+' : '') + data.revenueGrowth + '% vs last week' : 'All time' },
           { label: 'Total Orders',     value: data.totalOrders?.toLocaleString(),    color: 'var(--teal)',         sub: 'Paid orders' },
           { label: 'Avg. Order Value', value: fmt(data.avgOrderValue),               color: 'var(--green)',        sub: 'Per order' },
-          { label: 'Est. Sessions',    value: data.totalSessions?.toLocaleString(),  color: 'var(--amber)',        sub: 'Based on 3.3% conv.' },
           { label: 'Best Day',         value: data.bestDay || 'N/A',                 color: '#EC4899',             sub: data.bestDayRevenue > 0 ? fmt(data.bestDayRevenue) + ' revenue' : 'No orders yet' },
         ].map((s, i) => (
           <div key={i} className="card analytics-stat">
@@ -177,9 +176,8 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* Customer Retention + Conversion Funnel */}
-      <div className="charts-two-col" style={{ marginBottom: 16 }}>
-        {/* Customer Retention */}
+      {/* Customer Retention */}
+      <div style={{ marginBottom: 16 }}>
         <div className="card" style={{ padding: 24 }}>
           <div className="chart-title" style={{ marginBottom: 16 }}>👤 Customer Retention</div>
           <div style={{ textAlign: 'center', marginBottom: 16 }}>
@@ -200,33 +198,6 @@ export default function AnalyticsPage() {
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Best Day</div>
             </div>
           </div>
-        </div>
-
-        {/* Conversion Funnel */}
-        <div className="card" style={{ padding: 24 }}>
-          <div className="chart-title" style={{ marginBottom: 16 }}>🎯 Conversion Funnel</div>
-          {data.conversionFunnel && [
-            { label: 'Visitors', key: 'visitors', color: '#6366F1', icon: '👥' },
-            { label: 'Add to Cart', key: 'addToCart', color: '#06B6D4', icon: '🛒' },
-            { label: 'Checkout', key: 'checkout', color: '#F59E0B', icon: '💳' },
-            { label: 'Purchased', key: 'purchased', color: '#34D399', icon: '✅' },
-          ].map((step, i) => {
-            const val = data.conversionFunnel[step.key] || 0
-            const total = data.conversionFunnel.visitors || 1
-            const pct = Math.round((val / total) * 100)
-            return (
-              <div key={i} style={{ marginBottom: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{step.icon} {step.label}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: step.color }}>{val.toLocaleString()} ({pct}%)</span>
-                </div>
-                <div style={{ height: 6, background: 'var(--bg-secondary)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: pct + '%', background: step.color, borderRadius: 3 }}/>
-                </div>
-              </div>
-            )
-          })}
-          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 8 }}>* Funnel estimated from order data</div>
         </div>
       </div>
 
@@ -252,7 +223,7 @@ export default function AnalyticsPage() {
 
       {/* Data source note */}
       <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0' }}>
-        Data sourced directly from your Shopify store orders · Sessions estimated at 3.3% conversion rate
+        All figures sourced directly from your real Shopify store orders.
       </div>
     </div>
   )

@@ -180,9 +180,9 @@ function LiveDemo() {
 // ── DIAGNOSIS PREVIEW CARD ─────────────────────────────
 function DiagnosisCard() {
   const leaks = [
-    { icon: '📝', title: 'Weak Descriptions', impact: '$1,240/mo', sev: '#EF4444', bar: '85%' },
-    { icon: '📉', title: 'High Cart Abandonment', impact: '$890/mo', sev: '#F59E0B', bar: '52%' },
-    { icon: '🔍', title: 'Missing Meta Tags', impact: '$320/mo', sev: '#F59E0B', bar: '40%' },
+    { icon: '📝', title: '8 products have weak descriptions', impact: 'High', sev: '#EF4444', bar: '85%' },
+    { icon: '🖼️', title: '3 products missing images', impact: 'Medium', sev: '#F59E0B', bar: '52%' },
+    { icon: '⚡', title: '5 products not optimized', impact: 'Medium', sev: '#F59E0B', bar: '40%' },
   ]
   return (
     <div style={{ background: 'rgba(10,18,38,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, overflow: 'hidden', backdropFilter: 'blur(20px)', boxShadow: '0 32px 64px rgba(0,0,0,0.4)' }}>
@@ -203,12 +203,12 @@ function DiagnosisCard() {
                 strokeLinecap="round" strokeDasharray="125.7" strokeDashoffset="50"
                 style={{ transform: 'rotate(-90deg)', transformOrigin: '26px 26px', filter: 'drop-shadow(0 0 4px #EF444460)' }} />
             </svg>
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#EF4444' }}>42</div>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#F59E0B'}}>68</div>
           </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Store Health: Critical</div>
-            <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>3 revenue leaks detected</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#EF4444', marginTop: 3 }}>~$2,450/mo recoverable</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Store Health: Needs Work</div>
+            <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>3 opportunities found</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#F59E0B', marginTop: 3 }}>16 fixable items across your store</div>
           </div>
         </div>
         {/* Leaks */}
@@ -225,7 +225,7 @@ function DiagnosisCard() {
           </div>
         ))}
         <button onClick={() => window.location.href = '/register'} style={{ width: '100%', marginTop: 12, background: '#6366f1', border: 'none', borderRadius: 10, padding: '10px', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-  <Zap size={11} /> Fix all leaks with AI
+  <Zap size={11} /> See how to fix these
 </button>
       </div>
     </div>
@@ -385,7 +385,7 @@ export default function LandingPage() {
             </h1>
 
             <p className="hero-animate-3 dm-sans" style={{ fontSize: 15, color: '#64748b', lineHeight: 1.75, marginBottom: 30, maxWidth: 430 }}>
-              Optivise scans your real Shopify data and tells you exactly where revenue is leaking — with dollar amounts and one-click AI fixes.
+              Optivise scans your real Shopify data and shows you specific, fixable opportunities to grow — with one-click AI fixes. No fake numbers, ever.
             </p>
 
             <div className="hero-animate-4 hero-btns" style={{ display: 'flex', gap: 10, marginBottom: 26 }}>
@@ -420,10 +420,10 @@ export default function LandingPage() {
       <div style={{ background: 'rgba(10,18,38,0.8)', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '22px 40px' }}>
         <div className="stats-grid" style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', textAlign: 'center', gap: 16 }}>
           {[
-            { num: 256757, prefix: '$', suffix: '', decimals: 0, label: 'Revenue analyzed' },
-            { num: 42, prefix: '', suffix: '%', decimals: 0, label: 'Avg. revenue leak found' },
-            { num: 60, prefix: '', suffix: 's', decimals: 0, label: 'Time to first diagnosis' },
-            { num: 6, prefix: '', suffix: ' weeks', decimals: 0, label: 'To build the platform' },
+            { num: 60, prefix: '', suffix: 's', decimals: 0, label: 'Time to first scan' },
+            { num: 5, prefix: '', suffix: ' tones', decimals: 0, label: 'AI writing styles' },
+            { num: 1, prefix: '', suffix: '-click', decimals: 0, label: 'Save to Shopify' },
+            { num: 100, prefix: '', suffix: '%', decimals: 0, label: 'Real Shopify data' },
           ].map((s, i) => (
             <div key={i}>
               <div style={{ fontSize: 28, fontWeight: 900, color: '#fff', letterSpacing: '-1px', fontFamily: 'DM Sans, sans-serif' }}>
@@ -446,16 +446,16 @@ export default function LandingPage() {
         </div>
         <div className="pain-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 10 }}>
           {[
-            { icon: '📝', problem: '"My descriptions are terrible but I don\'t know how to write them."', loss: '−$720/mo' },
-            { icon: '📊', problem: '"I have no idea which of my 47 products are actually making me money."', loss: '−$1,200/mo' },
-            { icon: '💸', problem: '"I spent $300 on ads last week. No idea if it worked."', loss: '−$900/mo' },
-            { icon: '🛒', problem: '"My conversion rate is 1.2% and I have no idea why people aren\'t buying."', loss: '−$1,800/mo' },
-            { icon: '😤', problem: '"I have 15 tabs open and no single place that shows me what\'s wrong."', loss: '−$600/mo' },
+            { icon: '📝', problem: '"My product descriptions are weak but I don\'t know how to write better ones."', loss: 'Common' },
+            { icon: '📊', problem: '"I can\'t tell which of my products are actually making me money."', loss: 'Common' },
+            { icon: '🖼️', problem: '"Some products have no images or half-finished listings."', loss: 'Common' },
+            { icon: '🔁', problem: '"Customers buy once and I never hear from them again."', loss: 'Common' },
+            { icon: '😤', problem: '"I have 15 tabs open and no single place showing what to fix."', loss: 'Common' },
           ].map((p, i) => (
             <div key={i} className="hover-lift" style={{ background: 'rgba(10,18,38,0.8)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: '18px 14px' }}>
               <div style={{ fontSize: 24, marginBottom: 10 }}>{p.icon}</div>
               <div className="dm-sans" style={{ fontSize: 11, color: '#475569', lineHeight: 1.65, marginBottom: 12 }}>{p.problem}</div>
-              <div className="dm-sans" style={{ fontSize: 11, fontWeight: 800, color: '#ef4444', background: 'rgba(239,68,68,0.07)', borderRadius: 6, padding: '3px 9px', display: 'inline-block' }}>{p.loss}</div>
+              <div className="dm-sans" style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b', background: 'rgba(245,158,11,0.07)', borderRadius: 6, padding: '3px 9px', display: 'inline-block' }}>{p.loss} pain point</div>
             </div>
           ))}
         </div>
@@ -483,9 +483,9 @@ export default function LandingPage() {
                 "Premium leather jacket. Size M/L/XL. Black color. Multiple pockets. Good quality material. Fast shipping available."
               </div>
               <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
-                {[['1.1%', 'conversion'], ['F', 'SEO grade'], ['4s', 'avg. time']].map(([v, l]) => (
+                {[['Generic', 'tone'], ['None', 'benefits'], ['Weak', 'SEO']].map(([v, l]) => (
                   <div key={l} style={{ textAlign: 'center', flex: 1, background: 'rgba(239,68,68,0.05)', borderRadius: 8, padding: '8px' }}>
-                    <div className="dm-sans" style={{ fontSize: 18, fontWeight: 900, color: '#ef4444' }}>{v}</div>
+                    <div className="dm-sans" style={{ fontSize: 16, fontWeight: 900, color: '#ef4444' }}>{v}</div>
                     <div className="dm-sans" style={{ fontSize: 9, color: '#334155', marginTop: 1 }}>{l}</div>
                   </div>
                 ))}
@@ -505,9 +505,9 @@ export default function LandingPage() {
                 <span style={{ color: '#10b981' }}>★ 30-day returns. Ships in 24h.</span>
               </div>
               <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
-                {[['4.2%', 'conversion'], ['A', 'SEO grade'], ['3.8×', 'time on page']].map(([v, l]) => (
+                {[['Benefit-led', 'tone'], ['Clear', 'benefits'], ['Strong', 'SEO']].map(([v, l]) => (
                   <div key={l} style={{ textAlign: 'center', flex: 1, background: 'rgba(16,185,129,0.05)', borderRadius: 8, padding: '8px' }}>
-                    <div className="dm-sans" style={{ fontSize: 18, fontWeight: 900, color: '#10b981' }}>{v}</div>
+                    <div className="dm-sans" style={{ fontSize: 14, fontWeight: 900, color: '#10b981' }}>{v}</div>
                     <div className="dm-sans" style={{ fontSize: 9, color: '#334155', marginTop: 1 }}>{l}</div>
                   </div>
                 ))}
@@ -543,7 +543,7 @@ export default function LandingPage() {
             {[
               { step: '01', color: '#6366f1', emoji: '🔗', title: 'Connect your store', body: 'Authorize with official Shopify OAuth. We pull your real products, orders, and revenue. Takes 90 seconds.', note: 'Read-only · Never modify without permission' },
               { step: '02', color: '#06b6d4', emoji: '🧠', title: 'AI runs your diagnosis', body: 'Optivise scans every product, your conversion rate, and compares against industry benchmarks to find revenue leaks.', note: 'Powered by GPT-4o · Real store data only' },
-              { step: '03', color: '#10b981', emoji: '🚀', title: 'Fix and watch revenue grow', body: 'Get a ranked list of exactly what to fix. Generate AI descriptions in 1 click. Apply directly to Shopify.', note: 'Average improvement visible within 7 days' },
+              { step: '03', color: '#10b981', emoji: '🚀', title: 'Fix it in one click', body: 'Get a ranked list of exactly what to fix. Generate AI descriptions in 1 click. Apply directly to Shopify.', note: 'You stay in control · Originals always backed up' },
             ].map((s, i) => (
               <div key={i} className="hover-lift" style={{ background: 'rgba(10,18,38,0.8)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, padding: '24px 20px', position: 'relative', zIndex: 1 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 13, background: `${s.color}12`, border: `1px solid ${s.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, marginBottom: 14 }}>{s.emoji}</div>
@@ -572,12 +572,12 @@ export default function LandingPage() {
         </div>
         <div className="features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
           {[
-            { icon: '🩺', color: '#EF4444', title: 'Store Diagnosis', desc: 'Connect your store and get your health score + ranked revenue leaks in 60 seconds. The feature that started it all.', badge: 'Core feature', progress: 95 },
-            { icon: '✨', color: '#6366f1', title: 'AI Product Descriptions', desc: '1-click AI rewrites for every product. Saves directly to Shopify. Your originals are always backed up.', badge: 'Most used', progress: 88 },
-            { icon: '📉', color: '#F59E0B', title: 'Revenue Leak Detector', desc: 'Finds exactly where you\'re losing money — with specific dollar amounts and one-click fixes.', badge: 'Highest ROI', progress: 92 },
-            { icon: '📊', color: '#06b6d4', title: 'Real Analytics', desc: 'Revenue, orders, and conversion rate pulled directly from your Shopify data. No estimates.', badge: null, progress: 78 },
-            { icon: '🧪', color: '#F59E0B', title: 'A/B Testing', desc: 'Test two description variants on any product. Let real conversion data pick the winner.', badge: null, progress: 72 },
-            { icon: '🏥', color: '#10b981', title: 'Store Health Score', desc: '0–100 score with 6 detailed health checks. See exactly what\'s working and what\'s hurting you.', badge: null, progress: 85 },
+            { icon: '🩺', color: '#EF4444', title: 'Store Diagnosis', desc: 'Connect your store and get a health score plus a ranked list of fixable issues in 60 seconds. The feature that started it all.', badge: 'Core feature', progress: 95 },
+            { icon: '✨', color: '#6366f1', title: 'AI Product Descriptions', desc: '1-click AI rewrites for every product, in 5 tones. Saves directly to Shopify. Your originals are always backed up.', badge: 'Most used', progress: 88 },
+            { icon: '📉', color: '#F59E0B', title: 'Revenue Opportunities', desc: 'Scans your real store data to surface specific, fixable opportunities — weak descriptions, missing images, one-time customers — with one-click fixes.', badge: 'Highest impact', progress: 92 },
+            { icon: '📊', color: '#06b6d4', title: 'Real Analytics', desc: 'Revenue, orders, average order value and top products pulled directly from your Shopify data. No estimates, no fabrication.', badge: null, progress: 85 },
+            { icon: '👥', color: '#F59E0B', title: 'Customer Insights', desc: 'See your real customers, segment them by spend and loyalty, and spot who to win back.', badge: null, progress: 80 },
+            { icon: '🏥', color: '#10b981', title: 'Store Health Score', desc: 'A 0–100 score with detailed checks across descriptions, images and optimization. See exactly what to improve.', badge: null, progress: 85 },
           ].map((f, i) => (
             <div key={i} className="hover-lift" style={{ background: 'rgba(10,18,38,0.8)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: '20px', position: 'relative' }}>
               {f.badge && (
@@ -674,19 +674,13 @@ export default function LandingPage() {
             Start free. Upgrade when ready.
           </h2>
           <p className="dm-sans" style={{ fontSize: 14, color: '#475569', marginBottom: 20 }}>No credit card. No sales call. No dark patterns.</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
-            <span className="dm-sans" style={{ fontSize: 13, color: billingYearly ? '#334155' : '#e2e8f0' }}>Monthly</span>
-            <div onClick={() => setBillingYearly(!billingYearly)} style={{ width: 44, height: 24, borderRadius: 12, background: billingYearly ? '#6366f1' : 'rgba(255,255,255,0.1)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
-              <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: billingYearly ? 23 : 3, transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }} />
-            </div>
-            <span className="dm-sans" style={{ fontSize: 13, color: billingYearly ? '#e2e8f0' : '#334155' }}>Yearly <span style={{ color: '#10b981', fontWeight: 700, fontSize: 11 }}>–20%</span></span>
-          </div>
+          
         </div>
         <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, alignItems: 'start' }}>
           {[
-            { name: 'Free', price: 0, yearly: 0, color: '#6366f1', popular: false, desc: 'Perfect to start', features: ['15 AI descriptions/month', 'Store Diagnosis', 'Revenue Leak Detector', 'Store Health Score', 'Basic Analytics', 'Description History'], cta: 'Start free forever', ghost: true },
-            { name: 'Starter', price: 29, yearly: 23, color: '#06b6d4', popular: true, desc: 'For serious growth', features: ['500 AI descriptions/month', 'Everything in Free', 'A/B Testing', 'AI Assistant', 'Weekly email reports', 'Priority support'], cta: 'Start free trial', ghost: false },
-            { name: 'Growth', price: 79, yearly: 63, color: '#10b981', popular: false, desc: 'Scale without limits', features: ['Unlimited AI descriptions', 'Everything in Starter', 'Advanced analytics', 'Revenue forecasting', 'Dedicated support', 'API access (soon)'], cta: 'Start free trial', ghost: true },
+            { name: 'Free', price: 0, yearly: 0, color: '#6366f1', popular: false, desc: 'Perfect to start', features: ['10 AI generations/month', 'Product descriptions', 'Revenue opportunities', 'Store health score', 'Description history', '1 store'], cta: 'Start free', ghost: true },
+            { name: 'Starter', price: 29, yearly: 29, color: '#06b6d4', popular: true, desc: 'For growing stores', features: ['100 AI generations/month', 'All AI tools', 'Full analytics', 'Revenue opportunities', 'Email support', '1 store'], cta: 'Start 7-day trial', ghost: false },
+            { name: 'Growth', price: 79, yearly: 79, color: '#10b981', popular: false, desc: 'For serious store owners', features: ['Unlimited AI generations', 'Everything in Starter', 'Bulk generation', 'Priority support', 'Up to 3 stores'], cta: 'Start 7-day trial', ghost: true },
           ].map((p, i) => (
             <div key={i} className="hover-lift" style={{ background: p.popular ? 'rgba(6,182,212,0.04)' : 'rgba(10,18,38,0.8)', border: p.popular ? '2px solid rgba(6,182,212,0.4)' : '1px solid rgba(255,255,255,0.05)', borderRadius: 18, padding: '26px 22px', position: 'relative' }}>
               {p.popular && (
@@ -695,7 +689,7 @@ export default function LandingPage() {
               <div className="dm-sans" style={{ fontSize: 13, fontWeight: 700, color: p.color, marginBottom: 2 }}>{p.name}</div>
               <div className="dm-sans" style={{ fontSize: 11, color: '#334155', marginBottom: 16 }}>{p.desc}</div>
               <div style={{ marginBottom: 20 }}>
-                <span className="dm-sans" style={{ fontSize: 38, fontWeight: 900, color: '#fff', letterSpacing: '-2px' }}>${billingYearly ? p.yearly : p.price}</span>
+                <span className="dm-sans" style={{ fontSize: 38, fontWeight: 900, color: '#fff', letterSpacing: '-2px' }}>${p.price}</span>
                 <span className="dm-sans" style={{ fontSize: 12, color: '#334155' }}>/mo</span>
                 {p.price === 0 && <div className="dm-sans" style={{ fontSize: 10, color: '#10b981', fontWeight: 700, marginTop: 3 }}>Free forever — no limits on diagnosis</div>}
               </div>
@@ -736,7 +730,7 @@ export default function LandingPage() {
       {/* ── FOOTER ── */}
       <footer style={{ background: '#010c1a', borderTop: '1px solid rgba(255,255,255,0.04)', padding: '24px 40px' }}>
         <div className="footer-inner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div className="dm-sans" style={{ fontSize: 11, color: '#1e3a5f' }}>© 2025 Optivise AI · Built by Varun Kumar Konnoju · Milwaukee, WI</div>
+          <div className="dm-sans" style={{ fontSize: 11, color: '#1e3a5f' }}>© 2026 Growyn AI LLC · Built by Varun Kumar Konnoju · Wisconsin</div>
           <div style={{ display: 'flex', gap: 18 }}>
             {[['Privacy', '/privacy'], ['Terms', '/terms'], ['Help', '/help']].map(([l, h]) => (
               <span key={l} onClick={() => navigate(h)} className="dm-sans" style={{ fontSize: 11, color: '#1e3a5f', cursor: 'pointer', transition: 'color 0.15s' }}

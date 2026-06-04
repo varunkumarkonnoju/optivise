@@ -63,7 +63,7 @@ export default function RegisterPage() {
   const skipToDiagnosis = () => {
     // New users who skip store connection go to diagnosis
     // which will show "connect your store" empty state
-    navigate('/diagnosis')
+    navigate('/insights')
   }
 
   const progressPct = step === 0 ? 30 : 70

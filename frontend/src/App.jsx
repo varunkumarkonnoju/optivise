@@ -61,7 +61,7 @@ function AppRoutes() {
       <Route path="/oauth/success" element={<OAuthSuccessPage />} />
       {/* NEW: Shopify OAuth callback — receives code from Shopify, exchanges for token */}
       <Route path="/auth/shopify/callback" element={<ShopifyCallbackPage />} />
-      <Route path="/diagnosis" element={<ProtectedRoute><StoreDiagnosisPage /></ProtectedRoute>} />
+      <Route path="/diagnosis" element={<Navigate to="/insights" replace />} />
       <Route path="/assistant" element={<ProtectedRoute><AssistantPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />

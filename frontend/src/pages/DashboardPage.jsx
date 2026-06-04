@@ -505,8 +505,7 @@ export default function DashboardPage() {
           icon={Percent} color="#06B6D4"
         />
         <MetricCard
-          label="Active A/B Tests" rawValue={data.activeAbTests}
-          delta={data.abTestsDelta} deltaLabel="new this week"
+          label="Total Customers" rawValue={data.totalCustomers}
           icon={TestTube2} color="#10B981"
         />
         <div className="metric-card card">

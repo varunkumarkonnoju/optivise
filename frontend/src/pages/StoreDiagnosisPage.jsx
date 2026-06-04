@@ -76,12 +76,12 @@ const buildDiagnosis = (prods, dash) => {
         ? 'All your products have solid descriptions. Keep them updated as you add new products and review them every 90 days — copy that was good 6 months ago may be outdated.'
         : `${weakDesc.slice(0, 2).map(p => p.title).join(', ')}${weakDesc.length > 2 ? ` and ${weakDesc.length - 2} more` : ''} have descriptions under 100 characters. Short copy fails to answer buyer questions, hurts SEO, and gives visitors no reason to add to cart.`,
       fix: weakDesc.length === 0
-        ? 'Your descriptions are solid! Consider A/B testing different copy styles on your top 3 products to squeeze out more conversions. Small wording changes can improve conversion by 10-20%.'
+        ? 'Your descriptions are solid! Keep them fresh and consider refining your top products with different tones using the Product Optimizer.'
         : 'Rewrite each affected description to 150+ words. Lead with the buyer\'s problem, follow with specific benefits, close with a reason to buy today. Optivise generates optimized rewrites in one click.',
-      actionLabel: weakDesc.length === 0 ? 'A/B Test Copy' : 'Fix with AI',
+      actionLabel: weakDesc.length === 0 ? 'Refine Copy' : 'Fix with AI',
       actionPath: '/products',
       beforeAfter: weakDesc.length > 0 ? beforeAfter : null,
-      nextStep: weakDesc.length === 0 ? 'Run A/B tests on your best-selling product to find the highest-converting copy.' : null,
+      nextStep: weakDesc.length === 0 ? 'Try different tones on your best-selling product to find copy you like best.' : null,
     },
     {
       id: 'revenue',

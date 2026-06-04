@@ -49,7 +49,7 @@ export default function ShopifyCallbackPage() {
         .then(user => {
           localStorage.setItem('user', JSON.stringify(user))
           if (setUser) setUser(user)
-          setTimeout(() => navigate('/diagnosis'), 500)
+          setTimeout(() => navigate('/insights'), 500)
         })
         .catch(() => navigate('/dashboard'))
       } else {

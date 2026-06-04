@@ -13,7 +13,6 @@ const nav = [
   { label: 'Dashboard',          path: '/dashboard',       icon: LayoutDashboard },
   { label: 'Revenue Leaks',      path: '/insights',        icon: TrendingDown    },
   { label: 'Product Optimizer',  path: '/products',        icon: Package         },
-  { label: 'A/B Testing',        path: '/abtesting',       icon: TestTube2       },
   { label: 'Analytics',          path: '/analytics',       icon: BarChart3       },
   { label: 'Customers',          path: '/customers',       icon: Users           },
   { label: 'Store Health',       path: '/automations',     icon: Activity        },

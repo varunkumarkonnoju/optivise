@@ -30,11 +30,11 @@ const STEPS = [
     subtitle: 'See exactly where your store is losing money every month.',
   },
   {
-    id: 'abtest',
+    id: 'health',
     icon: TestTube2,
     color: '#F59E0B',
-    title: 'Run your first A/B test',
-    subtitle: 'Test two descriptions and let data pick the winner.',
+    title: 'Check your store health',
+    subtitle: 'See your store health score and what to improve next.',
   },
 ]
 
@@ -137,7 +137,7 @@ export function OnboardingChecklist({ shopConnected }) {
                     if (step.id === 'connect') navigate('/settings')
                     else if (step.id === 'description') navigate('/products')
                     else if (step.id === 'leaks') navigate('/insights')
-                    else if (step.id === 'abtest') navigate('/products')
+                    else if (step.id === 'health') navigate('/automations')
                     markDone(step.id)
                   }
                 }}
@@ -320,34 +320,27 @@ function OnboardingModal({ completed, onClose, onMarkDone, shopConnected }) {
             {step.id === 'leaks' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[
-                  { color: '#EF4444', label: '2 products with no descriptions', loss: '-$360/mo' },
-                  { color: '#F59E0B', label: 'Conversion rate below average', loss: '-$840/mo' },
-                  { color: '#6366F1', label: '6 AI recommendations unread', loss: '-$300/mo' },
+                  { color: '#EF4444', label: 'Products with weak descriptions', tag: 'High impact' },
+                  { color: '#F59E0B', label: 'Products missing images', tag: 'Medium' },
+                  { color: '#6366F1', label: 'One-time customers to win back', tag: 'Opportunity' },
                 ].map((item, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', borderLeft: `3px solid ${item.color}`, borderRadius: '0 8px 8px 0', padding: '8px 12px', fontSize: 12 }}>
                     <span style={{ color: 'var(--text-secondary)' }}>{item.label}</span>
-                    <span style={{ color: item.color, fontWeight: 700 }}>{item.loss}</span>
+                    <span style={{ color: item.color, fontWeight: 700 }}>{item.tag}</span>
                   </div>
                 ))}
               </div>
             )}
 
-            {step.id === 'abtest' && (
+            {step.id === 'health' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  <div style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8, padding: '10px 12px' }}>
-                    <div style={{ fontSize: 10, color: '#6366F1', fontWeight: 700, marginBottom: 4 }}>VARIANT A (Original)</div>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-primary)' }}>1.8%</div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>conversion rate</div>
-                  </div>
-                  <div style={{ background: 'rgba(6,182,212,0.05)', border: '1px solid rgba(6,182,212,0.3)', borderRadius: 8, padding: '10px 12px' }}>
-                    <div style={{ fontSize: 10, color: '#06B6D4', fontWeight: 700, marginBottom: 4 }}>VARIANT B (AI Version)</div>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: '#06B6D4' }}>3.2%</div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>conversion rate</div>
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 14px' }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+                    Your Store Health score checks your descriptions, images, and optimization status across every product — and shows you exactly what to improve, with one-click fixes.
                   </div>
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
-                  Optivise auto-picks the winner at 95% statistical confidence
+                  All based on your real Shopify data — no estimates.
                 </div>
               </div>
             )}
@@ -364,7 +357,7 @@ function OnboardingModal({ completed, onClose, onMarkDone, shopConnected }) {
                     if (step.id === 'connect') goAndMark('/settings')
                     else if (step.id === 'description') goAndMark('/products')
                     else if (step.id === 'leaks') goAndMark('/insights')
-                    else if (step.id === 'abtest') goAndMark('/products')
+                    else if (step.id === 'health') goAndMark('/automations')
                   }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8,
@@ -376,7 +369,7 @@ function OnboardingModal({ completed, onClose, onMarkDone, shopConnected }) {
                   <Zap size={13} />
                   {step.id === 'connect' ? 'Connect Shopify' :
                    step.id === 'description' ? 'Go to Products' :
-                   step.id === 'leaks' ? 'View Revenue Leaks' : 'Start A/B Test'}
+                   step.id === 'leaks' ? 'View Opportunities' : 'Check Store Health'}
                   <ArrowRight size={13} />
                 </button>
               )}

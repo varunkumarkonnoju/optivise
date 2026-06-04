@@ -51,7 +51,7 @@ function AppRoutes() {
       <Route path="/insights" element={<ProtectedRoute><InsightsPage /></ProtectedRoute>} />
       <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
       <Route path="/customers" element={<ProtectedRoute><CustomersPage /></ProtectedRoute>} />
-      <Route path="/abtesting" element={<ProtectedRoute><ABTestingPage /></ProtectedRoute>} />
+      <Route path="/abtesting" element={<Navigate to="/products" replace />} />
       <Route path="/recommendations" element={<Navigate to="/insights" replace />} />
       <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
       <Route path="/automations" element={<ProtectedRoute><AutomationsPage /></ProtectedRoute>} />

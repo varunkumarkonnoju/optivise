@@ -59,7 +59,6 @@ const SEARCH_ITEMS = [
   { label: 'Product Optimizer',   path: '/products',        icon: Package      },
   { label: 'Analytics',           path: '/analytics',       icon: BarChart3    },
   { label: 'Recommendations',     path: '/recommendations', icon: Star         },
-  { label: 'A/B Testing',         path: '/abtesting',       icon: TestTube2    },
   { label: 'AI Assistant',        path: '/assistant',       icon: Sparkles     },
   { label: 'Revenue Leaks',       path: '/insights',        icon: TrendingDown },
   { label: 'Store Health',        path: '/automations',     icon: Activity     },
@@ -189,7 +188,7 @@ function QuickActions({ shopConnected }) {
   const actions = [
     { icon: Sparkles, label: 'Generate AI Description', color: '#6366F1', path: '/products', locked: !shopConnected },
     { icon: TrendingDown, label: 'Find Revenue Leaks', color: '#EF4444', path: '/insights', locked: !shopConnected },
-    { icon: TestTube2, label: 'Start A/B Test', color: '#F59E0B', path: '/abtesting', locked: !shopConnected },
+    { icon: TestTube2, label: 'Optimize Products', color: '#F59E0B', path: '/products', locked: !shopConnected },
     { icon: Activity, label: 'Store Health Score', color: '#10B981', path: '/automations', locked: false },
     { icon: Sparkles, label: 'Ask AI Assistant', color: '#06B6D4', path: '/assistant', locked: false },
   ]

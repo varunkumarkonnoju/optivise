@@ -79,7 +79,7 @@ const buildDiagnosis = (prods, dash) => {
         ? 'Your descriptions are solid! Consider A/B testing different copy styles on your top 3 products to squeeze out more conversions. Small wording changes can improve conversion by 10-20%.'
         : 'Rewrite each affected description to 150+ words. Lead with the buyer\'s problem, follow with specific benefits, close with a reason to buy today. Optivise generates optimized rewrites in one click.',
       actionLabel: weakDesc.length === 0 ? 'A/B Test Copy' : 'Fix with AI',
-      actionPath: weakDesc.length === 0 ? '/abtesting' : '/products',
+      actionPath: '/products',
       beforeAfter: weakDesc.length > 0 ? beforeAfter : null,
       nextStep: weakDesc.length === 0 ? 'Run A/B tests on your best-selling product to find the highest-converting copy.' : null,
     },
@@ -128,7 +128,7 @@ const buildDiagnosis = (prods, dash) => {
         ? 'You\'re above average — to push further, A/B test button copy, add urgency elements, and test different price points on your top 3 products.'
         : 'Add trust badges above Add to Cart. Show shipping cost on product page (not at checkout). Add 2-3 specific customer reviews near the buy button. Run A/B tests on your top products.',
       actionLabel: convRate >= 2.5 ? 'Push Higher with A/B' : 'Start A/B Testing',
-      actionPath: '/abtesting',
+      actionPath: '/products',
       beforeAfter: null,
       nextStep: convRate >= 2.5 ? `Target: push from ${convRate.toFixed(2)}% to ${(convRate + 0.5).toFixed(1)}% through systematic A/B testing on your top 3 products.` : null,
       extraInfo: convRate > 0 && convRate < 2.5 && totalRevenue > 0
@@ -298,7 +298,7 @@ function ImprovementRoadmap({ roadmap, healthScore }) {
           </div>
         ))}
       </div>
-      <button onClick={() => navigate('/abtesting')} style={{ width: '100%', marginTop: 14, background: '#10B981', border: 'none', borderRadius: 10, padding: '10px', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+      <button onClick={() => navigate('/products')} style={{ width: '100%', marginTop: 14, background: '#10B981', border: 'none', borderRadius: 10, padding: '10px', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
         <TrendingUp size={12} /> Start optimising →
       </button>
     </div>

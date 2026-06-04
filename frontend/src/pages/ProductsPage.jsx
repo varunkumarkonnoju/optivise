@@ -417,15 +417,8 @@ const [limitMessage, setLimitMessage] = useState('')
       <div className="card products-table">
         <div className="table-header-7">
           <div>Product</div><div>Price</div>
-          <div>
-            Revenue
-            <span style={{ fontSize: 9, color: 'var(--text-muted)', display: 'block', fontWeight: 400 }}>estimated</span>
-          </div>
-          <div>
-            Sessions
-            <span style={{ fontSize: 9, color: 'var(--text-muted)', display: 'block', fontWeight: 400 }}>estimated</span>
-          </div>
-          <div>Conversion</div><div>Status</div><div>AI Description</div>
+          <div>Revenue</div>
+          <div>Status</div><div>AI Description</div>
         </div>
 
         {filtered.map(p => {
@@ -448,13 +441,6 @@ const [limitMessage, setLimitMessage] = useState('')
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>${p.price?.toFixed(2)}</div>
                 <div style={{ fontSize: 13, fontWeight: 600 }}>${Math.round(p.revenue || 0)?.toLocaleString()}</div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{p.sessions > 0 ? p.sessions.toLocaleString() : '—'}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <div style={{ width: 60, height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
-                    <div style={{ width: Math.min((p.conversionRate || 0) * 10, 100) + '%', height: '100%', background: (p.conversionRate || 0) > 5 ? 'var(--green)' : (p.conversionRate || 0) > 3 ? 'var(--amber)' : 'var(--red)', borderRadius: 3 }} />
-                  </div>
-                  <span style={{ fontSize: 13, fontWeight: 600 }}>{p.conversionRate > 0 ? p.conversionRate.toFixed(1) + '%' : '—'}</span>
-                </div>
                 <div className="status-pill" style={{ background: cfg.bg, color: cfg.color }}><Icon size={11}/> {cfg.label}</div>
                 <button className="gen-btn" onClick={() => isOpen ? closeGenerator() : openGenerator(p)}>
                   <Sparkles size={12} />
@@ -560,7 +546,7 @@ const [limitMessage, setLimitMessage] = useState('')
 
         {/* Footer note */}
         <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border)', fontSize: 11, color: 'var(--text-muted)' }}>
-          * Revenue and sessions are estimated values. Real revenue data is available in the Analytics page.
+          Revenue is calculated from your real Shopify order history.
         </div>
       </div>
     </div>

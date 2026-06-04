@@ -376,11 +376,11 @@ export function AutomationsPage() {
       action: 'Optimize Products', path: '/products',
     },
     {
-      icon: '🧪', label: 'A/B Testing',
-      score:  (metrics?.activeAbTests || 0) > 0 ? 100 : 20,
-      detail: `${metrics?.activeAbTests || 0} active tests running`,
-      status: (metrics?.activeAbTests || 0) > 0 ? 'good' : 'poor',
-      action: 'Start A/B Test', path: '/abtesting',
+      icon: '📈', label: 'Revenue Opportunities',
+      score:  totalProducts > 0 ? Math.round((optimized / totalProducts) * 100) : 0,
+      detail: 'Review opportunities to grow your store',
+      status: optimized === totalProducts && totalProducts > 0 ? 'good' : 'warning',
+      action: 'View Opportunities', path: '/insights',
     },
     {
       icon: '🤖', label: 'AI Recommendations',
@@ -451,7 +451,7 @@ export function AutomationsPage() {
         <div style={{ flex: 1, minWidth: 180 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>Overall Store Health Score</div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.6 }}>
-            Based on {totalProducts} products — descriptions, images, optimization status, A/B testing and recommendations.
+            Based on {totalProducts} products — descriptions, images, optimization status, and recommendations.
           </div>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             {[

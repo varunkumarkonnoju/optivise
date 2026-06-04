@@ -137,7 +137,7 @@ export function OnboardingChecklist({ shopConnected }) {
                     if (step.id === 'connect') navigate('/settings')
                     else if (step.id === 'description') navigate('/products')
                     else if (step.id === 'leaks') navigate('/insights')
-                    else if (step.id === 'abtest') navigate('/abtesting')
+                    else if (step.id === 'abtest') navigate('/products')
                     markDone(step.id)
                   }
                 }}
@@ -364,7 +364,7 @@ function OnboardingModal({ completed, onClose, onMarkDone, shopConnected }) {
                     if (step.id === 'connect') goAndMark('/settings')
                     else if (step.id === 'description') goAndMark('/products')
                     else if (step.id === 'leaks') goAndMark('/insights')
-                    else if (step.id === 'abtest') goAndMark('/abtesting')
+                    else if (step.id === 'abtest') goAndMark('/products')
                   }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8,

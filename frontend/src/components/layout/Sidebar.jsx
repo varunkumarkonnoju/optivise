@@ -11,7 +11,7 @@ import './Layout.css'
 
 const nav = [
   { label: 'Dashboard',          path: '/dashboard',       icon: LayoutDashboard },
-  { label: 'Revenue Leaks',      path: '/insights',        icon: TrendingDown    },
+  { label: 'Revenue Opportunities', path: '/insights',     icon: TrendingDown    },
   { label: 'Product Optimizer',  path: '/products',        icon: Package         },
   { label: 'Analytics',          path: '/analytics',       icon: BarChart3       },
   { label: 'Customers',          path: '/customers',       icon: Users           },

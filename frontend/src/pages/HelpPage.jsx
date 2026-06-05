@@ -76,7 +76,7 @@ export default function HelpPage() {
       {/* Quick links */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
         {[
-          { icon: '🚀', title: 'Getting Started', desc: 'Connect your store', action: () => navigate('/profile') },
+          { icon: '🚀', title: 'Getting Started', desc: 'Connect your store', action: () => navigate('/settings') },
           { icon: '🛍️', title: 'Products', desc: 'AI descriptions', action: () => navigate('/products') },
           { icon: '📊', title: 'Analytics', desc: 'View your data', action: () => navigate('/analytics') },
         ].map((item, i) => (

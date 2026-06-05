@@ -204,7 +204,7 @@ export default function Topbar({ onMenuClick }) {
               borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 9999, overflow: 'hidden'
             }}>
               {[
-                { icon: <User size={14}/>, label: 'Profile', action: () => navigate('/profile') },
+                { icon: <User size={14}/>, label: 'Profile', action: () => navigate('/settings') },
                 { icon: <Settings size={14}/>, label: 'Settings', action: () => navigate('/settings') },
                 { icon: <HelpCircle size={14}/>, label: 'Help & Support', action: () => navigate('/help') },
               ].map((item, i) => (

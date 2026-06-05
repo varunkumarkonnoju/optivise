@@ -16,7 +16,7 @@ export default function ConnectStorePrompt() {
         Connect your store to see real analytics, AI recommendations, and growth insights tailored to your business.
       </div>
       <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => navigate('/profile')} style={{
+        <button onClick={() => navigate('/settings')} style={{
           background: 'linear-gradient(135deg, #6366F1, #06B6D4)', border: 'none',
           borderRadius: 10, padding: '12px 24px', color: 'white',
           fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit'

@@ -2,6 +2,7 @@ package com.optivise.service;
 
 import com.optivise.model.User;
 import com.optivise.repository.UserRepository;
+import com.optivise.repository.UserSettingsRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ public class WeeklyReportService {
     private static final Logger log = LoggerFactory.getLogger(WeeklyReportService.class);
 
     @Autowired private UserRepository userRepository;
+    @Autowired private UserSettingsRepository settingsRepository;
     @Autowired private ShopifyService shopifyService;
     @Autowired private EmailService emailService;
 
@@ -25,11 +27,22 @@ public class WeeklyReportService {
         log.info("Sending weekly reports to {} users", users.size());
         for (User user : users) {
             try {
-                if (user.getShopDomain() != null && user.getShopifyAccessToken() != null
+                boolean hasStore = user.getShopDomain() != null && user.getShopifyAccessToken() != null
                         && !user.getShopDomain().isBlank()
-                        && !user.getShopifyAccessToken().isBlank()) {
-                    sendReportToUser(user);
+                        && !user.getShopifyAccessToken().isBlank();
+                if (!hasStore) continue;
+
+                // Respect the user's weekly-report preference. Default to true if no
+                // settings row exists yet (matches the UserSettings default).
+                boolean wantsReport = settingsRepository.findByEmail(user.getEmail())
+                        .map(s -> s.isWeeklyReport())
+                        .orElse(true);
+                if (!wantsReport) {
+                    log.info("Skipping weekly report for {} (opted out)", user.getEmail());
+                    continue;
                 }
+
+                sendReportToUser(user);
             } catch (Exception e) {
                 log.error("Failed to send weekly report to {}: {}", user.getEmail(), e.getMessage());
             }
@@ -42,7 +55,7 @@ public class WeeklyReportService {
 
     private void sendReportToUser(User user) {
         try {
-            // ── Fetch real Shopify data ──
+            // -- Fetch real Shopify data --
             List<Map<String, Object>> products = shopifyService.fetchProductsForUser(
                     user.getShopDomain(), user.getShopifyAccessToken()
             );
@@ -50,7 +63,7 @@ public class WeeklyReportService {
                     user.getShopDomain(), user.getShopifyAccessToken()
             );
 
-            // ── Real revenue & order count ──
+            // -- Real revenue & order count --
             double revenue = 0;
             for (Map<String, Object> order : orders) {
                 Object total = order.get("total_price");
@@ -61,7 +74,7 @@ public class WeeklyReportService {
             }
             int orderCount = orders.size();
 
-            // ── Top product by REAL revenue from order line items ──
+            // -- Top product by REAL revenue from order line items --
             Map<String, Double> revenueByProduct = new HashMap<>();
             for (Map<String, Object> order : orders) {
                 Object lineItems = order.get("line_items");
@@ -91,13 +104,13 @@ public class WeeklyReportService {
                 }
             }
 
-            // ── Real count of products needing descriptions ──
+            // -- Real count of products needing descriptions --
             long noDescCount = products.stream().filter(p -> {
                 Object desc = p.get("body_html");
                 return desc == null || desc.toString().isBlank();
             }).count();
 
-            // ── Send honest email (no conversion rate, no fake losses, no A/B) ──
+            // -- Send honest email (no conversion rate, no fake losses, no A/B) --
             String userName = user.getName() != null ? user.getName().split(" ")[0] : "there";
             emailService.sendWeeklyReport(
                     user.getEmail(), userName,

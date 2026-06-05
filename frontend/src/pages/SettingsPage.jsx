@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { CheckCircle, AlertCircle, ExternalLink, Unlink } from 'lucide-react'
 
 export default function SettingsPage() {
-  const { user, setUser } = useAuth()
+  const { user, setUser, logout } = useAuth()
   const navigate = useNavigate()
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -14,12 +14,18 @@ export default function SettingsPage() {
   const [showConnectForm, setShowConnectForm] = useState(false)
   const token = localStorage.getItem('token')
 
+  // Profile fields
+  const [profile, setProfile] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+  })
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [profileSaved, setProfileSaved] = useState(false)
+  const [profileError, setProfileError] = useState('')
+
+  // App settings — only real ones
   const [settings, setSettings] = useState({
-    emailNotifications: true,
     weeklyReport: true,
-    lowStockAlerts: true,
-    newOrderAlerts: true,
-    aiSuggestions: true,
     theme: 'dark',
     language: 'en',
     currency: 'USD',
@@ -33,11 +39,7 @@ export default function SettingsPage() {
     .then(r => r.json())
     .then(data => {
       setSettings({
-        emailNotifications: data.emailNotifications ?? true,
         weeklyReport: data.weeklyReport ?? true,
-        lowStockAlerts: data.lowStockAlerts ?? true,
-        newOrderAlerts: data.newOrderAlerts ?? true,
-        aiSuggestions: data.aiSuggestions ?? true,
         theme: data.theme || 'dark',
         language: data.language || 'en',
         currency: data.currency || 'USD',
@@ -71,6 +73,27 @@ export default function SettingsPage() {
     }
   }
 
+  // ── SAVE PROFILE ────────────────────────────────────
+  const handleSaveProfile = async () => {
+    setSavingProfile(true); setProfileError(''); setProfileSaved(false)
+    try {
+      const res = await fetch('/api/users/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ name: profile.name, email: profile.email })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to save')
+      if (setUser && user) setUser({ ...user, name: profile.name, email: profile.email })
+      setProfileSaved(true)
+      setTimeout(() => setProfileSaved(false), 3000)
+    } catch (e) {
+      setProfileError(e.message)
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
   // ── DISCONNECT SHOPIFY ──────────────────────────────
   const handleDisconnect = async () => {
     if (!window.confirm('Disconnect your Shopify store? You can reconnect anytime.')) return
@@ -81,7 +104,6 @@ export default function SettingsPage() {
         headers: { 'Authorization': 'Bearer ' + token }
       })
       if (res.ok) {
-        // Refresh user data
         const userRes = await fetch('/api/auth/me', {
           headers: { 'Authorization': 'Bearer ' + token }
         })
@@ -134,7 +156,7 @@ export default function SettingsPage() {
   )
 
   const Toggle = ({ label, desc, value, onChange }) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
       <div>
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{label}</div>
         {desc && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{desc}</div>}
@@ -179,15 +201,55 @@ export default function SettingsPage() {
     <div style={{ maxWidth: 600 }}>
       <div style={{ marginBottom: 28 }}>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Settings</h1>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>Manage your store connection and app preferences</p>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>Manage your profile, store connection, and preferences</p>
       </div>
+
+      {/* ── PROFILE ── */}
+      <Section title="👤 Profile">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, #6366F1, #06B6D4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: 'white', flexShrink: 0 }}>
+            {profile.name?.charAt(0) || 'U'}
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)' }}>{profile.name || 'Your name'}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{profile.email}</div>
+            <div style={{ fontSize: 11, color: 'var(--purple-light)', marginTop: 3, fontWeight: 600 }}>{user?.role || 'Store Owner'} · {user?.plan || 'Free'} plan</div>
+          </div>
+        </div>
+
+        {profileError && <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '10px 14px', color: '#F87171', fontSize: 13, marginBottom: 12 }}>{profileError}</div>}
+
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>Full name</label>
+          <input
+            value={profile.name}
+            onChange={e => setProfile({ ...profile, name: e.target.value })}
+            placeholder="Your full name"
+            style={{ width: '100%', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 8, padding: '9px 12px', color: 'var(--text-primary)', fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
+          />
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>Email address</label>
+          <input
+            type="email"
+            value={profile.email}
+            onChange={e => setProfile({ ...profile, email: e.target.value })}
+            style={{ width: '100%', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 8, padding: '9px 12px', color: 'var(--text-primary)', fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
+          />
+        </div>
+
+        {profileSaved && <div style={{ background: 'var(--green-dim)', border: '1px solid var(--green)', borderRadius: 8, padding: '8px 12px', color: 'var(--green)', fontSize: 12, fontWeight: 600, marginBottom: 12 }}>✓ Profile saved</div>}
+
+        <button onClick={handleSaveProfile} disabled={savingProfile} className="btn-primary" style={{ fontSize: 13 }}>
+          {savingProfile ? 'Saving...' : 'Save profile'}
+        </button>
+      </Section>
 
       {/* ── SHOPIFY CONNECTION ── */}
       <Section title="🛍️ Shopify Store Connection">
         {shopConnected ? (
           <div>
-            {/* Connected state */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <CheckCircle size={16} color="#10B981" />
                 <div>
@@ -218,14 +280,13 @@ export default function SettingsPage() {
                 </button>
               </div>
             </div>
-            <div style={{ padding: '10px 0', fontSize: 11, color: 'var(--text-muted)' }}>
+            <div style={{ padding: '10px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>
               Disconnecting will remove your store data from Optivise. You can reconnect anytime.
             </div>
           </div>
         ) : (
           <div>
-            {/* Not connected state */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderBottom: '1px solid var(--border)', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0', marginBottom: 16 }}>
               <AlertCircle size={16} color="#F59E0B" />
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>No store connected</div>
@@ -270,27 +331,24 @@ export default function SettingsPage() {
         )}
       </Section>
 
-      {/* Notifications */}
-      <Section title="🔔 Notification Preferences">
-        <Toggle label="Email notifications" desc="Receive important updates via email" value={settings.emailNotifications} onChange={() => toggle('emailNotifications')} />
-        <Toggle label="Weekly performance report" desc="Get a weekly summary every Monday" value={settings.weeklyReport} onChange={() => toggle('weeklyReport')} />
-        <Toggle label="Low stock alerts" desc="Get notified when products have 5 or fewer items left" value={settings.lowStockAlerts} onChange={() => toggle('lowStockAlerts')} />
-        <Toggle label="New order alerts" desc="Get notified when new orders come in" value={settings.newOrderAlerts} onChange={() => toggle('newOrderAlerts')} />
-        <Toggle label="AI suggestions" desc="Receive AI-powered growth recommendations in dashboard" value={settings.aiSuggestions} onChange={() => toggle('aiSuggestions')} />
+      {/* ── NOTIFICATIONS (only the real one) ── */}
+      <Section title="🔔 Notifications">
+        <Toggle
+          label="Weekly performance report"
+          desc="Get a weekly email every Monday with your real revenue, top product, and opportunities to improve"
+          value={settings.weeklyReport}
+          onChange={() => toggle('weeklyReport')}
+        />
       </Section>
 
-      {/* Appearance */}
-      <Section title="🎨 Appearance">
+      {/* ── APPEARANCE ── */}
+      <Section title="🎨 Appearance & Display">
         <SettingSelect label="Theme" desc="Choose your preferred color scheme" value={settings.theme}
           onChange={v => setSettings(s => ({...s, theme: v}))}
           options={[{ value: 'dark', label: '🌙 Dark (default)' }, { value: 'light', label: '☀️ Light (coming soon)' }]} />
         <SettingSelect label="Language" desc="Choose your preferred language" value={settings.language}
           onChange={v => setSettings(s => ({...s, language: v}))}
           options={[{ value: 'en', label: '🇺🇸 English' }, { value: 'es', label: '🇪🇸 Spanish (coming soon)' }, { value: 'fr', label: '🇫🇷 French (coming soon)' }]} />
-      </Section>
-
-      {/* Store Preferences */}
-      <Section title="🛍️ Store Preferences">
         <SettingSelect label="Currency display" desc="How prices are displayed across the app" value={settings.currency}
           onChange={v => setSettings(s => ({...s, currency: v}))}
           options={[
@@ -315,21 +373,35 @@ export default function SettingsPage() {
           ]} />
       </Section>
 
-      {/* Account */}
-      <Section title="👤 Account">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Profile settings</div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Update your name and email</div>
-          </div>
-          <button onClick={() => navigate('/profile')} className="btn-ghost" style={{ fontSize: 12 }}>Go to Profile →</button>
+      {saved && (
+        <div style={{ background: 'var(--green-dim)', border: '1px solid var(--green)', borderRadius: 8, padding: '10px 14px', color: 'var(--green)', fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
+          ✓ Settings saved successfully!
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+      )}
+
+      <button onClick={handleSave} className="auth-btn-primary" style={{ width: '100%', marginBottom: 24 }}>
+        Save Settings
+      </button>
+
+      {/* ── SUBSCRIPTION ── */}
+      <Section title="💳 Subscription">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Subscription plan</div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Currently on <strong style={{color:'var(--purple-light)'}}>{user?.plan || 'Free'}</strong> plan</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Current plan</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>You are on the <strong style={{color:'var(--purple-light)'}}>{user?.plan || 'Free'}</strong> plan</div>
           </div>
           <button onClick={() => navigate('/pricing')} className="btn-primary" style={{ fontSize: 12 }}>Upgrade →</button>
+        </div>
+      </Section>
+
+      {/* ── ACCOUNT ── */}
+      <Section title="⚙️ Account">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Sign out</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Sign out of your Optivise account</div>
+          </div>
+          <button onClick={() => { logout(); navigate('/home') }} className="btn-ghost" style={{ fontSize: 12 }}>Sign out</button>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
           <div>
@@ -338,23 +410,13 @@ export default function SettingsPage() {
           </div>
           <button onClick={() => {
             if (window.confirm('Are you sure? This cannot be undone.')) {
-              alert('Please contact hello@optiviseai.io to delete your account.')
+              alert('To delete your account and all associated data, please email hello@optiviseai.io and we will process it promptly.')
             }
           }} className="btn-ghost" style={{ fontSize: 12, color: '#F87171', borderColor: 'rgba(239,68,68,0.3)' }}>
             Delete account
           </button>
         </div>
       </Section>
-
-      {saved && (
-        <div style={{ background: 'var(--green-dim)', border: '1px solid var(--green)', borderRadius: 8, padding: '10px 14px', color: 'var(--green)', fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
-          ✓ Settings saved successfully!
-        </div>
-      )}
-
-      <button onClick={handleSave} className="auth-btn-primary" style={{ width: '100%' }}>
-        Save Settings
-      </button>
     </div>
   )
 }

@@ -437,7 +437,30 @@ export default function DashboardPage() {
   const shopConnected = !!(user?.shopDomain) || (data && data.totalRevenue > 0)
 
   if (loading) return <div className="spinner" />
-  if (!data)   return null
+
+  // No store connected yet (or no data) → show a helpful prompt instead of a blank screen
+  const shopConnectedEarly = !!(user?.shopDomain)
+  if (!data || !shopConnectedEarly) {
+    const hour = new Date().getHours()
+    const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+    return (
+      <div className="dashboard">
+        <div className="dash-greeting">
+          <div>
+            <h1 className="greeting-title">
+              {greeting}, {user?.name?.split(' ')[0] || 'there'}! 👋
+            </h1>
+            <p className="greeting-sub" style={{ margin: '4px 0 0' }}>
+              Connect your Shopify store to see your dashboard.
+            </p>
+          </div>
+        </div>
+        <OnboardingChecklist shopConnected={false} />
+        <ConnectStorePrompt />
+        <QuickActions shopConnected={false} />
+      </div>
+    )
+  }
 
   const hour     = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'

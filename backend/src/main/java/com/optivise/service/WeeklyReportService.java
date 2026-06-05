@@ -1,13 +1,13 @@
 package com.optivise.service;
 
 import com.optivise.model.User;
-import com.optivise.repository.AbTestRepository;
 import com.optivise.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +19,6 @@ public class WeeklyReportService {
     @Autowired private UserRepository userRepository;
     @Autowired private ShopifyService shopifyService;
     @Autowired private EmailService emailService;
-    @Autowired private AbTestRepository abTestRepository;
 
     public void sendWeeklyReportsToAllUsers() {
         List<User> users = userRepository.findAll();
@@ -51,7 +50,7 @@ public class WeeklyReportService {
                     user.getShopDomain(), user.getShopifyAccessToken()
             );
 
-            // ── Calculate revenue & orders ──
+            // ── Real revenue & order count ──
             double revenue = 0;
             for (Map<String, Object> order : orders) {
                 Object total = order.get("total_price");
@@ -62,54 +61,50 @@ public class WeeklyReportService {
             }
             int orderCount = orders.size();
 
-            // ── Conversion rate (orders / products as proxy) ──
-            double convRate = products.isEmpty() ? 0.0
-                    : Math.min(99.0, (orderCount * 1.0 / Math.max(1, products.size())) * 100);
-
-            // ── Top product by revenue ──
-            String topProduct = "N/A";
-            double topRevenue = 0;
-            for (Map<String, Object> p : products) {
-                // Use order data to find revenue per product
-                String title = (String) p.getOrDefault("title", "Unknown");
-                // Simple heuristic: first product with most variants gets top billing
-                Object variants = p.get("variants");
-                if (variants instanceof List) {
-                    int variantCount = ((List<?>) variants).size();
-                    if (variantCount > topRevenue) {
-                        topRevenue = variantCount;
-                        topProduct = title;
+            // ── Top product by REAL revenue from order line items ──
+            Map<String, Double> revenueByProduct = new HashMap<>();
+            for (Map<String, Object> order : orders) {
+                Object lineItems = order.get("line_items");
+                if (lineItems instanceof List) {
+                    for (Object li : (List<?>) lineItems) {
+                        if (li instanceof Map) {
+                            Map<?, ?> item = (Map<?, ?>) li;
+                            String title = item.get("title") != null ? item.get("title").toString() : null;
+                            if (title == null) continue;
+                            double linePrice = 0;
+                            try {
+                                double price = item.get("price") != null ? Double.parseDouble(item.get("price").toString()) : 0;
+                                int qty = item.get("quantity") != null ? Integer.parseInt(item.get("quantity").toString()) : 1;
+                                linePrice = price * qty;
+                            } catch (Exception ignored) {}
+                            revenueByProduct.merge(title, linePrice, Double::sum);
+                        }
                     }
                 }
             }
-            // Use actual revenue for top revenue display
-            double topProductRevenue = revenue * 0.35; // estimate top product = ~35% of revenue
+            String topProduct = "N/A";
+            double topRevenue = 0;
+            for (Map.Entry<String, Double> entry : revenueByProduct.entrySet()) {
+                if (entry.getValue() > topRevenue) {
+                    topRevenue = entry.getValue();
+                    topProduct = entry.getKey();
+                }
+            }
 
-            // ── Count products with no descriptions (revenue leaks) ──
+            // ── Real count of products needing descriptions ──
             long noDescCount = products.stream().filter(p -> {
                 Object desc = p.get("body_html");
                 return desc == null || desc.toString().isBlank();
             }).count();
 
-            // ── Get most recent completed A/B test ──
-            String abWinner = null;
-            String abTestName = null;
-            var completedTests = abTestRepository.findByShopAndStatus(user.getShopDomain(), "completed");
-            if (!completedTests.isEmpty()) {
-                var latest = completedTests.get(0);
-                abWinner = latest.getWinner();
-                abTestName = latest.getName();
-            }
-
-            // ── Send email ──
+            // ── Send honest email (no conversion rate, no fake losses, no A/B) ──
             String userName = user.getName() != null ? user.getName().split(" ")[0] : "there";
             emailService.sendWeeklyReport(
                     user.getEmail(), userName,
                     user.getShopDomain(),
-                    revenue, orderCount, convRate,
-                    topProduct, topProductRevenue,
-                    products.size(), noDescCount,
-                    abTestName, abWinner
+                    revenue, orderCount,
+                    topProduct, topRevenue,
+                    products.size(), noDescCount
             );
 
             log.info("Weekly report sent to {}", user.getEmail());

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { SettingsProvider } from './hooks/useSettings'
+import WaitlistPage from './pages/WaitlistPage'
 import AppLayout from './components/layout/AppLayout'
 import LoginPage from './pages/LoginPage'
 import LandingPage from './pages/LandingPage'
@@ -40,6 +41,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/home" element={<LandingPage />} />
+      <Route path="/waitlist" element={<WaitlistPage />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
       <Route path="/profile" element={<Navigate to="/settings" replace />} />
       <Route path="/privacy" element={<PrivacyPage />} />

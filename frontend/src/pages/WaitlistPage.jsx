@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, CheckCircle, ArrowRight, Gift } from 'lucide-react'
+import OptiviseLogo from '../components/OptiviseLogo'
+import LogoText from '../components/LogoText'
 
 export default function WaitlistPage() {
   const navigate = useNavigate()
@@ -62,8 +64,9 @@ export default function WaitlistPage() {
 
       {/* Top bar */}
       <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: 1100, margin: '0 auto', width: '100%' }}>
-        <div onClick={() => navigate('/home')} style={{ fontSize: 18, fontWeight: 900, color: '#fff', cursor: 'pointer', letterSpacing: '-0.5px' }}>
-          Optivise
+        <div onClick={() => navigate('/home')} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+          <OptiviseLogo size={30} showText={false} />
+          <LogoText nameSize={15} tagSize={7} />
         </div>
         <button onClick={() => navigate('/home')} className="wl-dm" style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '7px 14px', color: '#94a3b8', fontSize: 13, cursor: 'pointer' }}>
           ← Back home

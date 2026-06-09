@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, CheckCircle, ArrowRight, Gift } from 'lucide-react'
-import OptiviseLogo from '../components/OptiviseLogo'
-import LogoText from '../components/LogoText'
 
 export default function WaitlistPage() {
   const navigate = useNavigate()
@@ -64,9 +62,8 @@ export default function WaitlistPage() {
 
       {/* Top bar */}
       <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: 1100, margin: '0 auto', width: '100%' }}>
-        <div onClick={() => navigate('/home')} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-          <OptiviseLogo size={30} showText={false} />
-          <LogoText nameSize={15} tagSize={7} />
+        <div onClick={() => navigate('/home')} style={{ fontSize: 18, fontWeight: 900, color: '#fff', cursor: 'pointer', letterSpacing: '-0.5px' }}>
+          Optivise
         </div>
         <button onClick={() => navigate('/home')} className="wl-dm" style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '7px 14px', color: '#94a3b8', fontSize: 13, cursor: 'pointer' }}>
           ← Back home
@@ -95,7 +92,7 @@ export default function WaitlistPage() {
               <div className="wl-fade-2" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 12, padding: '14px 16px', marginBottom: 24 }}>
                 <Gift size={18} color="#34d399" style={{ flexShrink: 0, marginTop: 1 }} />
                 <div className="wl-dm" style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
-                  <strong style={{ color: '#fff' }}>The first 50 people get extended free access</strong> when we launch — our way of thanking early believers.
+                  <strong style={{ color: '#fff' }}>The first 50 people — and anyone who shares honest feedback about what they need — get extended free access</strong> when we launch. Help us build the right thing, and we'll take care of you first.
                 </div>
               </div>
 

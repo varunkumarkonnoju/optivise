@@ -603,9 +603,9 @@ export default function LandingPage() {
                 <img src={VarunPhoto} alt="Varun" style={{ width: 140, height: 140, objectFit: 'contain', filter: 'drop-shadow(0 0 30px rgba(99,102,241,0.5))' }} />
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div className="dm-sans" style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9' }}>Varun Kumar Konnoju</div>
-                <div className="dm-sans" style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>MS Computer Science</div>
-                <div className="dm-sans" style={{ fontSize: 11, color: '#475569' }}>Concordia University of Wisconsin</div>
+                <div className="dm-sans" style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9' }}>Varun Kumar</div>
+                
+               
               </div>
               <div style={{ background: 'rgba(10,18,38,0.8)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: '16px 18px', width: '100%' }}>
                 <div className="dm-sans" style={{ fontSize: 9, fontWeight: 700, color: '#334155', letterSpacing: '1px', marginBottom: 12, textTransform: 'uppercase' }}>Build timeline</div>
@@ -632,13 +632,11 @@ export default function LandingPage() {
                 👋 The founder
               </div>
               <h2 className="instrument" style={{ fontSize: 36, fontWeight: 400, color: '#fff', lineHeight: 1.2, marginBottom: 16, letterSpacing: '-1.5px' }}>
-                I graduated in December.<br />
-                I had to wait for my visa.<br />
-                <em style={{ color: '#6366f1' }}>So I built instead.</em>
+                <br />
+                <br />
+                <em style={{ color: '#6366f1' }}></em>
               </h2>
-              <p className="dm-sans" style={{ fontSize: 13, color: '#475569', lineHeight: 1.8, marginBottom: 12 }}>
-                After finishing my MS in Computer Science at Concordia University of Wisconsin, I had to wait for my US work authorization. No job. No income. Just time and curiosity.
-              </p>
+              
               <p className="dm-sans" style={{ fontSize: 13, color: '#475569', lineHeight: 1.8, marginBottom: 20 }}>
                 I noticed Shopify store owners were losing thousands of dollars every month without knowing why. Their analytics showed them numbers, but never answers. So I spent 6 weeks building the tool I wished existed.
               </p>
